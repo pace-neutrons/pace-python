@@ -1,0 +1,12 @@
+version: '3'
+services:
+  pySpinW:
+    build: .
+    image: wardsimon/pyspinw
+    container_name: pySpinW
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./:/opt/notebooks
+    command: >
+      bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
