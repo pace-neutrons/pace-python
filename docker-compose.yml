@@ -1,12 +1,27 @@
-version: '3'
+version: '2'
+
 services:
   pySpinW:
-    build: .
-    image: wardsimon/pyspinw
     container_name: pySpinW
+    extends:
+      file: common.yml
+      service: basebuild
     ports:
       - "8888:8888"
     volumes:
       - ./:/opt/notebooks
     command: >
-      bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
+      bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --NotebookApp.token='' --NotebookApp.password=''"
+
+  testScript:
+    container_name: pySpinWTest
+    extends:
+      file: common.yml
+      service: basebuild
+    volumes:
+      - ./:/home/developer
+    environment:
+      - SCRIPT=${SCRIPT}
+      - DISPLAY=${DISPLAY}
+    command:
+      bash -c "source activate pySpinW && python ${SCRIPT}"

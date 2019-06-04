@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  basebuild:
+    build: .
+    image: wardsimon/pyspinw
+    environment:
+      - DISPLAY=${DISPLAY}

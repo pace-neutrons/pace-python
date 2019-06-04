@@ -1,39 +1,95 @@
 import os
 import platform
 from .MatlabProxyObject import MatlabProxyObject
+from .DataTypes import DataTypes
+from .MatlabFunction import MatlabFunction
 
 class Matlab(object):
     def __init__(self, mlPath=None, knowBetter=False):
+        """
+        Create an interface to a matlab compiled python library and treat the objects in a python/matlab way instead of
+        the ugly way it is done by default.
+
+        :param mlPath: Path to the SDK i.e. '/MATLAB/MATLAB_Runtime/v96' or to the location where matlab is installed
+        (MATLAB root directory)
+        :param knowBetter: The program tries to auto suggest the necessary directories. If we know better than the
+        program this parameter is True. Otherwise, False
+        """
 
         self.checkPath(mlPath, knowBetter)
-
-        from spinwCompilePyLib.for_testing import spinw
+        # We do the import here as we have to set the ENV before we can import
+        import pySpinW.libcall2 as spinw
         print('Interface opened')
-        self.Matlab = spinw
+        self.process = spinw
         self.interface = None
+        self.pyMatlab = None
+        self.converter = None
+        self.initialize()
 
     def initialize(self):
-        self.interface = self.Matlab.initialize()
-        return
+        """
+        Initialize the matlab environment. This can only be done after the module has been imported.
+
+        :return: None. obj has been filled with initialization pars.
+        """
+        self.interface = self.process.initialize()
+        import matlab as pyMatlab
+        self.pyMatlab = pyMatlab
+        self.converter = DataTypes(pyMatlab)
 
     def __getattr__(self, name):
+        """
+        Override for the get attribute. We don't want to call the process but the interface, so redirect calls there and
+        return a MatlabProxyObject
+
+        :param name: The function/class to be called.
+        :return: MatlabProxyObject of class/function given by name
+        """
+
         def method(*args):
-            print("tried to handle unknown method " + name)
-            if args:
-                print("it had arguments: " + str(args))
-            # print("tried to handle unknown method " + name)
-            # if args:
-            #     print("it had arguments: " + str(args))
-            #     obj = self.interface.feval(name)
-            # else:
-            #     obj = self.interface.feval(name, *args)
-            # return MatlabProxyObject(self, obj)
+            try:
+                nargout = int(self.interface.getArgOut(name, nargout=1))
+                method = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
+
+                # BUT method might not be a method!!!
+                # Case 1 - It is a method. Use MatlabProxyObject
+                # Case 2 - It is a function. Use MatlabFunction
+                # Case 3 - Numeric. Use self.converter.decode(method)
+                if isinstance(method, self.pyMatlab.double):
+                    # TODO When converter is done, return self.converter.decode(method)
+                    return method
+                elif self.interface.feval('isobject', method):
+                    return MatlabProxyObject(self.interface, method, self.converter)
+                elif self.interface.feval('isa', method, 'function_handle'):
+                    return MatlabFunction(self.interface, self.converter, [], method)
+                else:
+                    return method
+            except Exception as e:
+                print(e)
+                return []
         return method
 
     def __del__(self):
-        print('Interface closed')
+        """
+        Auto close the python/MATLAB interface.
+        :return:
+        """
+        if self.interface:
+            self.interface.exit()
+            self.interface = None
+            self.pyMatlab = None
+            print('Interface closed')
 
     def checkPath(self, mlPath, knowBetter=False):
+        """
+        Sets the environmental variables for Win, Mac, Linux
+
+        :param mlPath: Path to the SDK i.e. '/MATLAB/MATLAB_Runtime/v96' or to the location where matlab is installed
+        (MATLAB root directory)
+        :param knowBetter: The program tries to auto suggest the necessary directories. If we know better than the
+        program this parameter is True. Otherwise, False
+        :return: None
+        """
 
         class osObj(object):
             def __init__(self):

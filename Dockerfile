@@ -53,5 +53,19 @@ ENV XAPPLRESDIR /opt/mcr/v96/X11/app-defaults
 RUN conda create -y -n pySpinW python=3.7 anaconda \
     && conda init bash
 
+# Setup the graphics
+# Replace 1000 with your user / group id
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/developer && \
+    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
+    echo "developer:x:${uid}:" >> /etc/group && \
+    chown ${uid}:${gid} -R /home/developer
+
+USER developer
+ENV HOME /home/developer
+
+# Get SpinW and create startup file
+WORKDIR /home/developer
+
 # docker build -t spinw . && docker run -p 8888:8888 -v /Users/simonward/PycharmProjects/pySpinW2:/opt/notebooks -t -i spinw bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
 # bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
