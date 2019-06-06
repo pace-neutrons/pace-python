@@ -24,7 +24,10 @@ class MatlabProxyObject(object):
         for attribute in self._getAttributeNames():
             self.__dict__[attribute] = self.__getattr__(attribute)
         for method in self._getMethodNames():
-            super(MatlabProxyObject, self).__setattr__(method, MatlabFunction(self.interface, self.converter, self.handle, method))
+            super(MatlabProxyObject, self).__setattr__(method,
+                                                       MatlabFunction(self.interface, method,
+                                                                      converter=self.converter, parent=self.handle,
+                                                                      caller=self))
 
     def _getAttributeNames(self):
         return self.interface.fieldnames(self.interface.feval('handle', self.handle))
@@ -79,3 +82,11 @@ class MatlabProxyObject(object):
     @property
     def __doc__(self):
         return self.interface.help(self.handle, nargout=1)
+
+    def updateProxy(self):
+        # We assume methods can't change
+        for attribute in self._getAttributeNames():
+            self.__dict__[attribute] = self.__getattr__(attribute)
+
+    def updateObj(self):
+        raise NotImplementedError

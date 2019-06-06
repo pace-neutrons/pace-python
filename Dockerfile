@@ -6,7 +6,7 @@
 #
 # See http://www.mathworks.com/products/compiler/mcr/ for more info.
 
-FROM debian:stretch-slim
+FROM python:3.6-slim-stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get -q update \
@@ -55,11 +55,13 @@ RUN conda create -y -n pySpinW python=3.7 anaconda \
 
 # Setup the graphics
 # Replace 1000 with your user / group id
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/developer && \
-    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
-    echo "developer:x:${uid}:" >> /etc/group && \
-    chown ${uid}:${gid} -R /home/developer
+RUN export uid=1000 gid=1000 \
+    && mkdir -p /home/developer \
+    && echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd \
+    && echo "developer:x:${uid}:" >> /etc/group \
+    && chown ${uid}:${gid} -R /home/developer
+
+RUN pip install numpy
 
 USER developer
 ENV HOME /home/developer

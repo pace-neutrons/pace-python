@@ -1,7 +1,7 @@
 
 class MatlabFunction(object):
 
-    def __init__(self, interface, converter, parent, fun):
+    def __init__(self, interface, fun, converter=None, parent=None, caller=None):
         '''
 
         Create a proxt function to handle matlab calls
@@ -12,8 +12,12 @@ class MatlabFunction(object):
         '''
         self._interface = interface
         self.converter = converter
-        self._parent = parent
+        if parent is None:
+            self._parent = []
+        else:
+            self._parent = parent
         self._fun = fun
+        self._caller = caller
 
     def __call__(self, *args, nargout=-1, **kwargs):
         """Call the Matlab function.
@@ -51,13 +55,16 @@ class MatlabFunction(object):
                 d = self._interface.call2(self._fun, self._parent, args, nargout=nargout)
             else:
                 self._interface.call2(self._fun, self._parent, args, nargout=nargout)
+                if self._caller is not None:
+                    self._caller.updateProxy()
                 return
         else:
             if nargout > 0:
                 d = self._interface.feval(self._fun, self._parent, nargout=nargout)
             else:
                 self._interface.feval(self._fun, self._parent, nargout=nargout)
+                if self._caller is not None:
+                    self._caller.updateProxy()
                 return
 
-        ## TODO write a value decoder/encoder.
-        return d
+        return self.converter.decode(d)

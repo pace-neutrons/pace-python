@@ -35,7 +35,7 @@ class Matlab(object):
         self.interface = self.process.initialize()
         import matlab as pyMatlab
         self.pyMatlab = pyMatlab
-        self.converter = DataTypes(pyMatlab)
+        self.converter = DataTypes(self.interface, pyMatlab)
 
     def __getattr__(self, name):
         """
@@ -50,20 +50,7 @@ class Matlab(object):
             try:
                 nargout = int(self.interface.getArgOut(name, nargout=1))
                 method = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
-
-                # BUT method might not be a method!!!
-                # Case 1 - It is a method. Use MatlabProxyObject
-                # Case 2 - It is a function. Use MatlabFunction
-                # Case 3 - Numeric. Use self.converter.decode(method)
-                if isinstance(method, self.pyMatlab.double):
-                    # TODO When converter is done, return self.converter.decode(method)
-                    return method
-                elif self.interface.feval('isobject', method):
-                    return MatlabProxyObject(self.interface, method, self.converter)
-                elif self.interface.feval('isa', method, 'function_handle'):
-                    return MatlabFunction(self.interface, self.converter, [], method)
-                else:
-                    return method
+                return self.converter.decode(method)
             except Exception as e:
                 print(e)
                 return []

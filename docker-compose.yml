@@ -24,4 +24,5 @@ services:
       - SCRIPT=${SCRIPT}
       - DISPLAY=${DISPLAY}
     command:
-      bash -c "source activate pySpinW && python ${SCRIPT}"
+      #bash -c "source activate pySpinW && python ${SCRIPT}"
+      python3 ${SCRIPT}
