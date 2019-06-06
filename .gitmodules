@@ -1,0 +1,3 @@
+[submodule "src/spinW"]
+	path = src/spinW
+	url = https://github.com/SpinW/spinW_MATLAB
