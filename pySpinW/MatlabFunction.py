@@ -19,7 +19,7 @@ class MatlabFunction(object):
         self._fun = fun
         self._caller = caller
 
-    def __call__(self, *args, nargout=-1, **kwargs):
+    def __call__(self, *args, nargout=None, **kwargs):
         """Call the Matlab function.
 
         Calling this function will transfer all function arguments
@@ -48,7 +48,8 @@ class MatlabFunction(object):
         # Determination of the number of output arguments is a pain.
         # Push it here instead of the main matlab call function.
 
-        nargout = int(self._interface.getArgOut(self._fun, nargout=1))
+        if nargout is None:
+            nargout = int(self._interface.getArgOut(self._fun, nargout=1))
 
         if args:
             if nargout > 0:

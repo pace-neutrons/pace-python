@@ -26,7 +26,7 @@ class DataTypes:
             # Case 1)
             if isinstance(data, np.ndarray):
                 if np.iscomplexobj(data):
-                    data = self.interface.call('complex', [data.real.tolist(), data.imag.tolist()], nargout=1)
+                    data = self.interface.call('complex', (self.encode(data.real.tolist()), self.encode(data.imag.tolist())), nargout=1)
                 else:
                     data = data.tolist()
                     data = self.matlab.double(data)

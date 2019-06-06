@@ -46,9 +46,10 @@ class Matlab(object):
         :return: MatlabProxyObject of class/function given by name
         """
 
-        def method(*args):
+        def method(*args, nargout=None):
             try:
-                nargout = int(self.interface.getArgOut(name, nargout=1))
+                if nargout is None:
+                    nargout = int(self.interface.getArgOut(name, nargout=1))
                 method = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
                 return self.converter.decode(method)
             except Exception as e:
