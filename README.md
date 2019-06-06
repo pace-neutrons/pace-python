@@ -2,7 +2,7 @@
 
 ## WARNING
 
- - This is a WIP in kinda works, except for graphics (blame MATLAB)
+ - This is a WIP in kinda works, ~~except for graphics (blame MATLAB)~~ (If not using docker we can show crystal structure)
  - This doesn't seem to play well with conda environments. So you will need a python 3 on your system (also blame MATLAB for that one!).
 
 ## Install
