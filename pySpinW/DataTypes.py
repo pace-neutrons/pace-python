@@ -71,6 +71,13 @@ class DataTypes:
         elif isinstance(data, self.matlab.int8):
             # TODO for all available data types
             data = np.ndarray(data)
+        elif isinstance(data, str):
+            if len(data) == 34:
+                if data[0:2] == '!$':
+                    try:
+                        data = self.decode(self.interface.get_global(data[2:]))
+                    except Exception as e:
+                        print(e)
         elif isinstance(data, dict):
             for key, item in data.items():
                 data[key] = self.decode(item)

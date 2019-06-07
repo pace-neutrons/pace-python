@@ -1,5 +1,8 @@
+from io import StringIO
+
 from .MatlabFunction import MatlabFunction
 import re
+
 
 class MatlabProxyObject(object):
     """A Proxy for an object that exists in Matlab.
@@ -14,8 +17,9 @@ class MatlabProxyObject(object):
     def __init__(self, interface, handle, converter):
         """
         Create a non numeric object of class handle (an object from a non-numeric class).
-        :param interface:
-        :param handle:
+        :param interface: The callable MATLAB interface (where we run functions)
+        :param handle: The matlabObject which represents a class object
+        :param converter: The converter class between MATLAB/python
         """
         self.__dict__['handle'] = handle
         self.__dict__['interface'] = interface
@@ -30,9 +34,17 @@ class MatlabProxyObject(object):
                                                                       caller=self))
 
     def _getAttributeNames(self):
+        """
+        Gets attributes from a MATLAB object
+        :return: list of attribute names
+        """
         return self.interface.fieldnames(self.interface.feval('handle', self.handle))
 
     def _getMethodNames(self):
+        """
+        Gets methods from a MATLAB object
+        :return: list of method names
+        """
         return self.interface.methods(self.interface.feval('handle', self.handle))
 
     def __getattr__(self, name):
@@ -81,12 +93,21 @@ class MatlabProxyObject(object):
 
     @property
     def __doc__(self):
-        return self.interface.help(self.handle, nargout=1)
+        out = StringIO()
+        return self.interface.help(self.handle, nargout=1, stdout=out)
 
     def updateProxy(self):
+        """
+        Perform a update on an objects fields. Useful for when dealing with handle classes.
+        :return: None
+        """
         # We assume methods can't change
         for attribute in self._getAttributeNames():
             self.__dict__[attribute] = self.__getattr__(attribute)
 
     def updateObj(self):
+        """
+        When you change an attributes value, the corresponding value should be changed in self.handle
+        :return: None
+        """
         raise NotImplementedError

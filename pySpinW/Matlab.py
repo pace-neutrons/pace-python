@@ -1,8 +1,6 @@
 import os
 import platform
-from .MatlabProxyObject import MatlabProxyObject
 from .DataTypes import DataTypes
-from .MatlabFunction import MatlabFunction
 
 class Matlab(object):
     def __init__(self, mlPath=None, knowBetter=False):
@@ -18,7 +16,7 @@ class Matlab(object):
 
         self.checkPath(mlPath, knowBetter)
         # We do the import here as we have to set the ENV before we can import
-        import pySpinW.libcall2 as spinw
+        import pySpinW.swFuncs as spinw
         print('Interface opened')
         self.process = spinw
         self.interface = None
@@ -60,7 +58,7 @@ class Matlab(object):
     def __del__(self):
         """
         Auto close the python/MATLAB interface.
-        :return:
+        :return: None
         """
         if self.interface:
             self.interface.exit()

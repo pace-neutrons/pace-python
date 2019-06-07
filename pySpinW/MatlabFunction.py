@@ -1,4 +1,3 @@
-
 class MatlabFunction(object):
 
     def __init__(self, interface, fun, converter=None, parent=None, caller=None):
@@ -6,9 +5,9 @@ class MatlabFunction(object):
 
         Create a proxt function to handle matlab calls
 
-        :param interface:
-        :param parent:
-        :param fun:
+        :param interface: The callable MATLAB interface (where we run functions)
+        :param parent: What the function has been called from. Needed for handle class updates.
+        :param fun: String name of function to be executed.
         '''
         self._interface = interface
         self.converter = converter
@@ -34,7 +33,7 @@ class MatlabFunction(object):
         nargout : int
             Call the function in Matlab with this many output
             arguments. If the argument not given, we will try and work
-            out the corrent value.
+            out the correct value.
         **kwargs : dict
             Keyword arguments are transparently translated to Matlab's
             key-value pairs. For example, ``matlab.struct(foo="bar")``
@@ -46,26 +45,17 @@ class MatlabFunction(object):
         args = self.converter.encode(args)
 
         # Determination of the number of output arguments is a pain.
-        # Push it here instead of the main matlab call function.
-
         if nargout is None:
             nargout = int(self._interface.getArgOut(self._fun, nargout=1))
 
-        if args:
-            if nargout > 0:
-                d = self._interface.call2(self._fun, self._parent, args, nargout=nargout)
-            else:
-                self._interface.call2(self._fun, self._parent, args, nargout=nargout)
-                if self._caller is not None:
-                    self._caller.updateProxy()
-                return
+        if not args:
+            args = []
+        if nargout > 0:
+            d = self._interface.call2(self._fun, self._parent, args, nargout=nargout)
         else:
-            if nargout > 0:
-                d = self._interface.feval(self._fun, self._parent, nargout=nargout)
-            else:
-                self._interface.feval(self._fun, self._parent, nargout=nargout)
-                if self._caller is not None:
-                    self._caller.updateProxy()
-                return
+            self._interface.call2(self._fun, self._parent, args, nargout=nargout)
+            if self._caller is not None:
+                self._caller.updateProxy()
+            return
 
         return self.converter.decode(d)

@@ -61,7 +61,7 @@ RUN export uid=1000 gid=1000 \
     && echo "developer:x:${uid}:" >> /etc/group \
     && chown ${uid}:${gid} -R /home/developer
 
-RUN pip install numpy
+RUN pip install numpy jupyter
 
 USER developer
 ENV HOME /home/developer
