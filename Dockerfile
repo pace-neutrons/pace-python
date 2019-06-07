@@ -20,20 +20,6 @@ RUN apt-get -q update \
          ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Install conda
-#RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
-#    && bash /tmp/miniconda.sh -bfp /usr/local \
-#    && rm -rf /tmp/miniconda.sh \
-#    && conda install -y python=3 \
-#    && conda update conda \
-#    && apt-get -qq -y remove curl bzip2 \
-#    && apt-get -qq -y autoremove \
-#    && apt-get autoclean \
-#    && rm -rf /var/lib/apt/lists/* /var/log/dpkg.log \
-#    && conda clean --all --yes
-
-#ENV PATH /opt/conda/bin:$PATH
     
 # Install the MCR dependencies and some things we'll need and download the MCR
 # from Mathworks -silently install it
@@ -47,12 +33,8 @@ RUN mkdir /mcr-install \
     && cd / \
     && rm -rf mcr-install
 
-# Configure environment variables for MCR
-ENV LD_LIBRARY_PATH /opt/mcr/v96/runtime/glnxa64:/opt/mcr/v96/bin/glnxa64:/opt/mcr/v96/sys/os/glnxa64
-ENV XAPPLRESDIR /opt/mcr/v96/X11/app-defaults
-
-#RUN conda create -y -n pySpinW python=3.7 anaconda \
-#    && conda init bash
+# Move libexpat becuase it is too old
+RUN mv /opt/mcr/v96/bin/glnxa64/libexpat.so.1 /opt/mcr/v96/bin/glnxa64/libexpat.so.1.NOFIND
 
 # Setup the graphics
 # Replace 1000 with your user / group id
@@ -69,3 +51,7 @@ RUN pip install numpy jupyter
 USER developer
 ENV HOME /home/developer
 WORKDIR /home/developer
+
+# Configure environment variables for MCR
+ENV LD_LIBRARY_PATH /opt/mcr/v96/runtime/glnxa64:/opt/mcr/v96/bin/glnxa64:/opt/mcr/v96/sys/os/glnxa64
+ENV XAPPLRESDIR /opt/mcr/v96/X11/app-defaults
