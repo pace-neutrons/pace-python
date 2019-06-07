@@ -9,6 +9,7 @@
 FROM python:3.6-slim-stretch
 
 ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get -q update \
     && apt-get install -q -y --no-install-recommends \
          xorg \
@@ -21,18 +22,18 @@ RUN apt-get -q update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install conda
-RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
-    && bash /tmp/miniconda.sh -bfp /usr/local \
-    && rm -rf /tmp/miniconda.sh \
-    && conda install -y python=3 \
-    && conda update conda \
-    && apt-get -qq -y remove curl bzip2 \
-    && apt-get -qq -y autoremove \
-    && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/* /var/log/dpkg.log \
-    && conda clean --all --yes
+#RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
+#    && bash /tmp/miniconda.sh -bfp /usr/local \
+#    && rm -rf /tmp/miniconda.sh \
+#    && conda install -y python=3 \
+#    && conda update conda \
+#    && apt-get -qq -y remove curl bzip2 \
+#    && apt-get -qq -y autoremove \
+#    && apt-get autoclean \
+#    && rm -rf /var/lib/apt/lists/* /var/log/dpkg.log \
+#    && conda clean --all --yes
 
-ENV PATH /opt/conda/bin:$PATH
+#ENV PATH /opt/conda/bin:$PATH
     
 # Install the MCR dependencies and some things we'll need and download the MCR
 # from Mathworks -silently install it
@@ -50,8 +51,8 @@ RUN mkdir /mcr-install \
 ENV LD_LIBRARY_PATH /opt/mcr/v96/runtime/glnxa64:/opt/mcr/v96/bin/glnxa64:/opt/mcr/v96/sys/os/glnxa64
 ENV XAPPLRESDIR /opt/mcr/v96/X11/app-defaults
 
-RUN conda create -y -n pySpinW python=3.7 anaconda \
-    && conda init bash
+#RUN conda create -y -n pySpinW python=3.7 anaconda \
+#    && conda init bash
 
 # Setup the graphics
 # Replace 1000 with your user / group id
@@ -61,13 +62,10 @@ RUN export uid=1000 gid=1000 \
     && echo "developer:x:${uid}:" >> /etc/group \
     && chown ${uid}:${gid} -R /home/developer
 
+# Install the requirements
 RUN pip install numpy jupyter
 
+# Running as root is bad juju
 USER developer
 ENV HOME /home/developer
-
-# Get SpinW and create startup file
 WORKDIR /home/developer
-
-# docker build -t spinw . && docker run -p 8888:8888 -v /Users/simonward/PycharmProjects/pySpinW2:/opt/notebooks -t -i spinw bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
-# bash -c "source activate pySpinW && jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
