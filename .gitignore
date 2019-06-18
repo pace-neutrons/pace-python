@@ -1,4 +1,8 @@
 
-pySpinW/\.DS_Store
+pyHorace/\.DS_Store
 
 \.DS_Store
+
+*.pyc
+__pycache__
+pyHorace/mccExcludedFiles.log

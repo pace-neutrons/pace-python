@@ -18,7 +18,7 @@ class MatlabFunction(object):
         self._fun = fun
         self._caller = caller
 
-    def __call__(self, *args, nargout=None, **kwargs):
+    def __call__(self, *args, **kwargs):
         """Call the Matlab function.
 
         Calling this function will transfer all function arguments
@@ -40,6 +40,7 @@ class MatlabFunction(object):
             will be translated to ``struct('foo', 'bar')``.
 
         """
+        nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1
         # serialize keyword arguments:
         args += sum(kwargs.items(), ())
         args = self.converter.encode(args)

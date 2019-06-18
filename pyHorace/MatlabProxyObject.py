@@ -63,7 +63,8 @@ class MatlabProxyObject(object):
         # if it's a method, wrap it in a functor
         if name in m.methods(self.handle, nargout=1):
             class matlab_method:
-                def __call__(_self, *args, nargout=-1, **kwargs):
+                def __call__(_self, *args, **kwargs):
+                    nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1
                     # serialize keyword arguments:
                     args += sum(kwargs.items(), ())
                     return getattr(m, name)(self, *args, nargout=nargout)

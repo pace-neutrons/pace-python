@@ -16,9 +16,9 @@ class Matlab(object):
 
         self.checkPath(mlPath, knowBetter)
         # We do the import here as we have to set the ENV before we can import
-        import pySpinW.swFuncs as spinw
+        import pyHorace.horace as horace
         print('Interface opened')
-        self.process = spinw
+        self.process = horace
         self.interface = None
         self.pyMatlab = None
         self.converter = None
@@ -44,7 +44,8 @@ class Matlab(object):
         :return: MatlabProxyObject of class/function given by name
         """
 
-        def method(*args, nargout=None):
+        def method(*args, **kwargs):
+            nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
             try:
                 if nargout is None:
                     nargout = int(self.interface.getArgOut(name, nargout=1))
