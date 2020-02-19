@@ -2,10 +2,10 @@ function mccCommand = compile_python(nargin)
 
     sp = filesep;
     src_dir = fileparts(mfilename('fullpath'));
-    horace_dir = [src_dir sp 'Horace'];
-    herbert_dir = [src_dir sp 'Herbert'];
+    horace_dir = [src_dir sp 'Horace' sp 'horace_core'];
+    herbert_dir = [src_dir sp 'Herbert' sp 'herbert_core'];
     if ~exist('copy_files_list')
-        addpath([src_dir sp 'Herbert/admin']);
+        addpath([src_dir sp 'Herbert' sp 'herbert_core' sp 'admin']);
     end
     target_dir = [src_dir sp 'ISIS'];
     copy_files_list(herbert_dir, [target_dir sp 'Herbert']);
@@ -18,7 +18,7 @@ function mccCommand = compile_python(nargin)
         end
     end
     % Remove unwanted directories
-    deldir = {['Horace' sp 'demo'], ['Horace' sp 'test'], ['Herbert' sp 'applications/docify']};
+    deldir = {['Herbert' sp 'applications' sp 'docify']};
     for ii = 1:numel(deldir)
         dirname = [src_dir sp 'ISIS' sp deldir{ii}];
         if exist(dirname, 'dir')
@@ -39,8 +39,7 @@ function mccCommand = compile_python(nargin)
        src_dir sp 'waitforgui.m ' ...
        src_dir sp 'pybridge.m ' ...
        src_dir sp 'thinwrapper.m ' ...
-       src_dir sp 'pyhorace_init.m ' ...
-       src_dir sp 'horace_main.m'
+       src_dir sp 'pyhorace_init.m'
        ];
    eval(mccCommand);
 
