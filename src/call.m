@@ -1,4 +1,4 @@
-function results = call(name, args)
+function [out, varargout] = call(name, args)
 
 resultsize = nargout;
 if nargin == 1
@@ -10,8 +10,16 @@ if resultsize > 0
     % output arguments:
     results = cell(resultsize, 1);
     [results{:}] = feval(name, args{:});
-    if length(results) == 1
-        results = results{1};
+    % Checks if any output is an old-style class, if so wrap it a new
+    % style class so it doesn't get converted to Python dict on return.
+    for ir = 1:numel(results)
+        if isempty(metaclass(results{ir})) && ~isjava(results{ir})
+            results{ir} = thinwrapper(results{ir});
+        end
+    end
+    out = results{1};
+    if length(results) > 1
+        varargout = results(2:end);
     end
 else
     % try to get output from ans:
@@ -22,5 +30,6 @@ else
     catch err
         results = {[]};
     end
+    out = results{1};
 end
 end

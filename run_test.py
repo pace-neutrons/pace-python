@@ -21,12 +21,19 @@ from matlab import double as md
 import matlab
 
 m = horace.initialize()
+m.call('pyhorace_init', nargout=0)
+
+proj = m.call('projaxes', [md([-0.5, 1, 0]), md([0, 0, 1]), 'type', 'rrr'])
+w1 = m.call('cut_sqw', ['ei30_10K.sqw', proj, md([0.1, 0.02, 0.5]), md([1.5, 2.5]), md([0.4, 0.5]), md([3, 0.5, 20])])
+w2 = m.call2('cut_sqw', w1, [md([0.1, 0.5]), md([3, 0.5, 20])])
+hf = m.call2('plot', w1, [])
+m.call('pause', [10])
  
-proj = m.projaxes(md([-0.5, 1, 0]), md([0, 0, 1]), 'type', 'rrr', nargout=1)
-# The following fails in the compiled code with Matlab R2017b
-w1 = m.cut_sqw('/home/vqq25957/sqw_files/spinw/ei30_10K.sqw', proj, md([0.1, 0.02, 0.5]), md([1.5, 2.5]), md([0.4, 0.5]), md([3, 0.5, 20]), nargout=1) 
-# Will probably fail in all version (value classes are converted to python dict, lose class info).
-w2 = m.cut_sqw(w1, proj, md([0.1, 0.5]), md([3, 0.5, 20]), nargout=1)
+#proj = m.projaxes(md([-0.5, 1, 0]), md([0, 0, 1]), 'type', 'rrr', nargout=1)
+## The following fails in the compiled code with Matlab R2017b
+#w1 = m.cut_sqw('/home/vqq25957/sqw_files/spinw/ei30_10K.sqw', proj, md([0.1, 0.02, 0.5]), md([1.5, 2.5]), md([0.4, 0.5]), md([3, 0.5, 20]), nargout=1) 
+## Will probably fail in all version (value classes are converted to python dict, lose class info).
+#w2 = m.cut_sqw(w1, proj, md([0.1, 0.5]), md([3, 0.5, 20]), nargout=1)
 
 # import matlab.engine
 # from matlab import double as md
@@ -44,3 +51,7 @@ w2 = m.cut_sqw(w1, proj, md([0.1, 0.5]), md([3, 0.5, 20]), nargout=1)
 # #print(w1)
 # # The following fails in all versions
 # w2 = m.cut_sqw(w1, proj, md([0.1, 0.5]), md([3, 0.5, 20]), nargout=1)
+
+# Run python code within the Matlab engine inside Python (!!!)
+# pf = m.py.eval('lambda x: x[1]', m.py.dict())
+# print(m.feval(pf, md([1,2,3,4])))
