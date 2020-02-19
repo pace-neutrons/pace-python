@@ -2,26 +2,25 @@ horace MATLAB Python Package
 
 1. Prerequisites for Deployment 
 
-Verify that version 9.3 (R2017b) of the MATLAB Runtime is installed.   
-
-If the MATLAB Runtime is not installed, you can run the MATLAB Runtime installer.
+Verify that version 9.7 (R2019b) of the MATLAB Runtime is installed.   
+If not, you can run the MATLAB Runtime installer.
 To find its location, enter
   
     >>mcrinstaller
       
 at the MATLAB prompt.
+NOTE: You will need administrator rights to run the MATLAB Runtime installer. 
 
-Alternatively, download and install the Linux version of the MATLAB Runtime for R2017b 
+Alternatively, download and install the Windows version of the MATLAB Runtime for R2019b 
 from the following link on the MathWorks website:
 
-    http://www.mathworks.com/products/compiler/mcr/index.html
+    https://www.mathworks.com/products/compiler/mcr/index.html
    
 For more information about the MATLAB Runtime and the MATLAB Runtime installer, see 
-Package and Distribute in the MATLAB Compiler SDK documentation  
-in the MathWorks Documentation Center.    
+"Distribute Applications" in the MATLAB Compiler SDK documentation  
+in the MathWorks Documentation Center.
 
-
-Verify that a Linux version of Python 2.7, 3.4, 3.5, and/or 3.6 is installed.
+Verify that a Windows version of Python 2.7, 3.6, and/or 3.7 is installed.
 
 2. Installing the horace Package
 
@@ -40,22 +39,6 @@ the PYTHONPATH environment variable. For details, refer to:
 
     https://docs.python.org/2/install/index.html
 
-C. Set environment variables as follows:
-
-In the following directions, replace MR by the directory where MATLAB or the MATLAB Runtime is installed on the target machine.
-
-(1) Set the environment variable XAPPLRESDIR to this value:
-
-MR/v93/X11/app-defaults
-
-
-(2) If the environment variable LD_LIBRARY_PATH is undefined, set it to the following:
-
-MR/v93/runtime/glnxa64:MR/v93/bin/glnxa64:MR/v93/sys/os/glnxa64:MR/v93/sys/opengl/lib/glnxa64
-
-If it is defined, set it to the following:
-
-${LD_LIBRARY_PATH}:MR/v93/runtime/glnxa64:MR/v93/bin/glnxa64:MR/v93/sys/os/glnxa64:MR/v93/sys/opengl/lib/glnxa64
 
 3. Using the horace Package
 
