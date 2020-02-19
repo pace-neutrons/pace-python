@@ -1,69 +1,43 @@
-# pySpinW
+# Hugo
+
+<img src="hugo.png" width=150>
 
 ## WARNING - Work in progress.
 
 ### Summary
 
-**pySpinW** (*py-spin-double-u*) is a python implementation of the MATLAB library **SpinW**. It can optimize magnetic structures using mean field theory and calculate spin wave dispersion and spin-spin correlation function for complex crystal and magnetic structures. For details see http://www.spinw.org
+Horace is a suite of Matlab programs for the visualisation and analysis of large datasets from time-of-flight neutron inelastic scattering spectrometers.
 
-### Status
+The details on what Horace is and how to use it can be found on its wiki pages at http://horace.isis.rl.ac.uk/Main_Page
 
-This is currently under development and will progress in stages. 
-1) ~~Conversion to a compiled python library.~~ *Currently in testing*
-2) Conversion of graphics modules to native python using matplotlib/VTK.
-3) Migration of auxiliary code to pure python.
-4) Migration of main classes to pure python.
-5) Convert the core spinwave code to C++
+This a Python interface to Horace using a compiled Matlab library which does not require a Matlab license.
 
 ### Limitations
 
-- Currently graphics are not showing up in the Docker script.
-- The ipython interface is a bit clunky, until the ipython-magic is re-written
-- Maybe memory duplication, so not ideal for large datasets.
-
+- The interface is extremely clunky
+- Graphics don't work
+- Documenation is minimal
 
 ## Install
 
-There are 2 supported methods, Docker for a pre-built environment or a system install
+Clone this repository (including the `Horace` and `Herbert` submodules).
+Install the [Matlab Compiler Runtime](https://www.mathworks.com/products/compiler/matlab-runtime.html).
+Change to the `pyHorace` folder or add it to your `PYTHONPATH`.
+Run something like:
 
-### Using Docker
+```python
+import horace
+from matlab import double as md
 
-Use the Docker file and docker-compose as it creates a stable environment. 
+m = horace.initialize()
+m.call('pyhorace_init')
+
+proj = m.call('projaxes', [md([-0.5, 1, 0]), md([0, 0, 1]), 'type', 'rrr'])
+w1 = m.call('cut_sqw', ['/home/vqq25957/sqw_files/spinw/ei30_10K.sqw', proj, md([0.1, 0.02, 0.5]), md([1.5, 2.5]), md([0.4, 0.5]), md([3, 0.5, 20])])
+w2 = m.call2('cut_sqw', w1, [md([0.1, 0.5]), md([3, 0.5, 20])])
 
 ```
-docker-compose build
-```
 
-A jupyter notebook session is started with:
-```
-docker-compose up pySpinW
-```
-Where a session is accessible at http://127.0.0.1:8888 . At the moment `notebook.ipynb` is an example notebook.
-
-You can also try scripting with: 
-```
-docker-compose up testScript
-```
-It will execute `docker_script.py`
-
-#### Notes
-
-- On Windows/OSX Xming or a similar window manager should be installed. Currently graphics are not working, so this is not a requirement. 
-
-### Using system python3
-
-### Requirements 
-`numpy` and `jupyter` (if you want to run notebooks). 
-
-### Usage
-
-- Correct MATLAB library paths have to be set.
-- To start a session `mlPath` for your MATLAB or MATLAB Runtime (v96) installation has to be given.
-
-Then you can run `host_script.py` or make your own.
-
-#### Notes
-
-- Using a conda environment crashes the interface, so it's not recommended.
+If you have Matlab with a the `mcc` compiler toolbox installed, you can run the `compile_python.m` script to recompile the library.
 
 ## Pull requests are welcome!  
