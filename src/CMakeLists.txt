@@ -1,9 +1,9 @@
-matlab_add_mex(
-    NAME call_python
-    SRC call_python.cpp
-)
-target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(call_python ${PYTHON_LIBRARIES})
+#matlab_add_mex(
+#    NAME call_python
+#    SRC call_python.cpp
+#)
+#target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
+#target_link_libraries(call_python ${PYTHON_LIBRARIES})
 
 matlab_add_mex(
     NAME call_python_pointer
@@ -21,12 +21,12 @@ pybind11_add_module(call_matlab
                     call_matlab.cpp)
 target_include_directories(call_matlab PUBLIC ${Matlab_INCLUDE_DIRS})
 target_link_libraries(call_matlab PRIVATE ${Matlab_MEX_LIBRARY} ${Matlab_MX_LIBRARY})
-if(Matlab_HAS_CPP_API)
-    target_include_directories(call_matlab PUBLIC ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
-    target_link_libraries(call_matlab PRIVATE ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
-endif()
+#if(Matlab_HAS_CPP_API)
+#    target_include_directories(call_matlab PUBLIC ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
+#    target_link_libraries(call_matlab PRIVATE ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
+#endif()
 
-add_custom_target(compile_ctf ALL)
+add_custom_target(compile_ctf)
 if(WIN32)
     add_custom_command(
         TARGET compile_ctf PRE_BUILD
