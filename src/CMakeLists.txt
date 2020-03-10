@@ -5,6 +5,12 @@ matlab_add_mex(
 target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(call_python ${PYTHON_LIBRARIES})
 
+matlab_add_mex(
+    NAME call_python_pointer
+    SRC call_python_pointer.cpp
+)
+target_include_directories(call_python_pointer PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(call_python_pointer ${PYTHON_LIBRARIES})
 
 matlab_add_mex(
     NAME get_engine
