@@ -35,6 +35,7 @@ class Matlab(object):
         from .DataTypes import DataTypes
         self.pyMatlab = pyMatlab
         self.converter = DataTypes(self.interface, pyMatlab)
+        self.interface.call('pyhorace_init', [], nargout=0)
 
     def __getattr__(self, name):
         """

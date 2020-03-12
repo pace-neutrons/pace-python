@@ -1,6 +1,7 @@
 from io import StringIO
 
 from .MatlabFunction import MatlabFunction
+from .funcinspect import lhs_info
 import re
 
 
@@ -61,10 +62,11 @@ class MatlabProxyObject(object):
         if name in m.call('properties', [self.handle], nargout=1):
             return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
         # if it's a method, wrap it in a functor
-        if name in m.call('methods', [self.handle], nargout=1):
+        elif name in m.call('methods', [self.handle], nargout=1):
             class matlab_method:
                 def __call__(_self, *args, **kwargs):
-                    nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1
+                    nreturn = lhs_info(output_type='nreturns')
+                    nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
                     # serialize keyword arguments:
                     args += sum(kwargs.items(), ())
                     return getattr(m, name)(self, *args, nargout=nargout)
@@ -75,6 +77,15 @@ class MatlabProxyObject(object):
                     classname = getattr(m, 'class')(self)
                     return m.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
 
+            return matlab_method()
+        elif m.call('class', [self.handle], nargout=1) == 'thinwrapper':
+            class matlab_method:
+                def __call__(_self, *args, **kwargs):
+                    nreturn = lhs_info(output_type='nreturns')
+                    nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
+                    # serialize keyword arguments:
+                    args += sum(kwargs.items(), ())
+                    return self.converter.decode(m.call2(name, self.handle, self.converter.encode(args), nargout=nargout))
             return matlab_method()
 
     def __setattr__(self, name, value):

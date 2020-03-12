@@ -54,4 +54,10 @@ def as_matlab(arr):
     return cls(arr)
 
 def as_numpy(arr):
-    return np.ndarray(arr.size, dtype=arr._python_type, buffer=memoryview(arr._data), order='F')
+    if hasattr(arr, '_data'):
+        return np.ndarray(arr.size, dtype=arr._python_type, buffer=memoryview(arr._data), order='F')
+    else: # Probably complex matrix with real and imaginery parts in separate arrays
+        rp = np.ndarray(arr.size, dtype=arr._python_type, buffer=memoryview(arr._real), order='F')
+        ip = np.ndarray(arr.size, dtype=arr._python_type, buffer=memoryview(arr._imag), order='F')
+        return rp + 1j*ip   # This is an implicit memory copy
+        
