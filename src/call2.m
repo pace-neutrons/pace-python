@@ -1,6 +1,17 @@
-function results = call2(name ,obj, args)
+function [out, varargout] = call2(name ,obj, args)
 
 resultsize = nargout;
+try
+    maxresultsize = nargout(name);
+    if maxresultsize == -1
+        maxresultsize = resultsize;
+    end
+catch
+    maxresultsize = resultsize;
+end
+if resultsize > maxresultsize
+    resultsize = maxresultsize;
+end
 if nargin == 2
     args = {};
 end
@@ -36,8 +47,9 @@ if resultsize > 0
             results{ir} = thinwrapper(results{ir});
         end
     end
-    if length(results) == 1
-        results = results{1};
+    out = results{1};
+    if length(results) > 1
+        varargout = results(2:end);
     end
 else
     % try to get output from ans:
@@ -45,13 +57,24 @@ else
     if isempty(obj)
         feval(name, args{:})
     else
-        feval(name, obj, args{:})
+        if class(obj) == 'thinwrapper'
+            evalstr = sprintf('%s(%s', name, obj.ObjectString);
+            for iar = 1:numel(args)
+                assignin('base', sprintf('arg%d', iar), args{iar});
+                evalstr = sprintf('%s, arg%d', evalstr, iar);
+            end
+            evalstr = [evalstr ')'];
+            evalin('base', evalstr);
+        else
+            feval(name, obj, args{:});
+        end
     end
     try
         results = {ans};
     catch err
         results = {[]};
     end
+    out = results{1};
 end
 
 % Remove all non mapable reults

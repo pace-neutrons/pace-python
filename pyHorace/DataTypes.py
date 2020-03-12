@@ -1,6 +1,7 @@
 import numpy as np
 from .MatlabProxyObject import MatlabProxyObject
 from .MatlabFunction import MatlabFunction
+from .TypeWrappers import as_matlab, as_numpy
 
 class DataTypes:
 
@@ -22,16 +23,11 @@ class DataTypes:
         # 3) If it's a tuple, it's a cell, which we enumerate. BUT, then we convert it into a list.
         # 4) If it is a double it's a double, if a integer, we encode to a double as well. MATLAB is tricky :-/
 
-        if isinstance(data, (list, np.ndarray)):
+        if isinstance(data, list):
             # Case 1)
-            if isinstance(data, np.ndarray):
-                if np.iscomplexobj(data):
-                    data = self.interface.call('complex', (self.encode(data.real.tolist()), self.encode(data.imag.tolist())), nargout=1)
-                else:
-                    data = data.tolist()
-                    data = self.matlab.double(data)
-            else:
-                data = self.matlab.double(data)
+            data = self.matlab.double(data)
+        elif isinstance(data, np.ndarray):
+            data = as_matlab(data)
         elif isinstance(data, np.integer):
             # Case 4)
             data = float(data)
@@ -63,11 +59,10 @@ class DataTypes:
             for key, item in enumerate(data):
                 data[key] = self.decode(data[key])
             data = tuple(data)
+        elif isinstance(data, tuple):
+            return (self.decode(d) for d in data)
         elif isinstance(data, self.matlab.double):
-            if data._is_complex:
-                data = (np.array(data._real) + 1j*np.array(data._imag)).reshape(data._size)
-            else:
-                data = np.array(data).reshape(data.size)
+            data = as_numpy(data)
         elif isinstance(data, self.matlab.int8):
             # TODO for all available data types
             data = np.ndarray(data)
@@ -81,9 +76,9 @@ class DataTypes:
         elif isinstance(data, dict):
             for key, item in data.items():
                 data[key] = self.decode(item)
-        elif self.interface.feval('isobject', data):
+        elif self.interface.call('isobject', [data]):
             data = MatlabProxyObject(self.interface, data, self)
-        elif self.interface.feval('isa', data, 'function_handle'):
+        elif self.interface.call('isa', [data, 'function_handle']):
             data = MatlabFunction(self.interface, data, converter=self, parent=[])
 
         return data

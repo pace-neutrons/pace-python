@@ -1,6 +1,6 @@
 import os
 import platform
-from .DataTypes import DataTypes
+from .funcinspect import lhs_info
 
 class Matlab(object):
     def __init__(self, mlPath=None, knowBetter=False):
@@ -16,7 +16,7 @@ class Matlab(object):
 
         self.checkPath(mlPath, knowBetter)
         # We do the import here as we have to set the ENV before we can import
-        import pyHorace.horace as horace
+        from pyHorace import horace
         print('Interface opened')
         self.process = horace
         self.interface = None
@@ -32,6 +32,7 @@ class Matlab(object):
         """
         self.interface = self.process.initialize()
         import matlab as pyMatlab
+        from .DataTypes import DataTypes
         self.pyMatlab = pyMatlab
         self.converter = DataTypes(self.interface, pyMatlab)
 
@@ -46,11 +47,12 @@ class Matlab(object):
 
         def method(*args, **kwargs):
             nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
+            nreturn = lhs_info(output_type='nreturns')
             try:
                 if nargout is None:
-                    nargout = int(self.interface.getArgOut(name, nargout=1))
-                method = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
-                return self.converter.decode(method)
+                    nargout = max(min(int(self.interface.getArgOut(name, nargout=1)), nreturn), 1)
+                results = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
+                return self.converter.decode(results)
             except Exception as e:
                 print(e)
                 return []

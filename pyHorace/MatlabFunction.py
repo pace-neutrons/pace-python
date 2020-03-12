@@ -1,3 +1,5 @@
+from .funcinspect import lhs_info
+
 class MatlabFunction(object):
 
     def __init__(self, interface, fun, converter=None, parent=None, caller=None):
@@ -40,14 +42,15 @@ class MatlabFunction(object):
             will be translated to ``struct('foo', 'bar')``.
 
         """
-        nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1
+        nreturns = lhs_info(output_type='nreturns')
+        nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
         # serialize keyword arguments:
         args += sum(kwargs.items(), ())
         args = self.converter.encode(args)
 
         # Determination of the number of output arguments is a pain.
         if nargout is None:
-            nargout = int(self._interface.getArgOut(self._fun, nargout=1))
+            nargout = max(min(int(self.interface.getArgOut(name, nargout=1)), nreturn), 1)
 
         if not args:
             args = []

@@ -1,6 +1,17 @@
 function [out, varargout] = call(name, args)
 
 resultsize = nargout;
+try
+    maxresultsize = nargout(name);
+    if maxresultsize == -1
+        maxresultsize = resultsize;
+    end
+catch
+    maxresultsize = resultsize;
+end
+if resultsize > maxresultsize
+    resultsize = maxresultsize;
+end
 if nargin == 1
     args = {};
 end

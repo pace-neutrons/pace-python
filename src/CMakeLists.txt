@@ -26,7 +26,7 @@ target_link_libraries(call_matlab PRIVATE ${Matlab_MEX_LIBRARY} ${Matlab_MX_LIBR
 #    target_link_libraries(call_matlab PRIVATE ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
 #endif()
 
-add_custom_target(compile_ctf)
+add_custom_target(compile_ctf ALL)
 if(WIN32)
     add_custom_command(
         TARGET compile_ctf PRE_BUILD
@@ -54,9 +54,10 @@ add_custom_command(
         -a "${CMAKE_CURRENT_SOURCE_DIR}/call2.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
-        -a "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}" 
+        -a "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
+        -a "$<TARGET_FILE_DIR:call_python_pointer>/call_python_pointer.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
-add_dependencies(compile_ctf call_python)
+add_dependencies(compile_ctf call_python_pointer)
 
 

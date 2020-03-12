@@ -25,6 +25,7 @@ disp('!              of neutron spectroscopy data                        !')
 disp('!------------------------------------------------------------------!')
 
 % Set up graphical defaults for plotting
+genieplot_init;
 horace_plot.name_oned = 'Horace 1D plot';
 horace_plot.name_multiplot = 'Horace multiplot';
 horace_plot.name_stem = 'Horace stem plot';

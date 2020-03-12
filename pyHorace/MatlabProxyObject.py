@@ -38,14 +38,14 @@ class MatlabProxyObject(object):
         Gets attributes from a MATLAB object
         :return: list of attribute names
         """
-        return self.interface.fieldnames(self.interface.feval('handle', self.handle))
+        return self.interface.call('fieldnames', [self.interface.call('handle', [self.handle])])
 
     def _getMethodNames(self):
         """
         Gets methods from a MATLAB object
         :return: list of method names
         """
-        return self.interface.methods(self.interface.feval('handle', self.handle))
+        return self.interface.call('methods', [self.interface.call('handle', [self.handle])])
 
     def __getattr__(self, name):
         """Retrieve a value or function from the object.
@@ -58,10 +58,10 @@ class MatlabProxyObject(object):
         """
         m = self.interface
         # if it's a property, just retrieve it
-        if name in m.properties(self.handle, nargout=1):
-            return m.subsref(self.handle, m.substruct('.', name))
+        if name in m.call('properties', [self.handle], nargout=1):
+            return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
         # if it's a method, wrap it in a functor
-        if name in m.methods(self.handle, nargout=1):
+        if name in m.call('methods', [self.handle], nargout=1):
             class matlab_method:
                 def __call__(_self, *args, **kwargs):
                     nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1
@@ -73,29 +73,29 @@ class MatlabProxyObject(object):
                 @property
                 def __doc__(_self):
                     classname = getattr(m, 'class')(self)
-                    return m.help('{0}.{1}'.format(classname, name), nargout=1)
+                    return m.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
 
             return matlab_method()
 
     def __setattr__(self, name, value):
         self.__class__[name] = value
-        access = self.interface.substruct('.', name)
-        self.interface.subsasgn(self, access, value)
+        access = self.interface.call('substruct', ['.', name])
+        self.interface.call('subsasgn', [self, access, value])
 
     def __repr__(self):
         # getclass = self.interface.str2func('class')
-        return "<proxy for Matlab {} object>".format(self.interface.feval('class', self.handle))
+        return "<proxy for Matlab {} object>".format(self.interface.call('class', [self.handle]))
 
     def __str__(self):
         # remove pseudo-html tags from Matlab output
-        html_str = self.interface.eval("@(x) evalc('disp(x)')")
-        html_str = self.interface.feval(html_str, self.handle)
+        html_str = self.interface.call('eval', ["@(x) evalc('disp(x)')"])
+        html_str = self.interface.call(html_str, [self.handle])
         return re.sub('</?a[^>]*>', '', html_str)
 
     @property
     def __doc__(self):
         out = StringIO()
-        return self.interface.help(self.handle, nargout=1, stdout=out)
+        return self.interface.call('help', [self.handle], nargout=1, stdout=out)
 
     def updateProxy(self):
         """
