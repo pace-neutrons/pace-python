@@ -25,6 +25,9 @@ class MatlabProxyObject(object):
         self.__dict__['handle'] = handle
         self.__dict__['interface'] = interface
         self.__dict__['converter'] = converter
+        self.__dict__['_is_thinwrapper'] = self.interface.call('class', [self.handle], nargout=1) == 'thinwrapper'
+        if self._is_thinwrapper:
+            self.__dict__['_objstr'] = self.interface.call('subsref', [self.handle, self.interface.call('substruct', ['.', 'ObjectString'])])
 
         for attribute in self._getAttributeNames():
             self.__dict__[attribute] = self.__getattr__(attribute)
@@ -39,14 +42,22 @@ class MatlabProxyObject(object):
         Gets attributes from a MATLAB object
         :return: list of attribute names
         """
-        return self.interface.call('fieldnames', [self.interface.call('handle', [self.handle])])
+        if self._is_thinwrapper:
+            self.__dict__['_attributes'] = self.interface.call('evalin', ['base', 'fieldnames({})'.format(self._objstr)])
+            return self._attributes
+        else:
+            return self.interface.call('fieldnames', [self.interface.call('handle', [self.handle])])
 
     def _getMethodNames(self):
         """
         Gets methods from a MATLAB object
         :return: list of method names
         """
-        return self.interface.call('methods', [self.interface.call('handle', [self.handle])])
+        if self._is_thinwrapper:
+            self.__dict__['_methods'] = self.interface.call('evalin', ['base', 'methods({})'.format(self._objstr)])
+            return self._methods
+        else:
+            return self.interface.call('methods', [self.interface.call('handle', [self.handle])])
 
     def __getattr__(self, name):
         """Retrieve a value or function from the object.
@@ -59,7 +70,18 @@ class MatlabProxyObject(object):
         """
         m = self.interface
         # if it's a property, just retrieve it
-        if name in m.call('properties', [self.handle], nargout=1):
+        if self._is_thinwrapper:
+            if name in self._attributes:
+                return self.converter.decode(m.call('evalin', ['base', '{}.{}'.format(self._objstr, name)]))
+            class matlab_method:
+                def __call__(_self, *args, **kwargs):
+                    nreturn = lhs_info(output_type='nreturns')
+                    nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
+                    # serialize keyword arguments:
+                    args += sum(kwargs.items(), ())
+                    return self.converter.decode(m.call2(name, self.handle, self.converter.encode(args), nargout=nargout))
+            return matlab_method()
+        elif name in m.call('properties', [self.handle], nargout=1):
             return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
         # if it's a method, wrap it in a functor
         elif name in m.call('methods', [self.handle], nargout=1):
@@ -77,15 +99,6 @@ class MatlabProxyObject(object):
                     classname = getattr(m, 'class')(self)
                     return m.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
 
-            return matlab_method()
-        elif m.call('class', [self.handle], nargout=1) == 'thinwrapper':
-            class matlab_method:
-                def __call__(_self, *args, **kwargs):
-                    nreturn = lhs_info(output_type='nreturns')
-                    nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
-                    # serialize keyword arguments:
-                    args += sum(kwargs.items(), ())
-                    return self.converter.decode(m.call2(name, self.handle, self.converter.encode(args), nargout=nargout))
             return matlab_method()
 
     def __setattr__(self, name, value):

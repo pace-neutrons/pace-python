@@ -50,7 +50,8 @@ class MatlabFunction(object):
 
         # Determination of the number of output arguments is a pain.
         if nargout is None:
-            nargout = max(min(int(self.interface.getArgOut(name, nargout=1)), nreturn), 1)
+            mnargout = self._interface.getArgOut(self._fun, nargout=1)
+            nargout = max(min(int(mnargout), nreturns), 1)
 
         if not args:
             args = []
