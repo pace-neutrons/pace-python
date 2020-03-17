@@ -20,6 +20,14 @@ if resultsize > 0
     % call the function with the given number of
     % output arguments:
     results = cell(resultsize, 1);
+    if isempty(obj) && (numel(args) > 0 && strcmp(class(args{1}), 'thinwrapper'))
+        obj = args{1};
+        if numel(args) == 1
+            args = {}; 
+        else 
+            args = args(2:end);
+        end
+    end
     if isempty(obj)
         [results{:}] = feval(name, args{:});
     else
@@ -28,7 +36,7 @@ if resultsize > 0
         % and to export only the variable name (as a string) to Python.
         % So we have to push all input variables into the global namespace
         % and evaluate the function there rather than in this local namespace.
-        if class(obj) == 'thinwrapper'
+        if strcmp(class(obj), 'thinwrapper')
             evalstr = sprintf('%s(%s', name, obj.ObjectString);
             for iar = 1:numel(args)
                 assignin('base', sprintf('arg%d', iar), args{iar});
@@ -57,7 +65,7 @@ else
     if isempty(obj)
         feval(name, args{:})
     else
-        if class(obj) == 'thinwrapper'
+        if strcmp(class(obj), 'thinwrapper')
             evalstr = sprintf('%s(%s', name, obj.ObjectString);
             for iar = 1:numel(args)
                 assignin('base', sprintf('arg%d', iar), args{iar});

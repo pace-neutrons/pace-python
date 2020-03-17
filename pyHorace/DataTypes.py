@@ -1,7 +1,9 @@
 import numpy as np
+from numbers import Number
 from .MatlabProxyObject import MatlabProxyObject
 from .MatlabFunction import MatlabFunction
 from .TypeWrappers import as_matlab, as_numpy
+from .FunctionWrapper import pymatpy
 
 class DataTypes:
 
@@ -23,12 +25,14 @@ class DataTypes:
         # 3) If it's a tuple, it's a cell, which we enumerate. BUT, then we convert it into a list.
         # 4) If it is a double it's a double, if a integer, we encode to a double as well. MATLAB is tricky :-/
 
-        if isinstance(data, list):
+        if isinstance(data, list) or isinstance(data, range):
             # Case 1)
-            data = self.matlab.double(data)
+            if all([isinstance(d, Number) for d in data]):
+                data = self.matlab.double(data)
+            # If the list is not one of numbers leave it for Matlab to convert to a cell array
         elif isinstance(data, np.ndarray):
             data = as_matlab(data)
-        elif isinstance(data, np.integer):
+        elif isinstance(data, Number):
             # Case 4)
             data = float(data)
         elif isinstance(data, MatlabFunction):
