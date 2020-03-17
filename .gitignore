@@ -6,3 +6,9 @@ pyHorace/\.DS_Store
 *.pyc
 __pycache__
 pyHorace/mccExcludedFiles.log
+
+*~
+*swp
+*swo
+*-v[0-9]*
+*-v[0-9].*

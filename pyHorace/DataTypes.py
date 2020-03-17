@@ -39,6 +39,9 @@ class DataTypes:
             data = data._fun
         elif isinstance(data, MatlabProxyObject):
             data = data.handle
+        elif hasattr(data, '__call__'):
+            # A python callable - wrap it so that a Matlab mex using the C API can call it
+            data = pymatpy(data)
         else:
             # Case 2, 3
             if isinstance(data, dict):
