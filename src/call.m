@@ -16,6 +16,12 @@ if nargin == 1
     args = {};
 end
 
+for ir = 1:numel(args) 
+    if strcmp(class(args{ir}), 'pythonFunctionWrapper')
+        args{ir} = @(varargin) call_python_m(args{ir}.func_uuid, varargin{:})
+    end
+end
+
 if resultsize > 0
     % call the function with the given number of
     % output arguments:
