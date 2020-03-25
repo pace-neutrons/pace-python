@@ -79,7 +79,7 @@ class MatlabProxyObject(object):
                     nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
                     # serialize keyword arguments:
                     args += sum(kwargs.items(), ())
-                    return self.converter.decode(m.call2(name, self.handle, self.converter.encode(args), nargout=nargout))
+                    return self.converter.decode(m.call_method(name, self.handle, self.converter.encode(args), nargout=nargout))
             return matlab_method()
         elif name in m.call('properties', [self.handle], nargout=1):
             return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])

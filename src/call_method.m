@@ -1,4 +1,4 @@
-function [out, varargout] = call2(name ,obj, args)
+function [out, varargout] = call_method(name ,obj, args)
 
 resultsize = nargout;
 try

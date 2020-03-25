@@ -52,7 +52,7 @@ class Matlab(object):
             try:
                 if nargout is None:
                     nargout = max(min(int(self.interface.getArgOut(name, nargout=1)), nreturn), 1)
-                results = self.interface.call2(name, [], self.converter.encode(args), nargout=nargout)
+                results = self.interface.call_method(name, [], self.converter.encode(args), nargout=nargout)
                 return self.converter.decode(results)
             except Exception as e:
                 print(e)

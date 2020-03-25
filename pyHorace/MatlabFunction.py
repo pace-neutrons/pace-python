@@ -56,9 +56,9 @@ class MatlabFunction(object):
         if not args:
             args = []
         if nargout > 0:
-            d = self._interface.call2(self._fun, self._parent, args, nargout=nargout)
+            d = self._interface.call_method(self._fun, self._parent, args, nargout=nargout)
         else:
-            self._interface.call2(self._fun, self._parent, args, nargout=nargout)
+            self._interface.call_method(self._fun, self._parent, args, nargout=nargout)
             if self._caller is not None:
                 self._caller.updateProxy()
             return

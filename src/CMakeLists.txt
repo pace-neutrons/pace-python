@@ -51,7 +51,7 @@ add_custom_command(
     COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v 
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/call2.m"
+        -a "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
