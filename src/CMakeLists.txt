@@ -1,20 +1,22 @@
-#matlab_add_mex(
-#    NAME call_python
-#    SRC call_python.cpp
-#)
-#target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
-#target_link_libraries(call_python ${PYTHON_LIBRARIES})
-
 matlab_add_mex(
-    NAME call_python_pointer
-    SRC call_python_pointer.cpp
+    NAME call_python
+    SRC call_python.cpp
 )
-target_include_directories(call_python_pointer PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(call_python_pointer ${PYTHON_LIBRARIES})
+target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(call_python PUBLIC "${PyBind11_DIR}/include")
+target_link_libraries(call_python ${PYTHON_LIBRARIES})
 
 matlab_add_mex(
-    NAME get_engine
-    SRC get_engine.cpp
+    NAME pythonRemoveFuncKey
+    SRC pythonRemoveFuncKey.cpp
+)
+target_include_directories(pythonRemoveFuncKey PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(pythonRemoveFuncKey PUBLIC "${PyBind11_DIR}/include")
+target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
+
+matlab_add_mex(
+    NAME get_address
+    SRC get_address.cpp
 )
 
 pybind11_add_module(call_matlab 
@@ -43,9 +45,10 @@ else()
     )
     add_custom_command(
         TARGET compile_ctf PRE_BUILD
-        COMMAND ${BASH_COMMAND} mkdir -f "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
+        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
     )
 endif()
+
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
     COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v 
@@ -55,9 +58,11 @@ add_custom_command(
         -a "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
-        -a "$<TARGET_FILE_DIR:call_python_pointer>/call_python_pointer.${Matlab_MEX_EXTENSION}"
+        -a "${CMAKE_CURRENT_SOURCE_DIR}/pythonFunctionWrapper.m"
+        -a "${CMAKE_CURRENT_SOURCE_DIR}/call_python_m.m"
+        -a "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
+        -a "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
+        -a "$<TARGET_FILE_DIR:get_address>/get_address.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
-add_dependencies(compile_ctf call_python_pointer)
-
-
+add_dependencies(compile_ctf call_python pythonRemoveFuncKey get_address)

@@ -12,3 +12,5 @@ pyHorace/mccExcludedFiles.log
 *swo
 *-v[0-9]*
 *-v[0-9].*
+
+*.mex*
