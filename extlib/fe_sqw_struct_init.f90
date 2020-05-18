@@ -3,24 +3,52 @@ module fe_sqw
     implicit none
     type my_struct
         real(8) background
-        type(c_ptr) :: strdata
+        character(:), allocatable :: strdata
         integer intdata
     end type my_struct
 
     contains
         ! https://stackoverflow.com/questions/20365293/
-        function c2fstr(c_str)
-            interface
-                pure function strlen(s) bind(C, name="strlen")
-                    use, intrinsic :: iso_c_binding
-                    type(c_ptr), intent(in) :: s
-                    integer(c_size_t) strlen
-                end function strlen
-            end interface
-            type(c_ptr) c_str
-            character(kind=c_char, len=strlen(c_str)), pointer :: c2fstr
-            call c_f_pointer(c_str, c2fstr)
-        end function c2fstr
+        function c_to_f_string(s) result(str)
+            use, intrinsic :: iso_c_binding
+            character(kind=C_CHAR, len=1), intent(IN) :: s(*)
+            character(:), allocatable  :: str
+            integer i, nchars
+            i = 1
+            do
+            if (s(i) == c_null_char) exit
+               i = i + 1
+            end do
+            nchars = i - 1  ! Exclude null character from Fortran string
+            allocate(character(len=nchars) :: str)
+            str = transfer(s(1:nchars), str)
+        end function c_to_f_string
+
+        function user_model_init(background, strdat, intdat) bind(C) result(c_str)
+            real(8), intent(in) :: background
+            !type(c_ptr), intent(in), value :: strdat
+            character(kind=C_CHAR, len=1), intent(IN) :: strdat(*)
+            integer, intent(in) :: intdat
+            integer slen, i
+            character(kind=c_char, len=1), pointer :: fstr(:)
+            ! We're passing this back to C so cannot use allocatable for my_data
+            type(my_struct), pointer :: my_data
+            type(c_ptr) :: c_str
+            allocate(my_data)
+            my_data%background = background
+            my_data%strdata = c_to_f_string(strdat)
+            my_data%intdata = intdat
+            c_str = c_loc(my_data)
+        end function user_model_init
+
+        subroutine user_model_destroy(c_struct) bind(C)
+            type(c_ptr), intent(in), value :: c_struct
+            type(my_struct), pointer :: my_data
+            character(kind=c_char), pointer :: fstring(:)
+            call c_f_pointer(c_struct, my_data)
+            deallocate(my_data%strdata)
+            deallocate(my_data)
+        end subroutine user_model_destroy
 
         subroutine user_model_sqw(qh, qk, ql, en, parameters, results, n_elem, c_struct) bind(C)
             real(8), parameter :: PI = 3.1415926535897932385
@@ -40,7 +68,7 @@ module fe_sqw
         
             call c_f_pointer(c_struct, my_data)
             bkg = my_data%background
-            print *, c2fstr(my_data%strdata)
+            print *, my_data%strdata
         
             js = parameters(1) * 8
             d = parameters(2)

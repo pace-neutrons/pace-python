@@ -1,6 +1,25 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "extlib_struct.h"
+
+void *user_model_init(double *background, char *strdata, int *intdata)
+{
+    struct my_data *the_data = (struct my_data *)malloc(sizeof(struct my_data));
+    the_data->background = *background;
+    the_data->intdata = *intdata;
+    the_data->strdata = (char *)malloc(strlen(strdata) * sizeof(char));
+    strcpy(the_data->strdata, strdata);
+    return (void *)the_data;
+}
+
+void user_model_destroy(void *model_data)
+{
+    free(((struct my_data *)model_data)->strdata);
+    free(model_data);
+    model_data = NULL;
+}
 
 void user_model_sqw(const double *qh, const double *qk, const double *ql, const double *en, const double *parameters, double *result, int *n_elem, void *owndata)
 {
@@ -15,7 +34,7 @@ void user_model_sqw(const double *qh, const double *qk, const double *ql, const 
 
     const double bkg = ((struct my_data*)owndata)->background;
     const char* strdat = ((struct my_data*)owndata)->strdata;
-    /* printf("%s\n", strdat); */
+    printf("%s\n", strdat);
 
     double om, q2, ff, e2om2, game;
     for (int i=0; i<*n_elem; i++) {

@@ -1,3 +1,7 @@
+if ~exist('cut_sqw') 
+    addpath('/home/mdl27/work/isis/Herbert/trunk'); herbert_init; addpath('/home/mdl27/work/isis/Horace/trunk'); horace_init
+end
+
 % Fitting data to a SpinW model using Horace example 
 %
 % This tutorial will demonstrate how to fit a single crystal inelastic
@@ -61,14 +65,52 @@ end
 ws_calc_f = sqw_eval(my_cuts(1), @c_fe_sqw, {[J D gam temp amp] 'fe_sqw_f'});
 
 
+% Evaluate a C user function with a structure using loadlibrary
+if ~libisloaded('fe_sqw_struct_c')
+    loadlibrary('fe_sqw_struct_c', 'extlib_struct.h');
+end
+cstrt.background = 0.3; cstrt.strdata = libpointer('cstring', 'aabbcc'); cstrt.intdata = int32(1); cstrm = libstruct('my_data', cstrt);
+ws_calc_cs = sqw_eval(my_cuts(1), @c_fe_sqw, {[J D gam temp amp] 'fe_sqw_struct_c' cstrm});
+
+% Evaluate a Fortran user function with a structure using loadlibrary
+if ~libisloaded('fe_sqw_struct_f')
+    loadlibrary('fe_sqw_struct_f', 'extlib_struct.h');
+end
+cstrt.background = 0.3; cstrt.strdata = libpointer('cstring', 'ddeeff'); cstrt.intdata = int32(1); cstrm = libstruct('my_data', cstrt);
+ws_calc_fs = sqw_eval(my_cuts(1), @c_fe_sqw, {[J D gam temp amp] 'fe_sqw_struct_f' cstrm});
+disp('')
+
+
+% Evaluate a C/Fortran user function with a structure using loadlibrary with user initialisation / destruction
+
+% this signature doesn't work - it seems Matlab doesn't like it when a library routine overwrites a pointer.
+%mystr_ptr = libpointer;  % creates a null void pointer
+%calllib('fe_sqw_struct_c', 'user_model_init', mystr_ptr, 0.3, libpointer('cstring', 'aabbcc'), int32(1));
+
+mystr_ptr = calllib('fe_sqw_struct_c', 'user_model_init', 0.3, libpointer('cstring', 'ccbbaa'), int32(1));
+ws_calc_cs2 = sqw_eval(my_cuts(1), @c_fe_sqw, {[J D gam temp amp] 'fe_sqw_struct_c' mystr_ptr});
+calllib('fe_sqw_struct_c', 'user_model_destroy', mystr_ptr);
+
+if ~libisloaded('fe_sqw_struct_f_init')
+    loadlibrary('fe_sqw_struct_f_init', 'extlib_struct.h');
+end
+mystr_ptr = calllib('fe_sqw_struct_f_init', 'user_model_init', 0.3, libpointer('cstring', 'eeffgg'), int32(1));
+ws_calc_fs2 = sqw_eval(my_cuts(1), @c_fe_sqw, {[J D gam temp amp] 'fe_sqw_struct_f_init' mystr_ptr});
+calllib('fe_sqw_struct_f_init', 'user_model_destroy', mystr_ptr);
+
+
 %% -----------------------------------------------------------------------------
 
-function out = c_fe_sqw(h,k,l,en,p,libname)
+function out = c_fe_sqw(h,k,l,en,p,libname,mystruct)
     if nargin < 6
         libname = 'fe_sqw_c';
     end
     res = libpointer('doublePtr', h);
-    calllib(libname, 'user_model_sqw', h, k, l, en, p, res, numel(h), 0);
+    if nargin < 7
+        calllib(libname, 'user_model_sqw', h, k, l, en, p, res, numel(h));
+    else
+        calllib(libname, 'user_model_sqw', h, k, l, en, p, res, numel(h), mystruct);
+    end
     out = res.value;
 end
 
