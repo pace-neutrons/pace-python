@@ -14,3 +14,6 @@ pyHorace/mccExcludedFiles.log
 *-v[0-9].*
 
 *.mex*
+
+*.so
+*.mod
