@@ -1,6 +1,6 @@
 #include <math.h>
 
-void user_model_sqw(const double *qh, const double *qk, const double *ql, const double *en, const double *parameters, double *result, int *n_elem, int *own_memory)
+void user_model_sqw(const double *qh, const double *qk, const double *ql, const double *en, const double *parameters, double *result, int *n_elem)
 {
 /*
 def py_fe_sqw(h, k, l, e, p):

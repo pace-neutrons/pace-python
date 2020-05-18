@@ -1,11 +1,11 @@
-subroutine user_model_sqw(qh, qk, ql, en, parameters, results, n_elem, own_memory) bind(C)
+subroutine user_model_sqw(qh, qk, ql, en, parameters, results, n_elem) bind(C)
     implicit none
     real(8), parameter :: PI = 3.1415926535897932385
 
     real(8), dimension(n_elem), intent(in) :: qh, qk, ql, en
     real(8), dimension(5), intent(in) :: parameters
     real(8), dimension(n_elem), intent(out) :: results
-    integer, intent(in) :: n_elem, own_memory
+    integer, intent(in) :: n_elem
     real(8) js, d, gam, tt, amp, qscal
     real(8) om, q2, ff, e2om2, game
     real(8), parameter :: A = 0.0706, aa=35.008, B=0.3589, bb=15.358, C=0.5819, cc=5.561, DD=-0.0114
