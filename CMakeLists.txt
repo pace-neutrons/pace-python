@@ -18,6 +18,7 @@ else()
     find_package(BASH REQUIRED)
 endif()
 
+#set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2019b")
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
 get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)
 get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
@@ -42,3 +43,4 @@ include(PyBind11)
 add_subdirectory(${PyBind11_DIR} ${PyBind11_DIR})
 
 add_subdirectory(src)
+add_subdirectory(pyHorace)

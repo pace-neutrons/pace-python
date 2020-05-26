@@ -51,7 +51,7 @@ endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
-    COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v 
+    COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v -N
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
