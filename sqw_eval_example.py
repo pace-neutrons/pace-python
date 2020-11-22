@@ -6,11 +6,12 @@ classes does not nest (and the multifit object has a nested sqw object inside
 it). So it is changed to just use sqw_eval() instead.
 """
 
-import numpy as np
-
+# Have to import Matlab first before any CPython modules or will give ABI errors
 from pyHorace import Matlab
 m = Matlab()
 data_path = '/path/to/sqw/'
+
+import numpy as np
 
 sqw_file = '{}/iron.sqw'.format(data_path)
 

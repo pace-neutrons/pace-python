@@ -82,7 +82,10 @@ class MatlabProxyObject(object):
                     return self.converter.decode(m.call_method(name, self.handle, self.converter.encode(args), nargout=nargout))
             return matlab_method()
         elif name in m.call('properties', [self.handle], nargout=1):
-            return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
+            try:
+                return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
+            except TypeError:
+                return None
         # if it's a method, wrap it in a functor
         elif name in m.call('methods', [self.handle], nargout=1):
             class matlab_method:

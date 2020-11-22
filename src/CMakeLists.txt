@@ -53,16 +53,18 @@ add_custom_command(
     TARGET compile_ctf PRE_BUILD
     COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v -N
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/pythonFunctionWrapper.m"
-        -a "${CMAKE_CURRENT_SOURCE_DIR}/call_python_m.m"
-        -a "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
-        -a "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
-        -a "$<TARGET_FILE_DIR:get_address>/get_address.${Matlab_MEX_EXTENSION}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/set_global.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/waitforgui.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/pythonFunctionWrapper.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/call_python_m.m"
+        "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
+        "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
+        "$<TARGET_FILE_DIR:get_address>/get_address.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
 add_dependencies(compile_ctf call_python pythonRemoveFuncKey get_address)

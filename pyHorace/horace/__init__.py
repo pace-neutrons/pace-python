@@ -1,4 +1,4 @@
-#Copyright 2015-2018 MathWorks, Inc.
+# Copyright 2015-2019 MathWorks, Inc.
 
 # This template is used to generate an __init__.py file for a particular deployable package.
 
@@ -19,8 +19,8 @@ import weakref
 class _PathInitializer(object):
     PLATFORM_DICT = {'Windows': ['PATH','dll',''], 'Linux': ['LD_LIBRARY_PATH','so','libmw'], 'Darwin': ['DYLD_LIBRARY_PATH','dylib','libmw']}
     SUPPORTED_PYTHON_VERSIONS = ['2_7', '3_6', '3_7']
-    RUNTIME_VERSION_W_DOTS = '9.7'
-    RUNTIME_VERSION_W_UNDERSCORES = '9_7'
+    RUNTIME_VERSION_W_DOTS = '9.8'
+    RUNTIME_VERSION_W_UNDERSCORES = '9_8'
     PACKAGE_NAME = 'horace'
     
     def set_interpreter_version(self):    
@@ -327,9 +327,13 @@ def initialize_runtime(option_list):
             raise SyntaxError('initialize_runtime takes a list or tuple of strings.')
     _pir.initialize_runtime(option_list)
 
-# terminate_runtime() is intentionally omitted. Instead, when running interactively, 
-# the user should call exit(). When running a script, the runtime will automatically be
-# terminated when the script ends.
+# Before terminating the process, call terminate_runtime() once on any package. This will 
+# ensure graceful MATLAB runtime shutdown. After this call, the user should not use 
+# any MATLAB-related function.
+# When running interactively, the user should call exit() after done using the package. 
+# When running a script, the runtime will automatically be terminated when the script ends.
+def terminate_runtime():
+    _pir.terminate_runtime();
 
 @atexit.register
 def __exit_packages():

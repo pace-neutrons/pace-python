@@ -24,7 +24,7 @@ class MexFunction : public matlab::mex::Function {
             }
             matlab::data::CharArray key = inputs[0];
 
-            py::gil_scoped_acquire acquire;  // GIL{
+            PyGILState_STATE gstate = PyGILState_Ensure(); // GIL{
 
             if (!Py_IsInitialized())
                 throw std::runtime_error("Python not initialized.");
@@ -35,7 +35,7 @@ class MexFunction : public matlab::mex::Function {
                 pyHoraceFn = py::module::import("pyHorace.FunctionWrapper");
             } 
             catch (...) {
-                py::gil_scoped_release release;
+                PyGILState_Release(gstate);
                 matlabPtr->feval(u"error", 0,
                     std::vector<matlab::data::Array>({ factory.createScalar("Cannot import Python pyHorace module.") }));
             }
@@ -46,12 +46,12 @@ class MexFunction : public matlab::mex::Function {
                     throw std::runtime_error("Cannot delete key from functions dict.");
             }
             catch (...) {
-                py::gil_scoped_release release;
+                PyGILState_Release(gstate);
                 matlabPtr->feval(u"error", 0,
                     std::vector<matlab::data::Array>({ factory.createScalar("Cannot delete key from functions dict.") }));
             }
 
-            py::gil_scoped_release release;  // GIL}
+            PyGILState_Release(gstate);  // GIL}
 
         }
 
