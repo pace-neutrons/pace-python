@@ -51,7 +51,11 @@ class Matlab(object):
             nreturn = lhs_info(output_type='nreturns')
             try:
                 if nargout is None:
-                    nargout = max(min(int(self.interface.getArgOut(name, nargout=1)), nreturn), 1)
+                    mnargout, undetermined = self.interface.getArgOut(name, nargout=2)
+                    if not undetermined:
+                        nargout = max(min(int(mnargout), nreturn), 1)
+                    else:
+                        nargout = max(nreturn, 1)
                 results = self.interface.call_method(name, [], self.converter.encode(args), nargout=nargout)
                 return self.converter.decode(results)
             except Exception as e:

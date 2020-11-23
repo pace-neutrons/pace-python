@@ -73,22 +73,17 @@ w_sum_py = m.cut(w_cal_m, [-999., 999.])
 print("Summed counts in Python calculated cuts = {}".format(w_sum_py.data.s))
 
 hf1 = m.plot(w_cal_m)
+m.pl(w_cal_py)
 m.uiwait(hf1)
-hf2 = m.plot(w_cal_py)
-m.uiwait(hf2)
 
-### broken because old style class
-# # kk = m.evalin('base', 'class(multifit_sqw([{}]))'.format(' '.join(['{}'.format(s._objstr) for s in my_cuts])))
-# # gives: only a scalar struct can be returned from MATLAB
-# kk = m.evalin('base', 'multifit_sqw({})'.format(my_cuts[0]._objstr))
-# #kk = m.multifit_sqw (my_cuts);
-# kk = kk.set_fun (fe_sqw, [J, D, gam, temp, amp]);
-# kk = kk.set_free ([1, 0, 1, 0, 1]);
-# kk = kk.set_bfun (linear_bg, [0.1,0]);
-# kk = kk.set_bfree ([1,0]);
-# kk = kk.set_options ('list',2);
-# 
-# # Time it to see how long it takes to do the fit
-# m.tic()
-# wfit, fitdata = kk.fit('comp');
-# t_ana = m.toc();
+kk = m.multifit_sqw(my_cuts[0])
+kk = kk.set_fun (fe_sqw, [J, D, gam, temp, amp])
+kk = kk.set_free ([1, 0, 1, 0, 1])
+kk = kk.set_bfun (linear_bg, [0.1,0])
+kk = kk.set_bfree ([1,0])
+kk = kk.set_options ('list',2)
+
+# Time it to see how long it takes to do the fit
+m.tic()
+wfit, fitdata = kk.fit('comp')
+t_ana = m.toc();

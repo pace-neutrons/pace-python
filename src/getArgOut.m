@@ -1,5 +1,6 @@
-function n = getArgOut(name, parent)
+function [n, undetermined] = getArgOut(name, parent)
 
+undertermined = false;
 if isstring(name)
     fun = str2func(name);
     try
@@ -9,10 +10,12 @@ if isstring(name)
             n = nargout(name);
         catch
             n = 1;
+            undetermined = true;
         end
     end
 else
     n = 1;
+    undetermined = true;
 end
 
 end

@@ -32,7 +32,7 @@ for i = 1:numel(in)
             f = fieldnames(in{i});
             for k = 1:numel(f)
                 if isobject(in{i}.(f{k}))
-                    UUID = char(randsample([65:74 97:106], 32, true));
+                    UUID = char(randsamp([65:74 97:106], 32, true));
                     set_global(UUID, in{i}.(f{k}))
                     in{i}.(f{k}) = sprintf('!$%s',UUID);
                 elseif isstruct(in{i}.(f{k}))
@@ -54,4 +54,12 @@ end
 
 if uncell
     in = in{1};
+end
+
+end
+
+function out = randsamp(n, k, bv)
+% Replacement for randsample from stats toolbox
+    v = ceil(rand(1, k) * numel(n)); 
+    out = n(v);
 end

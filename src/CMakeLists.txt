@@ -56,6 +56,7 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/has_thin_members.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/set_global.m"
