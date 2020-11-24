@@ -45,6 +45,10 @@ _define_wrapper(matlab.int32, np.int32)
 _define_wrapper(matlab.uint64, np.uint64)
 _define_wrapper(matlab.int64, np.int64)
 _define_wrapper(matlab.logical, np.bool_)
+_define_wrapper(matlab.double, np.float64)
+_define_wrapper(matlab.double, np.complex128)
+_define_wrapper(matlab.single, np.float32)
+_define_wrapper(matlab.single, np.complex64)
 
 def as_matlab(arr):
     try:

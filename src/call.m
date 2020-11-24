@@ -21,26 +21,29 @@ end
 % there rather than in this local namespace, because the real object behind the
 % thinwrapper is only in the global namespace.
 is_thin = false;
-evalstr = sprintf('%s(', name);
-assargs = {};
-for ir = 1:numel(args) 
-    if ir > 1; comma = ','; else comma = ''; end;
-    if strcmp(class(args{ir}), 'thinwrapper')
-        evalstr = sprintf('%s%s %s', evalstr, comma, args{ir}.ObjectString);
-        assargs{ir} = [];
-        is_thin = true;
-    else
-        if strcmp(class(args{ir}), 'pythonFunctionWrapper')
-            args{ir} = @(varargin) call_python_m(args{ir}.func_uuid, varargin{:});
+try
+    evalstr = sprintf('%s(', name);
+catch
+    evalstr = [];
+end
+if numel(evalstr) > 0
+    assargs = {};
+    for ir = 1:numel(args) 
+        if ir > 1; comma = ','; else comma = ''; end;
+        if strcmp(class(args{ir}), 'thinwrapper')
+            evalstr = sprintf('%s%s %s', evalstr, comma, args{ir}.ObjectString);
+            assargs{ir} = [];
+            is_thin = true;
+        else
+            if strcmp(class(args{ir}), 'pythonFunctionWrapper')
+                args{ir} = @(varargin) call_python_m(args{ir}.func_uuid, varargin{:});
+            end
+            evalstr = sprintf('%s%s arg%d', evalstr, comma, ir);
+            assargs{ir} = sprintf('arg%d', ir);
         end
-        evalstr = sprintf('%s%s arg%d', evalstr, comma, ir);
-        assargs{ir} = sprintf('arg%d', ir);
     end
 end
-if is_thin && (strcmp(name, 'fieldnames') || strcmp(name, 'properties') || ...
-               strcmp(name, 'methods') || strcmp(name, 'handle') || ...
-               strcmp(name, 'subsref') || strcmp(name, 'isobject') || ...
-               strcmp(name, 'class'))
+if is_thin && (strcmp(name, 'class'))
     is_thin = false;
 end
 if is_thin
@@ -56,21 +59,29 @@ if resultsize > 0
     % call the function with the given number of
     % output arguments:
     results = cell(resultsize, 1);
-    if is_thin
-        try
-            [results{:}] = evalin('base', evalstr);
-        catch err
-            %disp(err);
+    try
+        if is_thin
+            try
+                [results{:}] = evalin('base', evalstr);
+            catch err
+                %disp(err);
+                [results{:}] = feval(name,  args{:});
+            end
+        else
             [results{:}] = feval(name,  args{:});
         end
-    else
-        [results{:}] = feval(name,  args{:});
+    catch err
+        if (strcmp(err.identifier,'MATLAB:unassignedOutputs'))
+            results = {[]};
+        else
+            rethrow(err);
+        end
     end
     % Checks if any output is an old-style class, if so wrap it a new
     % style class so it doesn't get converted to Python dict on return.
     for ir = 1:numel(results)
         if (isempty(metaclass(results{ir})) && ~isjava(results{ir})) || has_thin_members(results{ir})
-            results{ir} = thinwrapper(results{ir});
+            results{ir} = wrap_obj(results{ir});
         end
     end
     out = results{1};

@@ -26,11 +26,14 @@ class MatlabProxyObject(object):
         self.__dict__['interface'] = interface
         self.__dict__['converter'] = converter
         self.__dict__['_is_thinwrapper'] = self.interface.call('class', [self.handle], nargout=1) == 'thinwrapper'
+        self.__dict__['_is_handle_class'] = self.interface.call('isa', [self.handle, 'handle'], nargout=1)
         if self._is_thinwrapper:
             self.__dict__['_objstr'] = self.interface.call('subsref', [self.handle, self.interface.call('substruct', ['.', 'ObjectString'])])
 
-        for attribute in self._getAttributeNames():
-            self.__dict__[attribute] = self.__getattr__(attribute)
+        if not self._is_handle_class:
+            # Matlab value class: properties will not change so copy them to the Python object
+            for attribute in self._getAttributeNames():
+                self.__dict__[attribute] = self.__getattr__(attribute)
         for method in self._getMethodNames():
             super(MatlabProxyObject, self).__setattr__(method,
                                                        MatlabFunction(self.interface, method,
@@ -115,8 +118,11 @@ class MatlabProxyObject(object):
 
     def __str__(self):
         # remove pseudo-html tags from Matlab output
-        html_str = self.interface.call('eval', ["@(x) evalc('disp(x)')"])
-        html_str = self.interface.call(html_str, [self.handle])
+        if self._is_thinwrapper:
+            html_str = self.interface.call('evalin', ['base', f"evalc('display({self._objstr})')"], nargout=1)
+        else:
+            html_str = self.interface.call('eval', ["@(x) evalc('disp(x)')"])
+            html_str = self.interface.call(html_str, [self.handle])
         return re.sub('</?a[^>]*>', '', html_str)
 
     @property

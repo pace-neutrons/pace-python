@@ -1,3 +1,4 @@
+import six
 import numpy as np
 from numbers import Number
 from .MatlabProxyObject import MatlabProxyObject
@@ -36,7 +37,13 @@ class DataTypes:
             # Case 4)
             data = float(data)
         elif isinstance(data, MatlabFunction):
-            data = data._fun
+            if isinstance(data._fun, six.string_types):
+                if data._parent:
+                    data = self.interface.get_method_refs(data._fun, data._parent, nargout=1)
+                else:
+                    data = self.interface.get_method_refs(data._fun, nargout=1)
+            else:
+                data = data._fun
         elif isinstance(data, MatlabProxyObject):
             data = data.handle
         elif hasattr(data, '__call__'):
