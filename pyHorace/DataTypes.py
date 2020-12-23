@@ -18,6 +18,14 @@ class DataTypes:
         # self.outNumpy = True
         # self.transpose = True
 
+    def _unwrap(self, datalist):
+        for ii in range(len(datalist)):
+            if isinstance(datalist[ii], MatlabProxyObject):
+                datalist[ii] = datalist[ii].handle
+            elif hasattr(datalist[ii], '__call__'):
+                datalist[ii] = pymatpy(datalist[ii], self.interface)
+        return datalist
+
     def encode(self, data):
 
         # What is data?
@@ -26,10 +34,14 @@ class DataTypes:
         # 3) If it's a tuple, it's a cell, which we enumerate. BUT, then we convert it into a list.
         # 4) If it is a double it's a double, if a integer, we encode to a double as well. MATLAB is tricky :-/
 
-        if isinstance(data, list) or isinstance(data, range):
+        if isinstance(data, bool):
+            data = self.matlab.logical([data])
+        elif isinstance(data, list) or isinstance(data, range):
             # Case 1)
             if all([isinstance(d, Number) for d in data]):
                 data = self.matlab.double(data)
+            else:  # Make sure to wrap / unwrap our own stuff
+                data = self._unwrap(data)
             # If the list is not one of numbers leave it for Matlab to convert to a cell array
         elif isinstance(data, np.ndarray):
             data = as_matlab(data)

@@ -30,10 +30,13 @@ class MatlabProxyObject(object):
         if self._is_thinwrapper:
             self.__dict__['_objstr'] = self.interface.call('subsref', [self.handle, self.interface.call('substruct', ['.', 'ObjectString'])])
 
-        if not self._is_handle_class:
-            # Matlab value class: properties will not change so copy them to the Python object
-            for attribute in self._getAttributeNames():
-                self.__dict__[attribute] = self.__getattr__(attribute)
+        # This cause performance slow downs for large data members and an recursion issue with
+        # samples included in sqw object (each sample object is copied to all dependent header "files")
+        #if not self._is_handle_class:
+        #    # Matlab value class: properties will not change so copy them to the Python object
+        #    for attribute in self._getAttributeNames():
+        #        self.__dict__[attribute] = self.__getattr__(attribute)
+        self._getAttributeNames()
         for method in self._getMethodNames():
             super(MatlabProxyObject, self).__setattr__(method,
                                                        MatlabFunction(self.interface, method,
@@ -75,22 +78,23 @@ class MatlabProxyObject(object):
         # if it's a property, just retrieve it
         if self._is_thinwrapper:
             if name in self._attributes:
-                return self.converter.decode(m.call('evalin', ['base', '{}.{}'.format(self._objstr, name)]))
+                return self.converter.decode(self.interface.call('evalin', ['base', '{}.{}'.format(self._objstr, name)]))
             class matlab_method:
                 def __call__(_self, *args, **kwargs):
                     nreturn = lhs_info(output_type='nreturns')
                     nargout = max(min(int(kwargs.pop('nargout') if 'nargout' in kwargs.keys() else -1), nreturn), 1)
                     # serialize keyword arguments:
                     args += sum(kwargs.items(), ())
-                    return self.converter.decode(m.call_method(name, self.handle, self.converter.encode(args), nargout=nargout))
+                    args = [self.converter.encode(ar) for ar in args]
+                    return self.converter.decode(self.interface.call_method(name, self.handle, args, nargout=nargout))
             return matlab_method()
-        elif name in m.call('properties', [self.handle], nargout=1):
+        elif name in self.interface.call('properties', [self.handle], nargout=1):
             try:
-                return m.call('subsref', [self.handle, m.call('substruct', ['.', name])])
+                return self.converter.decode(self.interface.call('subsref', [self.handle, self.interface.call('substruct', ['.', name])]))
             except TypeError:
                 return None
         # if it's a method, wrap it in a functor
-        elif name in m.call('methods', [self.handle], nargout=1):
+        elif name in self.interface.call('methods', [self.handle], nargout=1):
             class matlab_method:
                 def __call__(_self, *args, **kwargs):
                     nreturn = lhs_info(output_type='nreturns')
@@ -103,7 +107,7 @@ class MatlabProxyObject(object):
                 @property
                 def __doc__(_self):
                     classname = getattr(m, 'class')(self)
-                    return m.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
+                    return self.interface.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
 
             return matlab_method()
 
@@ -125,10 +129,24 @@ class MatlabProxyObject(object):
             html_str = self.interface.call(html_str, [self.handle])
         return re.sub('</?a[^>]*>', '', html_str)
 
+    def __dir__(self):
+        return super(MatlabProxyObject, self).__dir__() + list(self.__dict__.keys()) + self._getAttributeNames()
+
     @property
     def __doc__(self):
         out = StringIO()
-        return self.interface.call('help', [self.handle], nargout=1, stdout=out)
+        if self._is_thinwrapper:
+            return self.interface.call('evalin', ['base', f"evalc('help({self._objstr})')"], nargout=1, stdout=out)
+        else:
+            return self.interface.call('help', [self.handle], nargout=1, stdout=out)
+
+    def __del__(self):
+        if self._is_thinwrapper:
+            try:
+                self.interface.call('evalin', ['base', f"clear('{self._objstr}')"], nargout=0)
+            except RuntimeError as err:
+                if not str(err).startswith('call() cannot be called after terminate()'):
+                    raise
 
     def updateProxy(self):
         """

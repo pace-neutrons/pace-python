@@ -57,9 +57,7 @@ if numel(evalstr) > 0
             assargs{ir} = [];
             is_thin = true;
         else
-            if strcmp(class(args{ir}), 'pythonFunctionWrapper')
-                args{ir} = @(varargin) call_python_m(args{ir}.func_uuid, varargin{:});
-            end
+            args{ir} = check_wrapped_function(args{ir});
             evalstr = sprintf('%s%s arg%d', evalstr, comma, ir);
             assargs{ir} = sprintf('arg%d', ir);
         end
@@ -89,7 +87,10 @@ if resultsize > 0
         try
             [results{:}] = evalin('base', evalstr);
         catch err
-            %disp(err)
+            disp(err);
+            for ii = 1:numel(err.stack)
+                disp(err.stack(ii));
+            end
             has_failed = true;
         end
     end

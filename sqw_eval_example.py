@@ -69,7 +69,7 @@ w_cal_py = m.sqw_eval(my_cuts[0], py_fe_sqw, [35, 0, 30, 10, 300])
 
 w_sum_m = m.cut(w_cal_m, [-999., 999.])
 print("Summed counts in Matlab calculated cuts = {}".format(w_sum_m.data.s))
-w_sum_py = m.cut(w_cal_m, [-999., 999.])
+w_sum_py = m.cut(w_cal_py, [-999., 999.])
 print("Summed counts in Python calculated cuts = {}".format(w_sum_py.data.s))
 
 hf1 = m.plot(w_cal_m)
@@ -87,3 +87,4 @@ kk = kk.set_options ('list',2)
 m.tic()
 wfit, fitdata = kk.fit('comp')
 t_ana = m.toc();
+print(t_ana)

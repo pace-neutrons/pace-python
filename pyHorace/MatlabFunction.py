@@ -46,7 +46,6 @@ class MatlabFunction(object):
         nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
         # serialize keyword arguments:
         args += sum(kwargs.items(), ())
-        args = self.converter.encode(args)
 
         # Determination of the number of output arguments is a pain.
         if nargout is None:
@@ -58,6 +57,7 @@ class MatlabFunction(object):
 
         if not args:
             args = []
+        args = [self.converter.encode(ar) for ar in args]
         if nargout > 0:
             d = self._interface.call_method(self._fun, self._parent, args, nargout=nargout)
         else:

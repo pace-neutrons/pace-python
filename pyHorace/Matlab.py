@@ -56,7 +56,8 @@ class Matlab(object):
                         nargout = max(min(int(mnargout), nreturn), 1)
                     else:
                         nargout = max(nreturn, 1)
-                results = self.interface.call_method(name, [], self.converter.encode(args), nargout=nargout)
+                m_args = [self.converter.encode(ar) for ar in args] 
+                results = self.interface.call_method(name, [], m_args, nargout=nargout)
                 return self.converter.decode(results)
             except Exception as e:
                 print(e)

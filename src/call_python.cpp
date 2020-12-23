@@ -140,8 +140,11 @@ CellArray cast_listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &f
         return fill_vec_from_pyobj<double>(objs, factory);
     } else if (typeflags == MYCOMPLEX) {
         return fill_vec_from_pyobj<std::complex<double>>(objs, factory);
-    } else {
+    } else if (typeflags == MYOTHER) {
         return cell_out;
+    } else {
+        // We've got mixed types - should try to handle this in future (as cell array)
+        throw std::runtime_error("Python returned a list or tuple of mixed types.");
     }
 }
 
