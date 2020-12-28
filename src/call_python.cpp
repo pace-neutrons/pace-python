@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 
 #define MATLABERROR(errmsg) matlabPtr->feval(u"error", 0, std::vector<matlab::data::Array>({ factory.createScalar(errmsg) }));
 #define MYINTEGER 1
@@ -18,8 +19,12 @@ using namespace matlab::data;
 using matlab::mex::ArgumentList;
 namespace py = pybind11;
 
-template <typename T> py::array_t<T>
-wrap_matlab(matlab::data::Array arr, py::handle owner) {
+// -------------------------------------------------------------------------------------------------------
+// Code to translate Matlab types to Python types
+// -------------------------------------------------------------------------------------------------------
+
+// Wraps a Matlab array in a numpy array without copying (should work with all numeric types)
+template <typename T> PyObject* matlab_to_python_t (const matlab::data::Array arr, py::handle owner) {
     std::vector<size_t> strides = {sizeof(T)};
     std::vector<size_t> dims = arr.getDimensions();
     if (arr.getMemoryLayout() == matlab::data::MemoryLayout::COLUMN_MAJOR) {
@@ -37,32 +42,113 @@ wrap_matlab(matlab::data::Array arr, py::handle owner) {
     const matlab::data::TypedArray<T> arr_t = matlab::data::TypedArray<T>(arr);
     // We need to pass a dummy python `base` object to own the reference otherwise PyBind will copy the data
     // See: https://github.com/pybind/pybind11/issues/323
-    return py::array_t<T>(dims, strides, (T*)(&(*arr_t.begin())), owner);
+    py::array_t<T> retval(dims, strides, (T*)(&(*arr_t.begin())), owner);
+    PyObject* rv = retval.ptr();
+    Py_INCREF(rv);
+    return rv;
 }
-
-
-py::tuple convMat2np(ArgumentList inputs, py::handle owner) {
-    // Note that this function must be called when we have the GIL
-    size_t narg = inputs.size() - 1;
-
-    py::tuple retval(narg);
-    for (size_t idx = 1; idx <= narg; idx++) {
-        if (inputs[idx].getType() == matlab::data::ArrayType::DOUBLE)
-            retval[idx - 1] = wrap_matlab<double>(inputs[idx], owner);
-        else if (inputs[idx].getType() == matlab::data::ArrayType::SINGLE)
-            retval[idx - 1] = wrap_matlab<float>(inputs[idx], owner);
-        else if (inputs[idx].getType() == matlab::data::ArrayType::COMPLEX_SINGLE)
-            retval[idx - 1] = wrap_matlab<std::complex<float>>(inputs[idx], owner);
-        else if (inputs[idx].getType() == matlab::data::ArrayType::COMPLEX_DOUBLE)
-            retval[idx - 1] = wrap_matlab<std::complex<double>>(inputs[idx], owner);
-        else
-            throw std::runtime_error("Unrecognised input type");
+// Specialisations for other types to generate the appropriate Python type
+template <> PyObject* matlab_to_python_t<char16_t>(const matlab::data::Array input, py::handle owner) {
+    const matlab::data::TypedArray<char16_t> str(input);
+    return PyUnicode_FromKindAndData(2, (void*)(&(*str.begin())), str.getNumberOfElements());
+}
+template <> PyObject* matlab_to_python_t<std::basic_string<char16_t>>(const matlab::data::Array input, py::handle owner) {
+    const matlab::data::TypedArray<matlab::data::MATLABString> str(input);
+    if (input.getNumberOfElements() == 1) {
+        const std::basic_string<char16_t> cstr(str[0]);
+        return PyUnicode_FromKindAndData(2, (void*)cstr.c_str(), cstr.size());
+    } else {
+        PyObject* retval = PyList_New(0);
+        for (auto mstr: str) {
+            const std::basic_string<char16_t> cstr(mstr);
+            if (PyList_Append(retval, PyUnicode_FromKindAndData(2, (void*)cstr.c_str(), cstr.size()))) {
+                throw std::runtime_error("Error constructing python list from string array");
+            }
+        }
+        return retval;
     }
-
+}
+PyObject* matlab_to_python(const matlab::data::Array input, py::handle owner); 
+template <> PyObject* matlab_to_python_t<py::dict>(const matlab::data::Array input, py::handle owner) {
+    const matlab::data::StructArray in_struct(input);
+    if (input.getNumberOfElements() == 1) {
+        PyObject* retval = PyDict_New();
+        for (auto ky : in_struct.getFieldNames()) {
+            PyObject* pyky = PyUnicode_FromString(std::string(ky).c_str());
+            PyObject* pyval = matlab_to_python(in_struct[0][ky], owner);
+            if (PyDict_SetItem(retval, pyky, pyval)) {
+                throw std::runtime_error("Error constructing python dict from matlab struct");
+            }
+        }
+        return retval;
+    } else {
+        PyObject* retval = PyList_New(0);
+        for (auto struc : in_struct) {
+            PyObject* elem = PyDict_New();
+            for (auto ky : in_struct.getFieldNames()) {
+                PyObject* pyky = PyUnicode_FromString(std::string(ky).c_str());
+                PyObject* pyval = matlab_to_python(struc[ky], owner);
+                if (PyDict_SetItem(elem, pyky, pyval)) {
+                    throw std::runtime_error("Error constructing python dict from matlab struct");
+                }
+            }
+            if (PyList_Append(retval, elem)) {
+                throw std::runtime_error("Error constructing python list from struct array");
+            }
+        }
+        return retval;
+    }
+}
+template <> PyObject* matlab_to_python_t<py::list>(const matlab::data::Array input, py::handle owner) {
+    const matlab::data::CellArray in_cell(input);
+    PyObject* retval = PyList_New(0);
+    for (auto elem : in_cell) {
+        PyObject *val = matlab_to_python(elem, owner);
+        if (PyList_Append(retval, val)) {
+            throw std::runtime_error("Error constructing python list from cell array");
+        }
+    }
     return retval;
 }
 
-CellArray cast_py_to_matlab_array(void *result, matlab::data::ArrayFactory &factory) {
+PyObject* matlab_to_python(const matlab::data::Array input, py::handle owner) {
+    matlab::data::ArrayType type = input.getType();
+    switch(type) {
+        case matlab::data::ArrayType::DOUBLE:         return matlab_to_python_t<double>(input, owner);
+        case matlab::data::ArrayType::SINGLE:         return matlab_to_python_t<float>(input, owner);
+        case matlab::data::ArrayType::COMPLEX_SINGLE: return matlab_to_python_t<std::complex<float>>(input, owner);
+        case matlab::data::ArrayType::COMPLEX_DOUBLE: return matlab_to_python_t<std::complex<double>>(input, owner);
+        case matlab::data::ArrayType::LOGICAL:        return matlab_to_python_t<bool>(input, owner);
+        case matlab::data::ArrayType::INT8:           return matlab_to_python_t<int8_t>(input, owner);
+        case matlab::data::ArrayType::INT16:          return matlab_to_python_t<int16_t>(input, owner);
+        case matlab::data::ArrayType::INT32:          return matlab_to_python_t<int32_t>(input, owner);
+        case matlab::data::ArrayType::UINT8:          return matlab_to_python_t<uint8_t>(input, owner);
+        case matlab::data::ArrayType::UINT16:         return matlab_to_python_t<uint16_t>(input, owner);
+        case matlab::data::ArrayType::UINT32:         return matlab_to_python_t<uint32_t>(input, owner);
+        case matlab::data::ArrayType::CHAR:           return matlab_to_python_t<char16_t>(input, owner);
+        case matlab::data::ArrayType::MATLAB_STRING:  return matlab_to_python_t<std::basic_string<char16_t>>(input, owner);
+        case matlab::data::ArrayType::STRUCT:         return matlab_to_python_t<py::dict>(input, owner);
+        case matlab::data::ArrayType::CELL:           return matlab_to_python_t<py::list>(input, owner);
+        default:
+           throw std::runtime_error("Unrecognised input type");
+    }
+}
+
+py::tuple convMat2np(ArgumentList inputs, py::handle owner, size_t lastInd=-1) {
+    // Note that this function must be called when we have the GIL
+    size_t narg = inputs.size() + lastInd;
+    py::tuple retval(narg);
+    for (size_t idx = 1; idx <= narg; idx++) {
+        retval[idx - 1] = matlab_to_python(inputs[idx], owner);
+    }
+    return retval;
+}
+
+// -------------------------------------------------------------------------------------------------------
+// Code to translate Python types to Matlab types
+// -------------------------------------------------------------------------------------------------------
+
+CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
     // Cast the result to the PyArray C struct and its corresponding dtype struct
     py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
     py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
@@ -106,7 +192,57 @@ template <typename T> CellArray fill_vec_from_pyobj(std::vector<PyObject*> &objs
     return factory.createCellArray({1, 1}, factory.createArray<T>({1, vec.size()}, (T*)(&(*vec.begin())), (T*)(&(*vec.end()))));
 }
 
-CellArray cast_listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
+CharArray python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
+    Py_ssize_t str_sz;
+    const char *str = PyUnicode_AsUTF8AndSize(result, &str_sz);
+    if (!str) {
+        PyErr_Print();
+        throw std::runtime_error("Cannot create string from pyobject");
+    }
+    return factory.createCharArray(std::string(str, str_sz));
+}
+
+CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory);
+StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
+    Py_ssize_t pos = 0;
+    PyObject *key, *val;
+    std::vector<std::string> keys;
+    std::vector<PyObject*> vals;
+    while (PyDict_Next(result, &pos, &key, &val)) {
+        Py_ssize_t str_sz;
+        const char *str = PyUnicode_AsUTF8AndSize(key, &str_sz);
+        if (!str) {
+            throw std::runtime_error("Can only convert python dict with string keys to Matlab struct");
+        }
+        keys.push_back(std::string(str, str_sz));
+        vals.push_back(val);
+    }
+    StructArray retval = factory.createStructArray({1,1}, keys);
+    auto npy_api = py::detail::npy_api::get();
+    for (size_t ii=0; ii<keys.size(); ii++) {
+        bool is_arr = npy_api.PyArray_Check_(vals[ii]);
+        if (is_arr) {
+            retval[0][keys[ii]] = python_array_to_matlab((void*)vals[ii], factory);
+        } else if (PyTuple_Check(vals[ii]) || PyList_Check(vals[ii])) {
+            retval[0][keys[ii]] = listtuple_to_cell(vals[ii], factory);
+        } else if (PyUnicode_Check(vals[ii])) {
+            retval[0][keys[ii]] = python_string_to_matlab(vals[ii], factory);
+        } else if (vals[ii] == Py_None) {
+            retval[0][keys[ii]] = factory.createArray<double>({0});
+        } else if (PyLong_Check(vals[ii])) {
+            retval[0][keys[ii]] = factory.createScalar<int64_t>(PyLong_AsLong(vals[ii]));
+        } else if (PyFloat_Check(vals[ii])) {
+            retval[0][keys[ii]] = factory.createScalar<double>(PyFloat_AsDouble(vals[ii]));
+        } else if (PyComplex_Check(vals[ii])) {
+            retval[0][keys[ii]] = factory.createScalar(std::complex<double>(PyComplex_RealAsDouble(vals[ii]), PyComplex_ImagAsDouble(vals[ii])));
+        } else {
+            throw std::runtime_error("Unknown dict item type from Python function.");
+        }
+    }
+    return retval;
+}
+
+CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
     size_t obj_size = PyTuple_Check(result) ? (size_t)PyTuple_Size(result) : (size_t)PyList_Size(result);
     CellArray cell_out = factory.createCellArray({1, obj_size});
     auto npy_api = py::detail::npy_api::get();
@@ -116,18 +252,30 @@ CellArray cast_listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &f
         PyObject *item = PyTuple_Check(result) ? PyTuple_GetItem(result, ii) : PyList_GetItem(result, ii);
         bool is_arr = npy_api.PyArray_Check_(item);
         if (is_arr) {
-            cell_out[0][ii] = cast_py_to_matlab_array((void*)item, factory);
+            cell_out[0][ii] = python_array_to_matlab((void*)item, factory);
             typeflags |= MYOTHER;
         } else if (PyTuple_Check(item) || PyList_Check(item)) {
-            cell_out[0][ii] = cast_listtuple_to_cell(item, factory);
+            cell_out[0][ii] = listtuple_to_cell(item, factory);
+            typeflags |= MYOTHER;
+        } else if (PyUnicode_Check(item)) {
+            cell_out[0][ii] = python_string_to_matlab(item, factory);
+            typeflags |= MYOTHER;
+        } else if (PyDict_Check(item)) {
+            cell_out[0][ii] = python_dict_to_matlab(item, factory);
+            typeflags |= MYOTHER;
+        } else if (item == Py_None) {
+            cell_out[0][ii] = factory.createArray<double>({0});
             typeflags |= MYOTHER;
         } else if (PyLong_Check(item)) {
+            cell_out[0][ii] = factory.createScalar<int64_t>(PyLong_AsLong(item));
             typeflags |= MYINTEGER;
             objs.push_back(item);
         } else if (PyFloat_Check(item)) {
+            cell_out[0][ii] = factory.createScalar<double>(PyFloat_AsDouble(item));
             typeflags |= MYFLOAT;
             objs.push_back(item);
         } else if (PyComplex_Check(item)) {
+            cell_out[0][ii] = factory.createScalar(std::complex<double>(PyComplex_RealAsDouble(item), PyComplex_ImagAsDouble(item)));
             typeflags |= MYCOMPLEX;
             objs.push_back(item);
         } else {
@@ -140,13 +288,15 @@ CellArray cast_listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &f
         return fill_vec_from_pyobj<double>(objs, factory);
     } else if (typeflags == MYCOMPLEX) {
         return fill_vec_from_pyobj<std::complex<double>>(objs, factory);
-    } else if (typeflags == MYOTHER) {
-        return cell_out;
     } else {
-        // We've got mixed types - should try to handle this in future (as cell array)
-        throw std::runtime_error("Python returned a list or tuple of mixed types.");
+        // We've got mixed or nonnumeric types - return a cell array of the elements
+        return cell_out;
     }
 }
+
+// -------------------------------------------------------------------------------------------------------
+// Mex class to run Python function referenced in a global dictionary
+// -------------------------------------------------------------------------------------------------------
 
 class MexFunction : public matlab::mex::Function {
 
@@ -188,9 +338,19 @@ class MexFunction : public matlab::mex::Function {
 
             if (PyCallable_Check(fnItem)) {
                 PyObject *result;
+                size_t endIdx = inputs.size() - 1;
                 try {
-                    py::tuple arr_in = convMat2np(inputs, fnItem);
-                    result = PyObject_CallObject(fnItem, arr_in.ptr());
+                    try {
+                        const matlab::data::StructArray in_struct(inputs[endIdx]);
+                        const matlab::data::Array v = in_struct[0][matlab::data::MATLABFieldIdentifier("pyHorace_pyKwArgs")];
+                        PyObject *kwargs = matlab_to_python(inputs[endIdx], fnItem);
+                        PyDict_DelItemString(kwargs, "pyHorace_pyKwArgs");
+                        py::tuple arr_in = convMat2np(inputs, fnItem, -2);
+                        result = PyObject_Call(fnItem, arr_in.ptr(), kwargs);
+                    } catch (...) {
+                        py::tuple arr_in = convMat2np(inputs, fnItem);
+                        result = PyObject_CallObject(fnItem, arr_in.ptr());
+                    }
                 } catch (char *e) {
                 }
                 if (result == NULL) {
@@ -203,7 +363,7 @@ class MexFunction : public matlab::mex::Function {
                     bool is_arr = npy_api.PyArray_Check_(result);
                     if (is_arr) {
                         try {
-                            outputs[0] = cast_py_to_matlab_array((void*)result, factory);
+                            outputs[0] = python_array_to_matlab((void*)result, factory);
                         } catch (char *e) {
                             Py_DECREF(result);
                             PyGILState_Release(gstate);
@@ -212,14 +372,32 @@ class MexFunction : public matlab::mex::Function {
                     }
                     else if(PyTuple_Check(result) || PyList_Check(result)) {
                         try {
-                            outputs[0] = cast_listtuple_to_cell(result, factory);
+                            outputs[0] = listtuple_to_cell(result, factory);
                         } catch (char *e) {
                             Py_DECREF(result);
                             PyGILState_Release(gstate);
                             MATLABERROR(e);
                         }
                     }
-                    else {
+                    else if (PyUnicode_Check(result)) {
+                        try {
+                            outputs[0] = python_string_to_matlab(result, factory);
+                        } catch (char *e) {
+                            Py_DECREF(result);
+                            PyGILState_Release(gstate);
+                            MATLABERROR(e);
+                        }
+                    }
+                    else if (PyDict_Check(result)) {
+                        try {
+                            outputs[0] = python_dict_to_matlab(result, factory);
+                        } catch (char *e) {
+                            Py_DECREF(result);
+                            PyGILState_Release(gstate);
+                            MATLABERROR(e);
+                        }
+                    }
+                    else if (result != Py_None) {
                         Py_DECREF(result);
                         PyGILState_Release(gstate);
                         MATLABERROR("Unknown return type from Python function.");

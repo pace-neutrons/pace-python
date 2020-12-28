@@ -33,7 +33,7 @@ for i = 1:numel(in)
             for k = 1:numel(f)
                 if isobject(in{i}.(f{k}))
                     UUID = char(randsamp([65:74 97:106], 32, true));
-                    set_global(UUID, in{i}.(f{k}))
+                    set_global(UUID, in{i}.(f{k}));
                     in{i}.(f{k}) = sprintf('!$%s',UUID);
                 elseif isstruct(in{i}.(f{k}))
                     in{i}.(f{k}) = recfind(in{i}.(f{k}));

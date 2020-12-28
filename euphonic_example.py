@@ -1,6 +1,6 @@
 # For some reason we _have_ to load euphonic before Matlab
 from euphonic import ForceConstants
-from euphonic_wrapper import EuphonicWrapper
+from pyHorace import EuphonicWrapper
 
 # Setting (os.RTLD_NOW | os.RTLD_DEEPBIND) flags causes a crash here...
 #import sys; sys.setdlopenflags(10)
