@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
-#include <type_traits>
+#include <cstring>
 
 #define MATLABERROR(errmsg) matlabPtr->feval(u"error", 0, std::vector<matlab::data::Array>({ factory.createScalar(errmsg) }));
 #define MYINTEGER 1
@@ -148,6 +148,46 @@ py::tuple convMat2np(ArgumentList inputs, py::handle owner, size_t lastInd=-1) {
 // Code to translate Python types to Matlab types
 // -------------------------------------------------------------------------------------------------------
 
+// Slower copy methods - follow data strides for non-contiguous arrays
+template <typename T> TypedArray<T> raw_to_matlab(char *raw, size_t sz, std::vector<size_t> dims, ssize_t *strides, matlab::data::ArrayFactory &factory) {
+    buffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
+    T* ptr = buf.get();
+    std::vector<size_t> stride;
+    std::vector<size_t> k = {dims[0]};
+    for (size_t i=1; i<dims.size(); i++)
+        k.push_back(k[i-1] * dims[i]);
+    for (size_t i=0; i<dims.size(); i++) {
+        if (strides[i] > -1) 
+            stride.push_back(static_cast<size_t>(strides[i]));
+        else
+            throw std::runtime_error("Invalid stride in numpy array");
+    }
+    for (size_t i=0; i<sz; i++) {
+        size_t offset = 0, idx = i, vi;
+        // This computes the N-Dim indices (i0,i1,i2,...) and multiplies it by the strides
+        // The algorithm is taken from the ind2sub.m function in Matlab
+        for (size_t d=dims.size(); d>0; d--) {
+            vi = idx % k[d-1];
+            offset += ((idx - vi) / k[d-1]) * stride[d];
+            idx = vi;
+        }
+        offset += vi * stride[0];
+        ptr[i] = *((T*)(raw + offset));
+    }
+    return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
+}
+
+// Fast method block memory copy for contigous C- or Fortran-style arrays
+template <typename T> TypedArray<T> raw_to_matlab_contiguous(T* begin, size_t sz, std::vector<size_t> dims, bool f_contigous, matlab::data::ArrayFactory &factory) {
+    buffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
+    memcpy(buf.get(), begin, sz * sizeof(T));
+    if (f_contigous) {
+        return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
+    } else {
+        return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::ROW_MAJOR);
+    }
+}
+
 CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
     // Cast the result to the PyArray C struct and its corresponding dtype struct
     py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
@@ -158,19 +198,40 @@ CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &facto
         dims.push_back(arr->dimensions[id]);
         numel = numel * dims[id];
     }
+    int f_or_c_contiguous = 0;
+    if (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_))
+        f_or_c_contiguous = -1;
+    else if (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_C_CONTIGUOUS_))
+        f_or_c_contiguous = 1;
+
     char *begin = arr->data;
-    char *end = begin + (numel * dtype->elsize);  // dangerous pointer arithmetic?
     if (dtype->kind == 'f') {       // Floating point array
-        if (dtype->elsize == sizeof(double))
-            return factory.createCellArray({1, 1}, factory.createArray<double>(dims, (double*)begin, (double*)end));
-        else if(dtype->elsize == sizeof(float))
-            return factory.createCellArray({1, 1}, factory.createArray<float>(dims, (float*)begin, (float*)end));
+        if (dtype->elsize == sizeof(double)) {
+            if (f_or_c_contiguous)
+                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((double*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+            else
+                return factory.createCellArray({1, 1}, raw_to_matlab<double>(begin, numel, dims, arr->strides, factory));
+        }
+        else if(dtype->elsize == sizeof(float)) {
+            if (f_or_c_contiguous)
+                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((float*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+            else
+                return factory.createCellArray({1, 1}, raw_to_matlab<float>(begin, numel, dims, arr->strides, factory));
+        }
     }
     else if (dtype->kind == 'c') {  // Complex array
-        if (dtype->elsize == sizeof(std::complex<double>))
-            return factory.createCellArray({1, 1}, factory.createArray<std::complex<double>>(dims, (std::complex<double>*)begin, (std::complex<double>*)end));
-        else if(dtype->elsize == sizeof(std::complex<float>))
-            return factory.createCellArray({1, 1}, factory.createArray<std::complex<float>>(dims, (std::complex<float>*)begin, (std::complex<float>*)end));
+        if (dtype->elsize == sizeof(std::complex<double>)) {
+            if (f_or_c_contiguous)
+                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((std::complex<double>*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+            else
+                return factory.createCellArray({1, 1}, raw_to_matlab<std::complex<double>>(begin, numel, dims, arr->strides, factory));
+        }
+        else if(dtype->elsize == sizeof(std::complex<float>)) {
+            if (f_or_c_contiguous)
+                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((std::complex<float>*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+            else
+                return factory.createCellArray({1, 1}, raw_to_matlab<std::complex<float>>(begin, numel, dims, arr->strides, factory));
+        }
     }
     else
         throw std::runtime_error("Python function returned a non-floating point array.");
