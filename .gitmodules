@@ -1,9 +1,0 @@
-[submodule "src/spinW"]
-	path = src/spinW
-	url = https://github.com/SpinW/spinW_MATLAB
-[submodule "src/Horace"]
-	path = src/Horace
-	url = https://github.com/pace-neutrons/Horace.git
-[submodule "src/Herbert"]
-	path = src/Herbert
-	url = https://github.com/pace-neutrons/Herbert.git

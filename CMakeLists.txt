@@ -42,7 +42,7 @@ endif()
 include(PyBind11)
 add_subdirectory(${PyBind11_DIR} ${PyBind11_DIR})
 
-include(MeuphonicBrillem)
+include(PACE)
 
 add_subdirectory(src)
 add_subdirectory(pyHorace)

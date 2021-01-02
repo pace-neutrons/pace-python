@@ -155,7 +155,7 @@ template <typename T> TypedArray<T> raw_to_matlab(char *raw, size_t sz, std::vec
     std::vector<size_t> stride;
     std::vector<size_t> k = {dims[0]};
     for (size_t i=1; i<dims.size(); i++)
-        k.push_back(k[i-1] * dims[i]);
+        k.push_back(k[i-1] * dims[i]);      // Cumulative product of dimensions
     for (size_t i=0; i<dims.size(); i++) {
         if (strides[i] > -1) 
             stride.push_back(static_cast<size_t>(strides[i]));
@@ -192,6 +192,15 @@ CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &facto
     // Cast the result to the PyArray C struct and its corresponding dtype struct
     py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
     py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
+    if (arr->nd == 0) {            // 0-dimensional array - return a scalar
+        if (dtype->kind == 'f') {
+            if (dtype->elsize == sizeof(double)) return factory.createCellArray({1, 1}, factory.createScalar(*((double*)(arr->data))));
+            else if (dtype->elsize == sizeof(float)) return factory.createCellArray({1, 1}, factory.createScalar(*((float*)(arr->data))));
+        } else if (dtype->kind == 'c') {
+            if (dtype->elsize == sizeof(std::complex<double>)) return factory.createCellArray({1, 1}, factory.createScalar(*((std::complex<double>*)(arr->data))));
+            else if (dtype->elsize == sizeof(std::complex<float>)) return factory.createCellArray({1, 1}, factory.createScalar(*((std::complex<float>*)(arr->data))));
+        }
+    }
     std::vector<size_t> dims;
     size_t numel = 1;
     for (size_t id = 0; id < arr->nd; id++) {
