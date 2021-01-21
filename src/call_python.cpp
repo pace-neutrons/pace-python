@@ -42,7 +42,8 @@ template <typename T> PyObject* matlab_to_python_t (const matlab::data::Array ar
     const matlab::data::TypedArray<T> arr_t = matlab::data::TypedArray<T>(arr);
     // We need to pass a dummy python `base` object to own the reference otherwise PyBind will copy the data
     // See: https://github.com/pybind/pybind11/issues/323
-    py::array_t<T> retval(dims, strides, (T*)(&(*arr_t.begin())), owner);
+    const T &tmp = *arr_t.begin();
+    py::array_t<T> retval(dims, strides, (T*)(&tmp), owner);
     PyObject* rv = retval.ptr();
     Py_INCREF(rv);
     return rv;

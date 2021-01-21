@@ -12,7 +12,8 @@ get_address_t(matlab::data::Array arr) {
     // (like for indexing using the [] operator on the original Array object)
     // Needs to be const to avoid copying to a new (mutable) array
     const matlab::data::TypedArray<T> arr_t = matlab::data::TypedArray<T>(arr);
-    return &(*arr_t.begin());
+    const T &tmp = *arr_t.begin();
+    return &tmp;
 }
 
 
