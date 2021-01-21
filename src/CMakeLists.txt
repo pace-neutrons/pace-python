@@ -14,20 +14,6 @@ target_include_directories(pythonRemoveFuncKey PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_include_directories(pythonRemoveFuncKey PUBLIC "${PyBind11_DIR}/include")
 target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
 
-matlab_add_mex(
-    NAME get_address
-    SRC get_address.cpp
-)
-
-pybind11_add_module(call_matlab 
-                    call_matlab.cpp)
-target_include_directories(call_matlab PUBLIC ${Matlab_INCLUDE_DIRS})
-target_link_libraries(call_matlab PRIVATE ${Matlab_MEX_LIBRARY} ${Matlab_MX_LIBRARY})
-#if(Matlab_HAS_CPP_API)
-#    target_include_directories(call_matlab PUBLIC ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
-#    target_link_libraries(call_matlab PRIVATE ${Matlab_ENGINE_LIBRARY} ${Matlab_DATAARRAY_LIBRARY})
-#endif()
-
 add_custom_target(compile_ctf ALL)
 if(WIN32)
     add_custom_command(
@@ -67,14 +53,15 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/get_method_refs.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/get_global.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/set_global.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/waitforgui.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/pythonFunctionWrapper.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/call_python_m.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyclasswrapper.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/check_wrapped_function.m"
         "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
         "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
-        "$<TARGET_FILE_DIR:get_address>/get_address.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
 add_dependencies(compile_ctf call_python pythonRemoveFuncKey get_address)
