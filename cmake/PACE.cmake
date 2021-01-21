@@ -36,14 +36,14 @@ add_custom_target(add_euphonic ALL)
 if(WIN32)
     add_custom_command(
         TARGET add_euphonic PRE_BUILD
-        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
-        COMMAND ${POWERSHELL_COMMAND} Copy-Item "${MEUPHONIC_BINARY_DIR}/euphonic_wrapper.py" -Destination "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
+        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
+        COMMAND ${POWERSHELL_COMMAND} Copy-Item "${MEUPHONIC_BINARY_DIR}/euphonic_wrapper.py" -Destination "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
     )
 else()
     add_custom_command(
         TARGET add_euphonic PRE_BUILD
-        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
-        COMMAND ${BASH_COMMAND} cp "${MEUPHONIC_BINARY_DIR}/euphonic_wrapper.py" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
+        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
+        COMMAND ${BASH_COMMAND} cp "${MEUPHONIC_BINARY_DIR}/euphonic_wrapper.py" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
     )
 endif()
 
@@ -51,12 +51,12 @@ add_custom_target(add_brillem ALL)
 if(WIN32)
     add_custom_command(
         TARGET add_brillem PRE_BUILD
-        COMMAND ${POWERSHELL_COMMAND} Copy-Item "${BRILLEM_BINARY_DIR}/brillem.py" -Destination "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace/brille_wrapper.py"
+        COMMAND ${POWERSHELL_COMMAND} Copy-Item "${BRILLEM_BINARY_DIR}/brillem.py" -Destination "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/brille_wrapper.py"
     )
 else()
     add_custom_command(
         TARGET add_brillem PRE_BUILD
-        COMMAND ${BASH_COMMAND} cp "${BRILLEM_BINARY_DIR}/brillem.py" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace/brille_wrapper.py"
+        COMMAND ${BASH_COMMAND} cp "${BRILLEM_BINARY_DIR}/brillem.py" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/brille_wrapper.py"
     )
 endif()
 add_dependencies(add_brillem add_euphonic)

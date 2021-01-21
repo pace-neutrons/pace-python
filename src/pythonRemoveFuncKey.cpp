@@ -32,12 +32,12 @@ class MexFunction : public matlab::mex::Function {
             // Imports the wrapper module and check its global dictionary for the function we want
             py::module pyHoraceFn;
             try {
-                pyHoraceFn = py::module::import("pyHorace.FunctionWrapper");
+                pyHoraceFn = py::module::import("pace_python.FunctionWrapper");
             } 
             catch (...) {
                 PyGILState_Release(gstate);
                 matlabPtr->feval(u"error", 0,
-                    std::vector<matlab::data::Array>({ factory.createScalar("Cannot import Python pyHorace module.") }));
+                    std::vector<matlab::data::Array>({ factory.createScalar("Cannot import Python pace_python module.") }));
             }
             py::dict fnDict = pyHoraceFn.attr("_globalFunctionDict");
             

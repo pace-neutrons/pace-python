@@ -16,9 +16,9 @@ class Matlab(object):
 
         self.checkPath(mlPath, knowBetter)
         # We do the import here as we have to set the ENV before we can import
-        from pyHorace import horace
+        from pace_python import pace
         print('Interface opened')
-        self.process = horace
+        self.process = pace
         self.interface = None
         self.pyMatlab = None
         self.converter = None

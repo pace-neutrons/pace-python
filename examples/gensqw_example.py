@@ -1,4 +1,4 @@
-from pyHorace import Matlab
+from pace_python import Matlab
 m = Matlab()
 
 #% ========================================================================

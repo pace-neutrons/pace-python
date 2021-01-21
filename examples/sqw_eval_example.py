@@ -7,7 +7,7 @@ it). So it is changed to just use sqw_eval() instead.
 """
 
 # Have to import Matlab first before any CPython modules or will give ABI errors
-from pyHorace import Matlab
+from pace_python import Matlab
 m = Matlab()
 data_path = '/path/to/sqw/'
 

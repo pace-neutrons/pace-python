@@ -1,4 +1,4 @@
-from pyHorace import horace
+from pace_python import horace
 from matlab import double as md
 import matlab
 

@@ -45,4 +45,4 @@ add_subdirectory(${PyBind11_DIR} ${PyBind11_DIR})
 include(PACE)
 
 add_subdirectory(src)
-add_subdirectory(pyHorace)
+add_subdirectory(pace_python)

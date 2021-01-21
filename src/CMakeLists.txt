@@ -23,7 +23,7 @@ if(WIN32)
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/swfiles"
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/dat_files"
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/external"
-        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
+        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
         COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
         COMMAND ${POWERSHELL_COMMAND} Copy-Item "${CMAKE_CURRENT_SOURCE_DIR}/+brille/*" -Destination "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
     )
@@ -35,7 +35,7 @@ else()
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace"
+        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
         COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
         COMMAND ${BASH_COMMAND} cp "${CMAKE_CURRENT_SOURCE_DIR}/+brille/*" "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
     )
@@ -43,7 +43,7 @@ endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
-    COMMAND ${Matlab_MCC_COMPILER} -W python:horace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pyHorace" -v -N
+    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python" -v -N
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
@@ -64,4 +64,4 @@ add_custom_command(
         "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
-add_dependencies(compile_ctf call_python pythonRemoveFuncKey get_address)
+add_dependencies(compile_ctf call_python pythonRemoveFuncKey)

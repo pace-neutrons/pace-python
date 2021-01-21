@@ -1,11 +1,11 @@
 
-pyHorace/\.DS_Store
+pace_python/\.DS_Store
 
 \.DS_Store
 
 *.pyc
 __pycache__
-pyHorace/mccExcludedFiles.log
+pace_python/mccExcludedFiles.log
 
 *~
 *swp
