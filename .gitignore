@@ -17,3 +17,19 @@ pace_python/mccExcludedFiles.log
 
 *.so
 *.mod
+
+BRILLEM-build
+BRILLEM-download
+HORACE-build
+HORACE-download
+MEUPHONIC-build
+MEUPHONIC-download
+SPINW-build
+SPINW-download
+
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt
+
+extern-pybind11
+src/CTF
