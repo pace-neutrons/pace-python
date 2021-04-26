@@ -216,3 +216,6 @@ class Matlab(object):
         magics = IPythonMagics.MatlabMagics(shell, self.interface)
         running_kernel.register_magics(magics)
         running_kernel.events.register('post_run_cell', IPythonMagics.showPlot)
+        redirect_stdout = IPythonMagics.Redirection(target='stdout')
+        running_kernel.events.register('pre_run_cell', redirect_stdout.pre)
+        running_kernel.events.register('post_run_cell', redirect_stdout.post)
