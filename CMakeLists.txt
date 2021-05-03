@@ -1,6 +1,6 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.6)
 
-project("hugo" VERSION "0.1.0")
+project("pace-python" VERSION "0.1.0")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_MACOSX_RPATH TRUE)
@@ -13,11 +13,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(WIN32)
-    find_package(PowerShell REQUIRED)
+    find_package(POWERSHELL REQUIRED)
 else()
     find_package(BASH REQUIRED)
 endif()
 
+# You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2019b")
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
 get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)

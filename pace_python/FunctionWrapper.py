@@ -39,7 +39,7 @@ class WrappedPythonClass(object):
         return key_string
 
 try:
-    from .brille_wrapper import create_bz, create_grid
+    from brille.utils import create_bz, create_grid
 except ImportError:
     pass
 else:

@@ -1,0 +1,3 @@
+[submodule "euphonic_sqw_models_module"]
+	path = euphonic_sqw_models_module
+	url = https://github.com/pace-neutrons/euphonic_sqw_models.git

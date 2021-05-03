@@ -1,6 +1,8 @@
 import os
 import platform
 from .funcinspect import lhs_info
+# On Windows/Conda we need to load numpy DLLs before Matlab starts
+import numpy
 
 # Store the Matlab engine as a module global wrapped inside a class
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called
@@ -123,14 +125,17 @@ class Matlab(object):
                 self.arch = self.ARCH_DICT[self.system][platform.architecture()[0]]
                 if self.system == 'Windows':
                     self.file_to_find = ''.join((self.lib_prefix, 'mclmcrrt', self.ver.replace('.','_'), '.', self.ext))
+                    self.sep = ';'
                 elif self.system == 'Linux':
                     self.file_to_find = ''.join((self.lib_prefix, 'mclmcrrt', '.', self.ext, '.', self.ver))
+                    self.sep = ':'
                 elif self.system == 'Darwin':
                     self.file_to_find = ''.join((self.lib_prefix, 'mclmcrrt', '.', self.ver, '.', self.ext))
+                    self.sep = ':'
                 else:
                     raise RuntimeError(f'Operating system {self.system} is not supported.')
 
-            def find_version(self, root_dir):
+            def find_version(self, root_dir, raise_if_not_found=True):
                 def check_lib_file(obj, ver, runtime_dir):
                     arch = next(os.walk(runtime_dir))[1]
                     if len(arch) == 1 and os.path.exists(os.path.join(runtime_dir, arch[0], self.file_to_find)):
@@ -156,15 +161,21 @@ class Matlab(object):
                             if os.path.isdir(sub_runtime):
                                 rv = check_lib_file(self, subsub, sub_runtime)
                                 if rv: return rv
-                raise FileNotFoundError(f'Required Matlab version {self.ver} not found in folder {root_dir}')
+                if raise_if_not_found:
+                    raise FileNotFoundError(f'Required Matlab version {self.ver} not found in folder {root_dir}')
+                else:
+                    return None
 
             def guess_path(self):
-                GUESSES = {'Windows': ['C:/Program Files/MATLAB', 'C:/Program Files (x86)/MATLAB'],
+                GUESSES = {'Windows': [r'C:\Program Files\MATLAB', 'C:\Program Files (x86)\MATLAB', 
+                                       r'C:\Program Files\MATLAB\MATLAB Runtime', 'C:\Program Files (x86)\MATLAB\MATLAB Runtime'],
                            'Linux': ['/usr/local/MATLAB', '/opt/MATLAB'],
                            'Darwin': ['/Applications/MATLAB']}
                 for possible_dir in GUESSES[self.system]:
                     if os.path.isdir(possible_dir):
-                        return self.find_version(possible_dir)
+                        rv = self.find_version(possible_dir, raise_if_not_found=False)
+                        if rv is not None:
+                           return rv
                 return None
 
             def guess_from_env(self):
@@ -190,7 +201,7 @@ class Matlab(object):
                     raise RuntimeError('Cannot find Matlab')
                 else:
                     needed_dirs = ['runtime', os.path.join('sys', 'os'), 'bin', os.path.join('extern', 'bin')]
-                    ld_path = ':'.join([os.path.join(mlPath, sub, obj.arch) for sub in needed_dirs])
+                    ld_path = obj.sep.join([os.path.join(mlPath, sub, obj.arch) for sub in needed_dirs])
                     os.environ[obj.path_var] = ld_path
                     print('Set ' + os.environ.get(obj.path_var))
             else:

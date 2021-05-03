@@ -10,5 +10,6 @@ else()
         TARGET copy_python PRE_BUILD
         COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
         COMMAND ${BASH_COMMAND} cp "${CMAKE_CURRENT_SOURCE_DIR}/*py" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/"
+        #COMMAND ${BASH_COMMAND} cp -r "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/*" "${CMAKE_CURRENT_SOURCE_DIR}/"
     )
 endif()
