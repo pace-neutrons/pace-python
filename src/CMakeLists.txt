@@ -3,16 +3,16 @@ matlab_add_mex(
     SRC call_python.cpp
 )
 target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_include_directories(call_python PUBLIC "${PyBind11_DIR}/include")
-target_link_libraries(call_python ${PYTHON_LIBRARIES})
+target_include_directories(call_python PUBLIC "${pybind11_SOURCE_DIR}/include")
+#target_link_libraries(call_python ${PYTHON_LIBRARIES})
 
 matlab_add_mex(
     NAME pythonRemoveFuncKey
     SRC pythonRemoveFuncKey.cpp
 )
 target_include_directories(pythonRemoveFuncKey PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_include_directories(pythonRemoveFuncKey PUBLIC "${PyBind11_DIR}/include")
-target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
+target_include_directories(pythonRemoveFuncKey PUBLIC "${pybind11_SOURCE_DIR}/include")
+#target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
 
 add_custom_target(compile_ctf ALL)
 if(WIN32)
