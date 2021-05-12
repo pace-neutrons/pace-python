@@ -3,7 +3,6 @@ from IPython.core import magic_arguments
 from IPython.core.magic import Magics, magics_class, line_magic
 from IPython.display import Image, display
 import ipykernel
-from matlab import double as md
 
 import threading
 import ctypes
@@ -26,6 +25,14 @@ def showPlot(self=None, result=None):
     ip = get_ipython()
     if ip is None or _magic_class_ref is None or _magic_class_ref.plot_type != 'inline':
         return
+    try:
+        from matlab import double as md
+    except ImportError:
+        return
+    else:
+        if _magic_class_ref.m is None:
+            from . import Matlab
+            _magic_class_ref.m = Matlab().interface
     interface = _magic_class_ref.m
     nfig = len(interface.call('get',(0., "children")))
     if nfig == 0:
@@ -65,8 +72,6 @@ def showPlot(self=None, result=None):
 class Redirection(object):
     # Class which redirects a C-level file descriptor to the equiv. IPython stream
     def __init__(self, target='stdout'):
-        self.libc = ctypes.CDLL(None)
-        self.c_stdstream = ctypes.c_void_p.in_dll(self.libc, target)
         self.target = {'stdout':sys.__stdout__, 'stderr':sys.__stderr__}[target].fileno()
         self.output = {'stdout':sys.stdout, 'stderr':sys.stderr}[target]
         self.thread = None
@@ -85,7 +90,6 @@ class Redirection(object):
     def pre(self):
         if self.not_redirecting():
             return
-        self.libc.fflush(self.c_stdstream)
         if self.saved_fd == None:
             self.saved_fd = os.dup(self.target)
         self.read_pipe, write_pipe = os.pipe()
@@ -110,7 +114,6 @@ class Redirection(object):
         if self.not_redirecting() or self.saved_fd == None:
             return
         sys.stdout.flush()
-        self.libc.fflush(self.c_stdstream)
         os.dup2(self.saved_fd, self.target)
         self.stop_flag = True
         os.close(self.read_pipe)
@@ -120,7 +123,7 @@ class Redirection(object):
         self.thread = None
         self.saved_fd = None
         if self.exc_info:
-            ip.showtraceback()
+            self.ip.showtraceback()
 
 
 @magics_class
@@ -201,10 +204,18 @@ class MatlabMagics(Magics):
             if args.width: self.width = args.width
             if args.height: self.height = args.height
             if args.resolution: self.resolution = args.resolution
+        elif plot_type == 'windowed':
+            self.plot_type = plot_type
+        else:
+            raise RuntimeError(f'Unknown plot type {plot_type}')
+        try:
+            import matlab
+        except ImportError:
+            return
+        if plot_type == 'inline':
             self.m.call('set', (0., 'defaultfigurevisible', 'off'), nargout=0)
             self.m.call('set', (0., 'defaultfigurepaperpositionmode', 'manual'), nargout=0)
         elif plot_type == 'windowed':
-            self.plot_type = plot_type
             self.m.call('set', (0., 'defaultfigurevisible', 'on'), nargout=0)
             self.m.call('set', (0., 'defaultfigurepaperpositionmode', 'auto'), nargout=0)
         else:

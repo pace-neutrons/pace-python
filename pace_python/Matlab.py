@@ -8,6 +8,7 @@ import numpy
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called
 # Which then gracefully shutsdown Matlab, else we get a segfault.
 _global_matlab_ref = None
+_has_registered_magic = None
 
 class _MatlabInstance(object):
     def __init__(self, instance):
@@ -55,7 +56,6 @@ class Matlab(object):
         from .DataTypes import DataTypes
         self.pyMatlab = pyMatlab
         self.converter = DataTypes(self.interface, pyMatlab)
-        self.register_ipython_magics()
 
     def __getattr__(self, name):
         """
@@ -213,20 +213,25 @@ class Matlab(object):
         else:
             return self.interface.call('class', [obj.handle], nargout=1)
 
-    def register_ipython_magics(self):
-        try:
-            import IPython 
-        except ImportError:
-            return None
-        running_kernel = IPython.get_ipython()
-        if running_kernel is None:
-            return None
-        from . import IPythonMagics
-        from traitlets import Instance
-        shell = Instance('IPython.core.interactiveshell.InteractiveShellABC', allow_none=True)
-        magics = IPythonMagics.MatlabMagics(shell, self.interface)
-        running_kernel.register_magics(magics)
-        running_kernel.events.register('post_run_cell', IPythonMagics.showPlot)
-        redirect_stdout = IPythonMagics.Redirection(target='stdout')
-        running_kernel.events.register('pre_run_cell', redirect_stdout.pre)
-        running_kernel.events.register('post_run_cell', redirect_stdout.post)
+def register_ipython_magics():
+    try:
+        import IPython 
+    except ImportError:
+        return None
+    global _has_registered_magic
+    _has_registered_magic = True
+    running_kernel = IPython.get_ipython()
+    if running_kernel is None:
+        return None
+    from . import IPythonMagics
+    from traitlets import Instance
+    shell = Instance('IPython.core.interactiveshell.InteractiveShellABC', allow_none=True)
+    magics = IPythonMagics.MatlabMagics(shell, None)
+    running_kernel.register_magics(magics)
+    running_kernel.events.register('post_run_cell', IPythonMagics.showPlot)
+    redirect_stdout = IPythonMagics.Redirection(target='stdout')
+    running_kernel.events.register('pre_run_cell', redirect_stdout.pre)
+    running_kernel.events.register('post_run_cell', redirect_stdout.post)
+
+if not _has_registered_magic:
+    register_ipython_magics()

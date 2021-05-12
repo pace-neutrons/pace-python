@@ -4,7 +4,6 @@ matlab_add_mex(
 )
 target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_include_directories(call_python PUBLIC "${pybind11_SOURCE_DIR}/include")
-#target_link_libraries(call_python ${PYTHON_LIBRARIES})
 
 matlab_add_mex(
     NAME pythonRemoveFuncKey
@@ -12,7 +11,10 @@ matlab_add_mex(
 )
 target_include_directories(pythonRemoveFuncKey PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_include_directories(pythonRemoveFuncKey PUBLIC "${pybind11_SOURCE_DIR}/include")
-#target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
+if(WIN32)
+    target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
+    target_link_libraries(call_python ${PYTHON_LIBRARIES})
+endif()
 
 add_custom_target(compile_ctf ALL)
 if(WIN32)
@@ -65,3 +67,13 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
 add_dependencies(compile_ctf call_python pythonRemoveFuncKey)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    pybind11_add_module(_stub _stub.cpp)
+    add_dependencies(_stub compile_ctf)
+    add_custom_command(
+        TARGET _stub POST_BUILD
+        COMMAND ${BASH_COMMAND} cp -f "$<TARGET_FILE_DIR:_stub>/_stub.*" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/pace/"
+    )
+endif()
+
