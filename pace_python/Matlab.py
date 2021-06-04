@@ -1,8 +1,15 @@
-import os
+import os, sys
 import platform
 from .funcinspect import lhs_info
 # On Windows/Conda we need to load numpy DLLs before Matlab starts
 import numpy
+# On some systems we need to load the BLAS/LAPACK libraries with the DEEPBIND
+# flag so it doesn't conflict with Matlab's BLAS/LAPACK.
+# This only works if users `import pace_python` before they import scipy...
+old_flags = sys.getdlopenflags()
+sys.setdlopenflags(os.RTLD_NOW | os.RTLD_DEEPBIND)
+import scipy.linalg
+sys.setdlopenflags(old_flags)
 
 # Store the Matlab engine as a module global wrapped inside a class
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called

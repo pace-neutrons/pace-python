@@ -129,8 +129,11 @@ class CMakeBuild(build_ext):
         check_call(
             [get_cmake(), '--build', '.'] + build_args,
             cwd=self.build_temp)
-        shutil.copytree(os.path.join(self.build_temp, 'bin', 'pace_python', 'pace'),
-                        os.path.join(self.build_lib, 'pace_python', 'pace'))
+        # shutil.copytree expects destination to not exist
+        outpath = os.path.join(self.build_lib, 'pace_python', 'pace')
+        if os.path.isdir(outpath): 
+            shutil.rmtree(outpath)
+        shutil.copytree(os.path.join(self.build_temp, 'bin', 'pace_python', 'pace'), outpath)
         for ff in ['requiredMCRProducts.txt', 'setup.py', 'readme.txt']:
             shutil.copyfile(os.path.join(self.build_temp, 'bin', 'pace_python', ff),
                             os.path.join(self.build_lib, 'pace_python', ff))
@@ -154,7 +157,7 @@ KEYWORDARGS = dict(
     packages=['pace_python', 'euphonic_sqw_models'],
     package_data={'pace_python':['requiredMCRProducts.txt', 'setup.py', 'readme.txt',
                                  'pace/__init__.py', 'pace/pace.ctf']},
-    #install_requires = ['euphonic>=0.5.0', 'brille>=0.5.2'],
+    install_requires = ['six>=1.12.0', 'numpy>=1.7.1'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=dict(build_ext=CMakeBuild),
     url="https://github.com/pace-neutrons/pace-python",
