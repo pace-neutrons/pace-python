@@ -215,6 +215,7 @@ end
 function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, info)
     % Check we don't already have conda installed on the path
     has_conda = false;
+    inst_path0 = inst_path;
     if ispc
         whichexec = 'where';
     else
@@ -304,22 +305,14 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, in
     info.Text = sprintf('%sPlease wait while the pace-python module is installed\n', prefixtext);
     drawnow;
     % Install pace_python itself using pip
-    try
-        py_exec = [inst_path '/envs/pace_python/bin/python'];
-        pyenv('Version', py_exec, 'ExecutionMode', 'InProcess');
-        pipe = py.subprocess.PIPE;
-        kwargs = pyargs('stdout', pipe, 'stderr', pipe);
-        out = py.subprocess.run([py.sys.executable '-m' 'pip' 'install' 'pace_python'], kwargs);
-    catch
-        if ispc
-            pip_exec = [inst_path '\envs\pace_python\Scripts\pip.exe'];
-        else
-            pip_exec = [inst_path '/envs/pace_python/bin/pip'];
-        end
-        [rv, out] = system([pip_exec ' install -i https://test.pypi.org/simple/ pace-python']);
-        if rv ~= 0
-            error(sprintf('Could not install pace-python module: Error message is: %s', out));
-        end
+    if ispc
+        pip_exec = [inst_path '\envs\pace_python\Scripts\pip.exe'];
+    else
+        pip_exec = [inst_path '/envs/pace_python/bin/pip'];
+    end
+    [rv, out] = system([pip_exec ' install -i https://test.pypi.org/simple/ pace-python']);
+    if rv ~= 0
+        error(sprintf('Could not install pace-python module: Error message is: %s', out));
     end
     info.Text = 'Installation Complete';
     app.OKButton.Visible = 'on';

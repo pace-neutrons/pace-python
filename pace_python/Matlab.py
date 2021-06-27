@@ -6,10 +6,11 @@ import numpy
 # On some systems we need to load the BLAS/LAPACK libraries with the DEEPBIND
 # flag so it doesn't conflict with Matlab's BLAS/LAPACK.
 # This only works if users `import pace_python` before they import scipy...
-old_flags = sys.getdlopenflags()
-sys.setdlopenflags(os.RTLD_NOW | os.RTLD_DEEPBIND)
-import scipy.linalg
-sys.setdlopenflags(old_flags)
+if platform.system() == 'Linux':
+    old_flags = sys.getdlopenflags()
+    sys.setdlopenflags(os.RTLD_NOW | os.RTLD_DEEPBIND)
+    import scipy.linalg
+    sys.setdlopenflags(old_flags)
 
 # Store the Matlab engine as a module global wrapped inside a class
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called
@@ -228,7 +229,7 @@ def register_ipython_magics():
     global _has_registered_magic
     _has_registered_magic = True
     running_kernel = IPython.get_ipython()
-    if running_kernel is None:
+    if running_kernel is None or sys.__stdout__ is None or sys.__stderr__ is None:
         return None
     from . import IPythonMagics
     from traitlets import Instance

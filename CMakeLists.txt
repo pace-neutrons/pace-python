@@ -15,6 +15,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(MINIMUM_PYBIND11_VERSION 2.5.0)
 set(FETCH_PYBIND11_REPO https://github.com/pybind/pybind11)
 
+# The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
+# the anaconda redistributable module (yet) - so disable it.
+# https://developercommunity.visualstudio.com/content/problem/852548/vcruntime140-1dll-is-missing.html
+if(WIN32)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -d2FH4-")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -d2FH4-")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -d2:-FH4-")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -d2:-FH4-")
+endif(WIN32)
+
 if(WIN32)
     find_package(POWERSHELL REQUIRED)
 else()
@@ -48,7 +58,7 @@ else()
 endif()
 
 # You can set a specific Matlab version folder here
-#set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2019b")
+#set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
 get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)
 get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
