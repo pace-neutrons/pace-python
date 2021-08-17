@@ -24,6 +24,8 @@ class DataTypes:
                 datalist[ii] = datalist[ii].handle
             elif hasattr(datalist[ii], '__call__'):
                 datalist[ii] = pymatpy(datalist[ii], self.interface)
+            elif isinstance(datalist[ii], list):
+                datalist[ii] = self.encode(datalist[ii])
         return datalist
 
     def encode(self, data):

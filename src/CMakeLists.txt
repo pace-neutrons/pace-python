@@ -26,8 +26,6 @@ if(WIN32)
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/dat_files"
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/external"
         COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
-        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
-        COMMAND ${POWERSHELL_COMMAND} Copy-Item "${CMAKE_CURRENT_SOURCE_DIR}/+brille/*" -Destination "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
     )
 else()
     add_custom_command(
@@ -38,8 +36,6 @@ else()
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
-        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
-        COMMAND ${BASH_COMMAND} cp "${CMAKE_CURRENT_SOURCE_DIR}/+brille/*" "${CMAKE_CURRENT_BINARY_DIR}/CTF/+brille"
     )
 endif()
 
@@ -47,6 +43,7 @@ add_custom_command(
     TARGET compile_ctf PRE_BUILD
     COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python" -v -N
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+        -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"

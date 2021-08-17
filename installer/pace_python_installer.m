@@ -41,7 +41,7 @@ classdef pace_python_installer < matlab.apps.AppBase
             spyder = app.SpyderCheckBox.Value;
             app.TabGroup.Visible = 'off';
             app.InfoLabel.Visible = 'on';
-            install_miniconda(miniconda_path, jupyter, spyder, app.InfoLabel);
+            install_miniconda(miniconda_path, jupyter, spyder, app);
         end
 
         % Button pushed function: InstallCustomButton
@@ -50,7 +50,8 @@ classdef pace_python_installer < matlab.apps.AppBase
             app.TabGroup.Visible = 'off';
             app.InfoLabel.Visible = 'on';
             for ii = 1:numel(py_path)
-                install_pace(py_path{ii}, app.InfoLabel);
+                rv = install_pace(py_path{ii}, app);
+                if rv ~= 0, return; end
             end
             app.InfoLabel.Text = 'Installation(s) Complete';
             app.OKButton.Visible = 'on';
@@ -203,16 +204,22 @@ end
 
 %% Module-private functions
 
-function install_pace(py_exec, info)
-    info.Text = sprintf('Installing pace-python to %s\n', py_exec);
+function rv = install_pace(py_exec, app)
+    app.InfoLabel.Text = sprintf('Installing pace-python to %s\n', py_exec);
     drawnow;
     [rv, out] = system([py_exec ' -m pip install -i https://test.pypi.org/simple/ pace-python']);
     if rv ~= 0
-        error(sprintf('Could not install pace-python module: Error message is: %s', out));
+        report_error(sprintf('Could not install pace-python module: Error message is: %s', out), app);
     end
 end
 
-function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, info)
+function report_error(msg, app)
+    app.InfoLabel.Text = msg;
+    app.OKButton.Visible = 'on';
+    drawnow;
+end
+
+function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, app)
     % Check we don't already have conda installed on the path
     has_conda = false;
     inst_path0 = inst_path;
@@ -242,7 +249,7 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, in
         inst_path = inst_path{1};
     else
         % Get the conda installable
-        info.Text = sprintf('%sPlease wait while miniconda is downloaded\n', prefixtext);
+        app.InfoLabel.Text = sprintf('%sPlease wait while miniconda is downloaded\n', prefixtext);
         drawnow;
         if ispc
             conda_url = 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe';
@@ -255,54 +262,59 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, in
             out_file = '/tmp/conda_install.sh';
         end
         [filestr, status] = urlwrite(conda_url, out_file);
-        if status == 0, error('Could not download miniconda'); end
-        info.Text = sprintf('%s', prefixtext);
+        if status == 0, report_error('Could not download miniconda'); return; end
+        app.InfoLabel.Text = sprintf('%sPlease wait while miniconda is installed\n', prefixtext);
         drawnow;
         % Install conda
         if ~exist(inst_path, 'dir')
             mkdir(inst_path);
         end
         if ispc
-            [rv, out] = system([out_file '/InstallationType=JustMe /RegisterPython=0 /S /D=' inst_path]);
+            [rv, out] = system([out_file ' /InstallationType=JustMe /RegisterPython=0 /S /D=' inst_path]);
             conda_exec = [inst_path '\scripts\conda.exe'];
         else
             [rv, out] = system(['bash ' out_file ' -b -f -p ' inst_path]);
             conda_exec = [inst_path '/bin/conda'];
         end
         if rv ~= 0
-            error(sprintf('Could not install Miniconda: Error message is: %s', out));
+            report_error(sprintf('Could not install Miniconda: Error message is: %s', out));
+            return;
         end
     end
 
     % Create pace_python environment
-    info.Text = sprintf('%sPlease wait while a Python environment is created\n', prefixtext);
+    app.InfoLabel.Text = sprintf('%sPlease wait while a Python environment is created\n', prefixtext);
     drawnow;
     [rv, out] = system([conda_exec ' create -n pace_python -y -c conda-forge python=3.7']);
     if rv ~= 0
-        error(sprintf('Could not create Python environment: Error message is: %s', out));
+        report_error(sprintf('Could not create Python environment: Error message is: %s', out));
+        return
     end
-    info.Text = sprintf('%sPlease wait while additional Python packages are installed\n', prefixtext);
+    app.InfoLabel.Text = sprintf('%sPlease wait while additional Python packages are installed\n', prefixtext);
     drawnow;
     [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge euphonic']);
     if rv ~= 0
-        error(sprintf('Could not install Euphonic: Error message is: %s', out));
+        report_error(sprintf('Could not install Euphonic: Error message is: %s', out));
+        return
     end
     if inst_jupyter
         [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge jupyter']);
         if rv ~= 0
-            error(sprintf('Could not install Jupyter: Error message is: %s', out));
+            report_error(sprintf('Could not install Jupyter: Error message is: %s', out));
+            return
         end
     end
     if inst_spyder
         [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge spyder']);
         if rv ~= 0
-            info.Text = prefixtext;
+            app.InfoLabel.Text = prefixtext;
             drawnow;
-            error(sprintf('Could not install Spyder: Error message is: %s', out));
+            report_error(sprintf('Could not install Spyder: Error message is: %s', out));
+            return
         end
     end
 
-    info.Text = sprintf('%sPlease wait while the pace-python module is installed\n', prefixtext);
+    app.InfoLabel.Text = sprintf('%sPlease wait while the pace-python module is installed\n', prefixtext);
     drawnow;
     % Install pace_python itself using pip
     if ispc
@@ -312,9 +324,10 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, in
     end
     [rv, out] = system([pip_exec ' install -i https://test.pypi.org/simple/ pace-python']);
     if rv ~= 0
-        error(sprintf('Could not install pace-python module: Error message is: %s', out));
+        report_error(sprintf('Could not install pace-python module: Error message is: %s', out));
+        return
     end
-    info.Text = 'Installation Complete';
+    app.InfoLabel.Text = 'Installation Complete';
     app.OKButton.Visible = 'on';
     drawnow;
 end

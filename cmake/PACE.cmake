@@ -5,7 +5,7 @@ message(STATUS "Downloading PACE")
 download(
     PROJ SPINW
     GIT_REPOSITORY https://github.com/mducle/spinw.git
-    GIT_TAG b0c3e8670a1513d8655605fa3f80ea182cfebcb8
+    GIT_TAG e3e57aae432f6737aff81d31ccda6e7dce741cef
     GIT_SHALLOW 1
 )
 

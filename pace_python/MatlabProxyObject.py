@@ -130,7 +130,7 @@ class MatlabProxyObject(object):
         return re.sub('</?a[^>]*>', '', html_str)
 
     def __dir__(self):
-        return super(MatlabProxyObject, self).__dir__() + list(self.__dict__.keys()) + self._getAttributeNames()
+        return list(set(super(MatlabProxyObject, self).__dir__() + list(self.__dict__.keys()) + self._getAttributeNames()))
 
     @property
     def __doc__(self):

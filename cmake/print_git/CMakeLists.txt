@@ -1,6 +1,0 @@
-find_package(Git)
-if (Git_FOUND)
-    message("Git Found: ${GIT_EXECUTABLE}")
-else()
-    message("Git Not Found")
-endif()

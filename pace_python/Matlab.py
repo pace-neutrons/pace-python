@@ -12,6 +12,12 @@ if platform.system() == 'Linux':
     import scipy.linalg
     sys.setdlopenflags(old_flags)
 
+# Import brille here to load its C module before Matlab gets loaded
+try:
+    import brille
+except ImportError:
+    pass
+
 # Store the Matlab engine as a module global wrapped inside a class
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called
 # Which then gracefully shutsdown Matlab, else we get a segfault.

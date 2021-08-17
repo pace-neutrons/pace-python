@@ -33,3 +33,14 @@ CMakeCache.txt
 
 extern-pybind11
 src/CTF
+
+build
+dist
+
+installer/Pace_Python_Installer/
+installer/mccExcludedFiles.log
+installer/pace_python_installer.exe
+installer/readme.txt
+installer/requiredMCRProducts.txt
+
+euphonic_sqw_models
