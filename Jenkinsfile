@@ -28,12 +28,13 @@ pipeline {
             sh '''
                 module load conda/3 &&
                 module load gcc &&
+                module load cmake &&
                 conda create --name pace_python -c conda-forge python=3.7 -y
                 conda activate pace_python &&
                 python -m pip install --upgrade pip &&
                 python -m pip install numpy scipy matplotlib &&
                 python -m pip install euphonic brille
-                module load matlab/R2020a
+                module load matlab
                 python setup.py bdist_wheel
             '''
             archiveArtifacts artifacts: 'dist/*whl'
@@ -67,6 +68,7 @@ pipeline {
                 module load conda/3 &&
                 conda activate pace_python &&
                 python -m pip install $(find dist -name "*whl"|tail -n1) &&
+                export LD_LIBRARY_PATH=/opt/software/matlab/R2019b/runtime/glnxa64:/opt/software/matlab/R2019b/bin/glnxa64:/opt/software/matlab/R2019b/sys/os:/opt/software/matlab/R2019b/extern/bin/glnxa64:$LD_LIBRARY_PATH &&
                 python test/run_test.py
             '''
           }
