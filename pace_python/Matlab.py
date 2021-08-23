@@ -195,7 +195,7 @@ class Matlab(object):
             def guess_from_env(self):
                 ld_path = os.getenv(obj.path_var)
                 if ld_path is None: return None
-                for possible_dir in ld_path.split(':'):
+                for possible_dir in ld_path.split(self.sep):
                     if os.path.exists(os.path.join(possible_dir, self.file_to_find)):
                         return os.path.abspath(os.path.join(possible_dir, '..', '..'))
                 return None

@@ -44,3 +44,9 @@ installer/readme.txt
 installer/requiredMCRProducts.txt
 
 euphonic_sqw_models
+
+cmake/print_git/CMakeFiles
+cmake/print_git/CMakeCache.txt
+cmake/print_git/*.cmake
+cmake/print_git/*.vcxproj
+cmake/print_git/*.sln

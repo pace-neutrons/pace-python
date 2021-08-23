@@ -121,6 +121,8 @@ class CMakeBuild(build_ext):
         cxxflags = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''), self.distribution.get_version())
         env['CXXFLAGS'] = cxxflags
+        if 'MATLAB_DIR' in env:
+            cmake_args += ['-DMatlab_ROOT_DIR=' + env['MATLAB_DIR']]
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         check_call(
