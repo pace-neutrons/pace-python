@@ -20,6 +20,11 @@ class PacePythonTest(unittest.TestCase):
     def setUpClass(cls):
         from pace_python import Matlab
         cls.m = Matlab()
+
+    @classmethod
+    def tearDownClass(cls):
+        with open('success', 'w') as f:
+            f.write('success')
     
     @classmethod
     def setup_fe_data(self):

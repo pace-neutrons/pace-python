@@ -2,7 +2,7 @@
 
 def get_agent(String jobname) {
   if (jobname.contains('linux')) {
-    withCredentials([string(credentialsId: 'sl7_agent', variable: 'agent')]) {
+    withCredentials([string(credentialsId: 'manylinux_agent', variable: 'agent')]) {
       return "${agent}"
     }
   } else if (jobname.contains('windows')) {
@@ -26,18 +26,9 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-                module load conda/3 &&
-                module load gcc &&
-                module load cmake &&
-                conda create --name pace_python -c conda-forge python=3.7 -y
-                conda activate pace_python &&
-                python -m pip install --upgrade pip &&
-                python -m pip install numpy scipy matplotlib &&
-                python -m pip install euphonic brille
-                module load matlab
-                python setup.py bdist_wheel
+                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/manylinux/jenkins_build_script.sh
             '''
-            archiveArtifacts artifacts: 'dist/*whl'
+            archiveArtifacts artifacts: 'wheelhouse/*whl'
           }
           else {
             powershell './cmake/build_pace_python.ps1'
@@ -65,11 +56,17 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-                module load conda/3 &&
-                conda activate pace_python &&
-                python -m pip install $(find dist -name "*whl"|tail -n1) &&
-                export LD_LIBRARY_PATH=/opt/software/matlab/R2019b/runtime/glnxa64:/opt/software/matlab/R2019b/bin/glnxa64:/opt/software/matlab/R2019b/sys/os:/opt/software/matlab/R2019b/extern/bin/glnxa64:$LD_LIBRARY_PATH &&
-                python test/run_test.py
+                eval "$(/opt/conda/bin/conda shell.bash hook)"
+                conda env remove -n py37
+                conda create -n py37 -c conda-forge python=3.7 -y
+                conda activate py37
+                conda install -c conda-forge scipy euphonic -y
+                python -m pip install brille
+                python -m pip install $(find -name "*cp37*whl"|tail -n1)
+                export LD_LIBRARY_PATH=/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64:$LD_LIBRARY_PATH
+                export LD_PRELOAD=/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so
+                python test/run_test.py || true
+                test -f success
             '''
           }
           else {

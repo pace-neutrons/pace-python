@@ -183,7 +183,7 @@ class Matlab(object):
             def guess_path(self):
                 GUESSES = {'Windows': [r'C:\Program Files\MATLAB', 'C:\Program Files (x86)\MATLAB', 
                                        r'C:\Program Files\MATLAB\MATLAB Runtime', 'C:\Program Files (x86)\MATLAB\MATLAB Runtime'],
-                           'Linux': ['/usr/local/MATLAB', '/opt/MATLAB', '/opt'],
+                           'Linux': ['/usr/local/MATLAB', '/opt/MATLAB', '/opt', '/usr/local/MATLAB/MATLAB_Runtime'],
                            'Darwin': ['/Applications/MATLAB']}
                 for possible_dir in GUESSES[self.system]:
                     if os.path.isdir(possible_dir):
