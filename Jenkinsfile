@@ -14,6 +14,25 @@ def get_agent(String jobname) {
   }
 }
 
+def setGitHubBuildStatus(String status, String message) {
+    script {
+        withCredentials([string(credentialsId: 'PacePython_API_Token',
+                variable: 'api_token')]) {
+            sh """
+                curl -H "Authorization: token ${api_token}" \
+                --request POST \
+                --data '{ \
+                    "state": "${status}", \
+                    "description": "${message} on ${env.JOB_BASE_NAME}", \
+                    "target_url": "$BUILD_URL", \
+                    "context": "${env.JOB_BASE_NAME}" \
+                }' \
+                https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
+            """
+        }
+    }
+}
+
 pipeline {
 
   agent {
@@ -88,14 +107,21 @@ pipeline {
       }
     }
 
+    success {
+        script {
+              setGitHubBuildStatus("success", "Successful")
+        }
+    }
+
     unsuccessful {
       withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
         script {
-            mail (
-              to: "${pace_python_email}",
-              subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
-              body: "See ${env.BUILD_URL}"
-            )
+            //mail (
+            //  to: "${pace_python_email}",
+            //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
+            //  body: "See ${env.BUILD_URL}"
+            //)
+            setGitHubBuildStatus("failure", "Unsuccessful")
         }
       }
     }
