@@ -18,6 +18,7 @@ def setGitHubBuildStatus(String status, String message) {
     script {
         withCredentials([string(credentialsId: 'PacePython_API_Token',
                 variable: 'api_token')]) {
+          if (isUnix()) {
             sh """
                 curl -H "Authorization: token ${api_token}" \
                 --request POST \
@@ -29,6 +30,28 @@ def setGitHubBuildStatus(String status, String message) {
                 }' \
                 https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
             """
+          }
+          else {
+            return powershell(
+            script: """
+                \$body = @"
+                  {
+                    "state": "${status}",
+                    "description": "${message} on ${env.JOB_BASE_NAME}",
+                    "target_url": "$BUILD_URL",
+                    "context": "${env.JOB_BASE_NAME}"
+                  }
+"@
+                [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+                Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
+                    -Headers @{Authorization = "token ${api_token}"} \
+                    -Method 'POST' \
+                    -ContentType "application/json" \
+                    -Body \$body
+            """,
+            returnStdout: true
+            )
+          }
         }
     }
 }
@@ -97,15 +120,6 @@ pipeline {
   }
 
   post {
-    always {
-      script {
-        if (!isUnix()) {
-          bat '''
-            CALL conda remove -n pace_python --all -y
-          '''
-        }
-      }
-    }
 
     success {
         script {

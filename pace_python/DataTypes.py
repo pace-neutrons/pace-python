@@ -20,12 +20,7 @@ class DataTypes:
 
     def _unwrap(self, datalist):
         for ii in range(len(datalist)):
-            if isinstance(datalist[ii], MatlabProxyObject):
-                datalist[ii] = datalist[ii].handle
-            elif hasattr(datalist[ii], '__call__'):
-                datalist[ii] = pymatpy(datalist[ii], self.interface)
-            elif isinstance(datalist[ii], list):
-                datalist[ii] = self.encode(datalist[ii])
+            datalist[ii] = self.encode(datalist[ii])
         return datalist
 
     def encode(self, data):

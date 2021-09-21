@@ -18,6 +18,12 @@ function Invoke-CmdScript {
 }
 
 Try {
+    python -m pip uninstall scipy numpy spglib pillow kiwisolver matplotlib seekpath pint -y
+} Catch {
+    Write-Error("Could not uninstall base python packages")
+}
+
+Try {
     $reg = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Python\ContinuumAnalytics\Anaconda39-64\InstallPath"
 } Catch [System.Management.Automation.ItemNotFoundException] {
     Write-Error("Could not find Anaconda key in registry")
@@ -32,7 +38,7 @@ $Env:_CONDA_ROOT = "$conda_root_dir"
 $Env:_CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
-Write-and-Invoke "conda remove -n pace_python --all -y"
+Write-and-Invoke "conda env remove -n pace_python -y"
 
 Try {
     Write-and-Invoke "Remove-Item -Force -Recurse -Path $conda_env_dir"

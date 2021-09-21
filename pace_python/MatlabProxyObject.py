@@ -112,9 +112,13 @@ class MatlabProxyObject(object):
             return matlab_method()
 
     def __setattr__(self, name, value):
-        self.__class__[name] = value
-        access = self.interface.call('substruct', ['.', name])
-        self.interface.call('subsasgn', [self, access, value])
+        if self._is_thinwrapper:
+            vstr = str(uuid.uuid4()).replace('-','_')
+            self.interface.call('assignin', ['base', vstr, value])
+            self.interface.call('evalin', ['base', '{}.{} = {}'.format(self._objstr, name, vstr)])
+        else:
+            access = self.interface.call('substruct', ['.', name])
+            self.interface.call('subsasgn', [self.handle, access, value])
 
     def __repr__(self):
         # getclass = self.interface.str2func('class')
