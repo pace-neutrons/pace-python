@@ -1,4 +1,4 @@
-from pace_python import horace
+from pace_neutrons import horace
 from matlab import double as md
 import matlab
 

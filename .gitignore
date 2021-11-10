@@ -1,11 +1,13 @@
 
 pace_python/\.DS_Store
+pace_neutrons/\.DS_Store
 
 \.DS_Store
 
 *.pyc
 __pycache__
 pace_python/mccExcludedFiles.log
+pace_neutrons/mccExcludedFiles.log
 
 *~
 *swp
@@ -40,13 +42,26 @@ dist
 installer/Pace_Python_Installer/
 installer/mccExcludedFiles.log
 installer/pace_python_installer.exe
+installer/pace_neutrons_installer.exe
+installer/pace_python_installer
+installer/pace_neutrons_installer
 installer/readme.txt
 installer/requiredMCRProducts.txt
 
+requiredMCRProducts.txt
+
 euphonic_sqw_models
 
+cmake/print_git/Makefile
 cmake/print_git/CMakeFiles
 cmake/print_git/CMakeCache.txt
 cmake/print_git/*.cmake
 cmake/print_git/*.vcxproj
 cmake/print_git/*.sln
+
+success
+
+pace_python.egg-info
+pace_neutrons.egg-info
+
+Matlab

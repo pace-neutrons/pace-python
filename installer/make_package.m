@@ -1,10 +1,10 @@
 % Needs R2020a or newer
 if ispc
-    mcc -e pace_python_installer.m
-    execname = 'pace_python_installer.exe';
+    mcc -e pace_neutrons_installer.m
+    execname = 'pace_neutrons_installer.exe';
 else
-    mcc -m pace_python_installer.m
-    execname = 'pace_python_installer';
+    mcc -m pace_neutrons_installer.m
+    execname = 'pace_neutrons_installer';
 end
 % Make sure we install the required products:
 % 35000=Core, 35010=Numerics, 35055=Python

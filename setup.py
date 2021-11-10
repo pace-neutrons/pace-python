@@ -4,6 +4,7 @@ import sys
 import subprocess
 import pkgutil
 import shutil
+import versioneer
 from sysconfig import get_platform
 from subprocess import CalledProcessError, check_output, check_call, run, PIPE
 from distutils.version import LooseVersion
@@ -132,33 +133,31 @@ class CMakeBuild(build_ext):
             [get_cmake(), '--build', '.'] + build_args,
             cwd=self.build_temp)
         # shutil.copytree expects destination to not exist
-        outpath = os.path.join(self.build_lib, 'pace_python', 'pace')
+        outpath = os.path.join(self.build_lib, 'pace_neutrons', 'pace')
         if os.path.isdir(outpath): 
             shutil.rmtree(outpath)
-        shutil.copytree(os.path.join(self.build_temp, 'bin', 'pace_python', 'pace'), outpath)
+        shutil.copytree(os.path.join(self.build_temp, 'bin', 'pace_neutrons', 'pace'), outpath)
         for ff in ['requiredMCRProducts.txt', 'setup.py', 'readme.txt']:
-            shutil.copyfile(os.path.join(self.build_temp, 'bin', 'pace_python', ff),
-                            os.path.join(self.build_lib, 'pace_python', ff))
+            shutil.copyfile(os.path.join(self.build_temp, 'bin', 'pace_neutrons', ff),
+                            os.path.join(self.build_lib, 'pace_neutrons', ff))
 
 
 with open("README.md", "r") as fh:
     LONG_DESCRIPTION = fh.read()
 
-with open("VERSION", "r") as fh:
-	VERSION_NUMBER = fh.readline().strip()
 
 KEYWORDARGS = dict(
-    name='pace_python',
-    version=VERSION_NUMBER,
+    name='pace_neutrons',
+    version=versioneer.get_version(),
     author='Duc Le',
     author_email='duc.le@stfc.ac.uk',
     description='A Python wrapper around Matlab programs for inelastic neutron scattering data analysis',
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension('pace_python')],
-    packages=['pace_python', 'euphonic_sqw_models'],
-    package_data={'pace_python':['requiredMCRProducts.txt', 'setup.py', 'readme.txt',
-                                 'pace/__init__.py', 'pace/pace.ctf']},
+    ext_modules=[CMakeExtension('pace_neutrons')],
+    packages=['pace_neutrons', 'euphonic_sqw_models'],
+    package_data={'pace_neutrons':['requiredMCRProducts.txt', 'setup.py', 'readme.txt',
+                                   'pace/__init__.py', 'pace/pace.ctf']},
     install_requires = ['six>=1.12.0', 'numpy>=1.7.1'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=dict(build_ext=CMakeBuild),

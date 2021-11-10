@@ -29,7 +29,7 @@ Try {
     Write-Error("Could not find Anaconda key in registry")
 }
 $conda_root_dir = "$($reg.'(default)')"
-$conda_env_dir = "$conda_root_dir\envs\pace_python"
+$conda_env_dir = "$conda_root_dir\envs\pace_neutrons"
 
 $Env:CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 $Env:_CE_M = ""
@@ -38,7 +38,7 @@ $Env:_CONDA_ROOT = "$conda_root_dir"
 $Env:_CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
-Write-and-Invoke "conda env remove -n pace_python -y"
+Write-and-Invoke "conda env remove -n pace_neutrons -y"
 
 Try {
     Write-and-Invoke "Remove-Item -Force -Recurse -Path $conda_env_dir"
@@ -46,14 +46,14 @@ Try {
     Write-Output "Could not remove '$conda_env_dir'`n$($_.Exception)"
 }
 
-Write-and-Invoke "conda create -n pace_python -c conda-forge python=3.7 -y"
-Write-and-Invoke "Enter-CondaEnvironment pace_python"
+Write-and-Invoke "conda create -n pace_neutrons -c conda-forge python=3.7 -y"
+Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
 Write-and-Invoke "python -m pip install --upgrade pip"
 Write-and-Invoke "python -m pip install numpy scipy matplotlib"
 Invoke-CmdScript "$Env:VS2019_VCVARSALL" x86_amd64
-Write-and-Invoke "python -m pip install euphonic brille"
+Write-and-Invoke "python -m pip install --force-reinstall euphonic brille"
 
-# Hard code to use R2020a as it is the mininum version needed for pace_python
+# Hard code to use R2020a as it is the mininum version needed for pace_neutrons
 Try {
     $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.8" -ErrorAction Stop
     $Env:MATLAB_DIR = $MATLAB_REG.MATLABROOT

@@ -133,7 +133,7 @@ class MatlabMagics(Magics):
 
     It defines several magic functions:
 
-    %pace_python - sets up the plotting environment (default 'inline')
+    %pace_neutrons - sets up the plotting environment (default 'inline')
     %matlab_fig - defines the inline figure size and resolution for the next plot only
     """
 
@@ -156,8 +156,8 @@ class MatlabMagics(Magics):
     @magic_arguments.argument('-w', '--width', type=int, help="Default figure width in pixels [def: 400]")
     @magic_arguments.argument('-h', '--height', type=int, help="Default figure height in pixels [def: 300]")
     @magic_arguments.argument('-r', '--resolution', type=int, help="Default figure resolution in dpi [def: 150]")
-    def pace_python(self, line):
-        """Set up pace_python to work with IPython notebooks
+    def pace(self, line):
+        """Set up pace_neutrons to work with IPython notebooks
         
         Use this magic function to set the behaviour of Matlab programs Horace and SpinW in Python.
         You can specify how plots should appear: either 'inline' [default] or 'windowed'.
@@ -168,15 +168,15 @@ class MatlabMagics(Magics):
         By default the inline backend is used for both figures and outputs. 
         To switch behaviour use, use:
 
-            In [1]: %pace_python windowed             # windowed figures, output unchanged ('inline' default)
-            In [2]: %pace_python console              # figure unchanged ('inline' default), console output
-            In [3]: %pace_python windowed console     # windowed figures, console output
-            In [4]: %pace_python inline inline        # inline figures, inline output
-            In [5]: %pace_python inline               # inline figures, inline output
-            In [6]: %pace_python inline console       # inline figures, console output
-            In [7]: %pace_python windowed inline      # windowed figures, console output
+            In [1]: %pace windowed             # windowed figures, output unchanged ('inline' default)
+            In [2]: %pace console              # figure unchanged ('inline' default), console output
+            In [3]: %pace windowed console     # windowed figures, console output
+            In [4]: %pace inline inline        # inline figures, inline output
+            In [5]: %pace inline               # inline figures, inline output
+            In [6]: %pace inline console       # inline figures, console output
+            In [7]: %pace windowed inline      # windowed figures, console output
 
-        Note that if you specify `%pace_python inline` this sets `'inline'` for _both_ figures and outputs.
+        Note that if you specify `%pace inline` this sets `'inline'` for _both_ figures and outputs.
         If you want inline figures and console outputs or windowed figures and inline output you must specify
         that specifically.
 
@@ -184,16 +184,16 @@ class MatlabMagics(Magics):
 
         For inlined figures, you can also set the default figure size and resolution with
 
-            In [8]: %pace_python inline --width 400 --height 300 --resolution 150
+            In [8]: %pace inline --width 400 --height 300 --resolution 150
 
         The values are in pixels for the width and height and dpi for resolution. A short cut:
 
-            In [9]: %pace_python inline -w 400 -h 300 -r 150
+            In [9]: %pace inline -w 400 -h 300 -r 150
 
         Also works. The width, height and resolution only applies to inline figures.
         You should use the usual Matlab commands to resize windowed figures.
         """
-        args = magic_arguments.parse_argstring(self.pace_python, line)
+        args = magic_arguments.parse_argstring(self.pace, line)
         plot_type = args.plot_type if args.plot_type else self.plot_type
         output = args.output if args.output else self.output
         if args.plot_type and args.plot_type == 'inline' and args.output == None:

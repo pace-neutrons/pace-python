@@ -1,11 +1,11 @@
 # For some reason we _have_ to load euphonic before Matlab
 from euphonic import ForceConstants
-from pace_python import EuphonicWrapper
+from pace_neutrons import EuphonicWrapper
 
 # Setting (os.RTLD_NOW | os.RTLD_DEEPBIND) flags causes a crash here...
 #import sys; sys.setdlopenflags(10)
 
-from pace_python import Matlab
+from pace_neutrons import Matlab
 m = Matlab()
 import numpy as np
 from matlab import double as md

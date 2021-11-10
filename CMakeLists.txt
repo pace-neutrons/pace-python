@@ -82,4 +82,4 @@ endif()
 include(PACE)
 
 add_subdirectory(src)
-add_subdirectory(pace_python)
+add_subdirectory(pace_neutrons)

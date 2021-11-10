@@ -94,6 +94,10 @@ pipeline {
     }
 
     stage("Run-Pace-Python-Tests") {
+      environment {
+        LD_LIBRARY_PATH = "/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64"
+        LD_PRELOAD = "/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so"
+      }
       steps {
         script {
           if (isUnix()) {
@@ -104,9 +108,7 @@ pipeline {
                 conda activate py37
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
-                python -m pip install $(find -name "*cp37*whl"|tail -n1)
-                export LD_LIBRARY_PATH=/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64:$LD_LIBRARY_PATH
-                export LD_PRELOAD=/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so
+                python -m pip install $(find wheelhouse -name "*cp37*whl"|tail -n1)
                 python test/run_test.py || true
                 test -f success
             '''

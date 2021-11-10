@@ -26,7 +26,7 @@ if(WIN32)
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/dat_files"
         COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/external"
         COMMAND ${POWERSHELL_COMMAND} Copy-Item -Force "${HORACE_BINARY_DIR}/worker_v2.m.template" -Destination "${CMAKE_CURRENT_BINARY_DIR}/CTF/worker_v2.m"
-        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
+        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons"
     )
 else()
     add_custom_command(
@@ -37,13 +37,13 @@ else()
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         COMMAND ${BASH_COMMAND} cp -f "${HORACE_BINARY_DIR}/worker_v2.m.template" "${CMAKE_CURRENT_BINARY_DIR}/CTF/worker_v2.m"
-        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python"
+        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons"
     )
 endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
-    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python" -v -N
+    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v -N
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
@@ -72,7 +72,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_dependencies(_stub compile_ctf)
     add_custom_command(
         TARGET _stub POST_BUILD
-        COMMAND ${BASH_COMMAND} cp -f "$<TARGET_FILE_DIR:_stub>/_stub.*" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_python/pace/"
+        COMMAND ${BASH_COMMAND} cp -f "$<TARGET_FILE_DIR:_stub>/_stub.*" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons/pace/"
     )
 endif()
 

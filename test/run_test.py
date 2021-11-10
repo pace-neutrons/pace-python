@@ -18,7 +18,7 @@ class PacePythonTest(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        from pace_python import Matlab
+        from pace_neutrons import Matlab
         cls.m = Matlab()
 
     @classmethod

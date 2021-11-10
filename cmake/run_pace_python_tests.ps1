@@ -9,7 +9,7 @@ Try {
     Write-Error("Could not find Anaconda key in registry")
 }
 $conda_root_dir = "$($reg.'(default)')"
-$conda_env_dir = "$conda_root_dir\envs\pace_python"
+$conda_env_dir = "$conda_root_dir\envs\pace_neutrons"
 
 $Env:CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 $Env:_CE_M = ""
@@ -18,12 +18,12 @@ $Env:_CONDA_ROOT = "$conda_root_dir"
 $Env:_CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
-Write-and-Invoke "Enter-CondaEnvironment pace_python"
+Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
 
 $wheels = Get-ChildItem dist -Filter *.whl
 Write-and-Invoke "python -m pip install .\dist\$($wheels[-1].Name)"
 
-# Hard code to use R2020a as it is the mininum version needed for pace_python
+# Hard code to use R2020a as it is the mininum version needed for pace_neutrons
 Try {
     $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.8" -ErrorAction Stop
     $Env:Path += ";$($MATLAB_REG.MATLABROOT)\runtime\win64"

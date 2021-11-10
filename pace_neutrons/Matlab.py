@@ -5,7 +5,7 @@ from .funcinspect import lhs_info
 import numpy
 # On some systems we need to load the BLAS/LAPACK libraries with the DEEPBIND
 # flag so it doesn't conflict with Matlab's BLAS/LAPACK.
-# This only works if users `import pace_python` before they import scipy...
+# This only works if users `import pace_neutrons` before they import scipy...
 if platform.system() == 'Linux':
     old_flags = sys.getdlopenflags()
     sys.setdlopenflags(os.RTLD_NOW | os.RTLD_DEEPBIND)
@@ -28,7 +28,7 @@ class _MatlabInstance(object):
     def __init__(self, runtime_version, mlPath):
         checkPath(runtime_version, mlPath)
         # We do the import here as we have to set the ENV before we can import
-        from pace_python import pace
+        from pace_neutrons import pace
         self._interface = pace.initialize()
         print('Interface opened')
         self._interface.call('pyhorace_init', [], nargout=0)

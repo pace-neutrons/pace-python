@@ -1,4 +1,4 @@
-from pace_python import Matlab
+from pace_neutrons import Matlab
 m = Matlab()
 
 #% ========================================================================

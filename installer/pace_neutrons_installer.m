@@ -1,4 +1,4 @@
-classdef pace_python_installer < matlab.apps.AppBase
+classdef pace_neutrons_installer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
@@ -94,9 +94,9 @@ classdef pace_python_installer < matlab.apps.AppBase
             % Create EditField_2
             app.DefaultEditField = uieditfield(app.DefaultInstallationTab, 'text');
             if ispc
-                app.DefaultEditField.Value = [getenv('USERPROFILE') '\pace_python'];
+                app.DefaultEditField.Value = [getenv('USERPROFILE') '\pace_neutrons'];
             else
-                app.DefaultEditField.Value = [getenv('HOME') '/pace_python'];
+                app.DefaultEditField.Value = [getenv('HOME') '/pace_neutrons'];
             end
             app.DefaultEditField.Position = [19 119 575 22];
 
@@ -177,7 +177,7 @@ classdef pace_python_installer < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = pace_python_installer
+        function app = pace_neutrons_installer
 
             % Create UIFigure and components
             createComponents(app)
@@ -282,30 +282,30 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, ap
         end
     end
 
-    % Create pace_python environment
+    % Create pace_neutrons environment
     app.InfoLabel.Text = sprintf('%sPlease wait while a Python environment is created\n', prefixtext);
     drawnow;
-    [rv, out] = system([conda_exec ' create -n pace_python -y -c conda-forge python=3.7']);
+    [rv, out] = system([conda_exec ' create -n pace_neutrons -y -c conda-forge python=3.7']);
     if rv ~= 0
         report_error(sprintf('Could not create Python environment: Error message is: %s', out));
         return
     end
     app.InfoLabel.Text = sprintf('%sPlease wait while additional Python packages are installed\n', prefixtext);
     drawnow;
-    [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge euphonic']);
+    [rv, out] = system([conda_exec ' install -n pace_neutrons -y -c conda-forge euphonic']);
     if rv ~= 0
         report_error(sprintf('Could not install Euphonic: Error message is: %s', out));
         return
     end
     if inst_jupyter
-        [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge jupyter']);
+        [rv, out] = system([conda_exec ' install -n pace_neutrons -y -c conda-forge jupyter']);
         if rv ~= 0
             report_error(sprintf('Could not install Jupyter: Error message is: %s', out));
             return
         end
     end
     if inst_spyder
-        [rv, out] = system([conda_exec ' install -n pace_python -y -c conda-forge spyder']);
+        [rv, out] = system([conda_exec ' install -n pace_neutrons -y -c conda-forge spyder']);
         if rv ~= 0
             app.InfoLabel.Text = prefixtext;
             drawnow;
@@ -316,11 +316,11 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, ap
 
     app.InfoLabel.Text = sprintf('%sPlease wait while the pace-python module is installed\n', prefixtext);
     drawnow;
-    % Install pace_python itself using pip
+    % Install pace_neutrons itself using pip
     if ispc
-        pip_exec = [inst_path '\envs\pace_python\Scripts\pip.exe'];
+        pip_exec = [inst_path '\envs\pace_neutrons\Scripts\pip.exe'];
     else
-        pip_exec = [inst_path '/envs/pace_python/bin/pip'];
+        pip_exec = [inst_path '/envs/pace_neutrons/bin/pip'];
     end
     [rv, out] = system([pip_exec ' install -i https://test.pypi.org/simple/ pace-python']);
     if rv ~= 0
