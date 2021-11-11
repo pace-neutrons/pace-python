@@ -14,6 +14,12 @@ def get_agent(String jobname) {
   }
 }
 
+def get_github_token() {
+  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+    return "${github_token}"
+  }
+}
+
 def setGitHubBuildStatus(String status, String message) {
     script {
         withCredentials([string(credentialsId: 'PacePython_API_Token',
@@ -63,9 +69,21 @@ pipeline {
   }
 
   stages {
+
     stage("Build-Pace-Python") {
       steps {
         script {
+          if (env.PACE_VERSION) {
+            if (isUnix()) {
+              sh """
+                git checkout -f "${env.PACE_VERSION}"
+              """
+            } else {
+              bat """
+                git checkout -f "${env.PACE_VERSION}"
+              """
+            }
+          }
           if (isUnix()) {
             sh '''
                 podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/manylinux/jenkins_build_script.sh
@@ -119,13 +137,37 @@ pipeline {
         }
       }
     }
+
+    stage("Push release") {
+      environment {
+        GITHUB_TOKEN = get_github_token()
+      }
+      steps {
+        script {
+          if (env.PACE_VERSION) {
+            if (isUnix()) {
+              sh '''
+                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
+                eval "$(/opt/conda/bin/conda shell.bash hook)"
+                conda activate py37
+                pip install requests pyyaml
+                python release.py --github --notest
+              '''
+            } else {
+              powershell './cmake/run_release.ps1'
+            }
+          }
+        }
+      }
+    }
+
   }
 
   post {
 
     success {
         script {
-              setGitHubBuildStatus("success", "Successful")
+          setGitHubBuildStatus("success", "Successful")
         }
     }
 

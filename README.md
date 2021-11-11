@@ -1,4 +1,4 @@
-# PACE-python
+# PACE-neutrons
 
 PACE is a suite of programs for data analysis of inelastic neutron scattering spectra, written in both Python and Matlab.
 
@@ -16,81 +16,56 @@ The Python programs have separate PyPI packages
 whilst this package provides a Python module for the Matlab codes using a compiled Matlab library, which does not require a Matlab license.
 
 
-## Install
+## Getting Started
 
-`pace_python` is still alpha-software so you need to build it yourself:
-
-```
-git clone https://github.com/pace-neutrons/pace-python
-cd pace-python
-python setup.py install --user
-```
-
-The build will download the necessary Matlab packages (i.e. Horace and SpinW) and compile them.
-So, you will need a Matlab installation with the Matlab Compiler SDK toolbox installed.
-In addition, you will need `cmake`, and a Matlab supported C compiler for your OS
-(generally `gcc-6`, `Visual Studio 2017` or `xcode-10.13` or newer).
-
-Note that Matlab only supports [certain Python versions](https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf). 
-In particular, no Matlab versions supports Python 3.9, and only Matlab R2020b and newer supports Python 3.8.
-
-The build will install `pace_python` as a module which can be imported.
-
-
-### Windows specific build notes.
-
-For `cmake` to work, you need to have Visual Studio on the path.
-You can either start `cmd` or PowerShell from the `Tools->Command Line` menu.
-Or, if you're just running `cmd` straight you need to execute the `vcvarsall.bat` script first.
-If you're using PowerShell straight or `git bash` you need to somehow import this environment first.
-For Powershell, the [`Invoke-Environment`](https://raw.githubusercontent.com/majkinetor/posh/master/MM_Admin/Invoke-Environment.ps1) script could be used.
-For `git bash` a similar [script](https://gist.github.com/kalj/1c85df4a9ba2f6de78f3bcce658f329c) is available.
-Finally, you can also start a `cmd` shell, run `vcvarsall.bat` and then start a PowerShell or `git bash`.
-
-If you have [chocolatey](https://chocolatey.org/) installed, you can install all the dependencies to build `pace_python` with:
+You can install and run the package using:
 
 ```
-choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-choco install -y visualstudio2019community --package-parameters "--includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop
-choco install -y miniconda git
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/majkinetor/posh/master/MM_Admin/Invoke-Environment.ps1 -OutFile C:\windows\system32\Invoke-Environment.psm1
+pip install pace_neutrons
+pace_neutrons
 ```
 
-when run in an Adminstrator PowerShell.
-Then you can clone and build `pace_python` (in a separate user PowerShell) with:
+When you first run `pace_neutrons` the module will check to see if you have the
+[Matlab Compiler Runtime (MCR)](https://www.mathworks.com/products/compiler/matlab-runtime.html) installed.
+If you do not have the version required by PACE (currently R2020a)
+then the program will prompt you to accept the Matlab license and
+it will download and install the required MCR components
+(approximately 500MB download, 2GB installed).
+Note that the installation is silent and may take some time to download and install (~15-30min).
+You can also manually install the MCR at the above link,
+but note that the distributions linked there is for the full Matlab installation including all toolboxes,
+which is approximately 2.5GB to download and 15GB installed.
 
-```
-Invoke-Environment "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-git clone https://github.com/pace-neutrons/pace-python
-cd pace-python
-& "C:\tools\miniconda3\shell\condabin\conda-hook.ps1"
-conda create -n pace python=3.7
-conda activate pace
-python setup.py install --user
-```
-
-## Usage
-
-In order to run the compiled module you either need a full Matlab installation with the Compiler SDK toolbox,
-or, if you have compiled it and distributed it to others, a
-[Matlab Compiler Runtime](https://uk.mathworks.com/products/compiler/matlab-runtime.html) of the same version as was used to compile it.
-
-Examples scripts are in the `examples` folder.
-A simple usage is:
+After installing the MCR, the program will start a Python command line.
+To use PACE you must first import and initialise the `Matlab` module as follows:
 
 ```python
-from pace_python import Matlab
+from pace_neutrons import Matlab
 m = Matlab()
+```
 
+Thereafter, you can use the Matlab-based commands of Horace or SpinW by prefixing them with `m.`, e.g.:
+
+```python
 proj = m.projaxes([-0.5, 1, 0], [0, 0, 1], 'type', 'rrr')
 w1 = m.cut_sqw('ei30_10K.sqw', proj, [0.1, 0.02, 0.5], [1.5, 2.5], [0.4, 0.5], [3, 0.5, 20])
 hf = m.plot(w1)
 ```
 
-The commands should follow the Matlab syntax for Horace/SpinW.
+You can get further help from the [Horace](https://horace.isis.rl.ac.uk/) or [SpinW](https://spinw.org/) webpages.
 
-Before running Python, you may need to set up the paths, as described in this 
-[document](https://uk.mathworks.com/help/compiler/mcr-path-settings-for-run-time-deployment.html).
+Finally if you have Jupyter or Spyder installed you can start a PACE session in either with:
 
+```
+pace_neutrons --jupyter
+```
 
-## Pull requests are welcome!  
+or 
+
+```
+pace_neutrons --spyder
+```
+
+## Developer notes
+
+Developer documentation is [here](docs/developer.md)

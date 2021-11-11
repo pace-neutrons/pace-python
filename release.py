@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import requests
 import subprocess
 from importlib_resources import open_text
@@ -35,14 +36,14 @@ def release_github(test=True):
         if pace_ver != ver:
             raise Exception(f'version mismatch! __version__: {pace_ver}; {ver_name}: {ver}')
 
-    desc = re.search('# (\[v[0-9\.]*\]\(http.*\)\n.*?)# \[v[0-9\.]*\]', changelog,
+    desc = re.search('# \[v[0-9\.]*\]\(http.*\)\n(.*?)# \[v[0-9\.]*\]', changelog,
                      re.DOTALL | re.MULTILINE).groups()[0].strip()
     payload = {
         "tag_name": pace_ver,
-        "target_commitish": "master",
+        "target_commitish": "main",
         "name": pace_ver,
         "body": desc,
-        "draft": False,
+        "draft": True,
         "prerelease": True
     }
     if test:
@@ -53,6 +54,38 @@ def release_github(test=True):
             data=json.dumps(payload),
             headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"]})
         print(response.text)
+
+    wheelfile = None
+    if os.path.exists('dist'):
+        wheelfile = [ff for ff in os.listdir('dist')][0]
+        wheelpath = os.path.join('dist', wheelfile)
+    elif os.path.exists('wheelhouse'):
+        wheelfile = [ff for ff in os.listdir('wheelhouse') if 'manylinux' in ff][0]
+        wheelpath = os.path.join('wheelhouse', wheelfile)
+    if wheelfile is not None and not test:
+        print(f'Uploading wheel {wheelpath}')
+        upload_url = re.search('^(.*)\{\?', json.loads(response.text)['upload_url']).groups()[0]
+        with open(wheelpath, 'rb') as f:
+            upload_response = requests.post(
+                f"{upload_url}?name={wheelfile}",
+                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
+                         "Content-type": "application/octet-stream"},
+                data=f.read())
+            print(upload_response.text)
+
+    installer_path = os.path.join('installer', 'Pace_Python_Installer')
+    if os.path.exists(installer_path) and not test:
+        installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]
+        installer_file = installer_file0.replace('MyAppInstaller', f'pace_neutrons_installer_{sys.platform}')
+        os.rename(os.path.join(installer_path, installer_file0), installer_file)
+        print(f'Uploading installer {installer_file}')
+        with open(installer_file, 'rb') as f:
+            upload_response = requests.post(
+                f"{upload_url}?name={installer_file}",
+                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
+                         "Content-type": "application/octet-stream"},
+                data=f.read())
+            print(upload_response.text)
     
 
 def release_pypi(test=True):
