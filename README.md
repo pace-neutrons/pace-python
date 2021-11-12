@@ -68,4 +68,4 @@ pace_neutrons --spyder
 
 ## Developer notes
 
-Developer documentation is [here](docs/developer.md)
+Developer documentation is [here](docs/developers.md)
