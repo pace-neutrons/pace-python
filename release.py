@@ -8,7 +8,7 @@ import subprocess
 from importlib_resources import open_text
 import yaml
 from pace_neutrons import __version__
-
+from pace_neutrons.utils import release_exists
 
 def main():
     parser = get_parser()
@@ -49,44 +49,13 @@ def release_github(test=True):
     if test:
         print(payload)
     else:
-        response = requests.post(
-            'https://api.github.com/repos/pace-neutrons/pace-python/releases',
-            data=json.dumps(payload),
-            headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"]})
-        print(response.text)
+        upload_url = release_exists(pace_ver, retval='upload_url')
+        if not upload_url:
+            upload_url = _create_gh_release(payload)
+        else:
+            upload_url = re.search('^(.*)\{\?', upload_url).groups()[0]
+        _upload_assets(upload_url)
 
-    wheelfile = None
-    if os.path.exists('dist'):
-        wheelfile = [ff for ff in os.listdir('dist')][0]
-        wheelpath = os.path.join('dist', wheelfile)
-    elif os.path.exists('wheelhouse'):
-        wheelfile = [ff for ff in os.listdir('wheelhouse') if 'manylinux' in ff][0]
-        wheelpath = os.path.join('wheelhouse', wheelfile)
-    if wheelfile is not None and not test:
-        print(f'Uploading wheel {wheelpath}')
-        upload_url = re.search('^(.*)\{\?', json.loads(response.text)['upload_url']).groups()[0]
-        with open(wheelpath, 'rb') as f:
-            upload_response = requests.post(
-                f"{upload_url}?name={wheelfile}",
-                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
-                         "Content-type": "application/octet-stream"},
-                data=f.read())
-            print(upload_response.text)
-
-    installer_path = os.path.join('installer', 'Pace_Python_Installer')
-    if os.path.exists(installer_path) and not test:
-        installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]
-        installer_file = installer_file0.replace('MyAppInstaller', f'pace_neutrons_installer_{sys.platform}')
-        os.rename(os.path.join(installer_path, installer_file0), installer_file)
-        print(f'Uploading installer {installer_file}')
-        with open(installer_file, 'rb') as f:
-            upload_response = requests.post(
-                f"{upload_url}?name={installer_file}",
-                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
-                         "Content-type": "application/octet-stream"},
-                data=f.read())
-            print(upload_response.text)
-    
 
 def release_pypi(test=True):
     subprocess.run(['rm','-r','dist'])
@@ -111,6 +80,51 @@ def get_parser():
         action='store_true',
         help='Actually send/upload')
     return parser
+
+
+def _create_gh_release(payload):
+    response = requests.post(
+        'https://api.github.com/repos/pace-neutrons/pace-python/releases',
+        data=json.dumps(payload),
+        headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"]})
+    print(response.text)
+    if response.status_code != 201:
+        raise RuntimeError('Could not create release')
+    upload_url = re.search('^(.*)\{\?', json.loads(response.text)['upload_url']).groups()[0]
+    return upload_url
+
+
+def _upload_assets(upload_url):
+    wheelfile = None
+    if os.path.exists('dist'):
+        wheelfile = [ff for ff in os.listdir('dist')][0]
+        wheelpath = os.path.join('dist', wheelfile)
+    elif os.path.exists('wheelhouse'):
+        wheelfile = [ff for ff in os.listdir('wheelhouse') if 'manylinux' in ff][0]
+        wheelpath = os.path.join('wheelhouse', wheelfile)
+    if wheelfile is not None:
+        print(f'Uploading wheel {wheelpath}')
+        with open(wheelpath, 'rb') as f:
+            upload_response = requests.post(
+                f"{upload_url}?name={wheelfile}",
+                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
+                         "Content-type": "application/octet-stream"},
+                data=f.read())
+            print(upload_response.text)
+
+    installer_path = os.path.join('installer', 'Pace_Python_Installer')
+    if os.path.exists(installer_path):
+        installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]
+        installer_file = installer_file0.replace('MyAppInstaller', f'pace_neutrons_installer_{sys.platform}')
+        print(f'Uploading installer {installer_file}')
+        with open(os.path.join(installer_path, installer_file0), 'rb') as f:
+            upload_response = requests.post(
+                f"{upload_url}?name={installer_file}",
+                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
+                         "Content-type": "application/octet-stream"},
+                data=f.read())
+            print(upload_response.text)
+    return None
 
 
 if __name__ == '__main__':

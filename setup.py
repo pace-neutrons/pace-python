@@ -99,7 +99,7 @@ class CMakeBuild(build_ext):
             cmake_args += ['-G','Unix Makefiles'] # Must be two entries to work
 
         cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                       '-DPYTHON_EXECUTABLE=' + sys.executable]
+                       '-DPython3_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
         #cfg = 'Debug' if self.debug else 'RelWithDebInfo'
@@ -161,6 +161,7 @@ KEYWORDARGS = dict(
     install_requires = ['six>=1.12.0', 'numpy>=1.7.1'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=dict(build_ext=CMakeBuild),
+    scripts=['scripts/pace_neutrons'],
     url="https://github.com/pace-neutrons/pace-python",
     zip_safe=False,
     classifiers=[
