@@ -27,7 +27,7 @@ authors:
   - family-names: "Wilkins"
     given-names: "Jacob"
 title: "pace_neutrons"
-version: "0.1.3"
+version: "0.1.4"
 date-released: "2021-07-13"
 license: "GPL-3.0-only"
 repository: "https://github.com/pace-neutrons/pace-python"

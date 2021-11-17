@@ -1,6 +1,6 @@
 import sys, os
 import platform
-from pace_neutrons.utils import DetectMatlab, get_runtime_version, PaceConfiguration, get_mantid
+from .utils import DetectMatlab, get_runtime_version, PaceConfiguration, get_mantid
 import argparse
 
 def _prepend_QT_libs():
@@ -35,6 +35,8 @@ def _set_env(input_path='', force_reload=False):
         if not mlPath:
             if cf.IsFirstRun:
                 from pace_neutrons.utils import install_MCR
+                print(('This is the first time PACE has been run, '
+                       'and we could not find a suitable Matlab Compiler Runtime (MCR) installed.'))
                 mlPath = install_MCR(interactive=True)
                 cf.IsFirstRun = False
                 cf.save()
@@ -77,7 +79,7 @@ def main(args=None):
     # Need to set the Qt library folder first if we're using Spyder,
     # or get conflict with bundled Matlab libraries on Linux
     force_reload = False
-    if args.spyder and not is_windows:
+    if (args.spyder or args.mantid) and not is_windows:
         force_reload = _prepend_QT_libs()
     # Run set env first before any more imports because we might need to restart the process
     mlPath = args.matlab_dir if args.matlab_dir is not None else ''

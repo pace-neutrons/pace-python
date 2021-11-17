@@ -99,7 +99,7 @@ class CMakeBuild(build_ext):
             cmake_args += ['-G','Unix Makefiles'] # Must be two entries to work
 
         cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                       '-DPython3_EXECUTABLE=' + sys.executable]
+                       '-DPYTHON_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
         #cfg = 'Debug' if self.debug else 'RelWithDebInfo'
@@ -140,10 +140,26 @@ class CMakeBuild(build_ext):
         for ff in ['requiredMCRProducts.txt', 'setup.py', 'readme.txt']:
             shutil.copyfile(os.path.join(self.build_temp, 'bin', 'pace_neutrons', ff),
                             os.path.join(self.build_lib, 'pace_neutrons', ff))
+        # Write the Matlab version
+        matlab_version = None
+        with open(os.path.join(self.build_temp, 'bin', 'pace_neutrons',
+                               'pace', '__init__.py'), 'r') as pace_init:
+            for line in pace_init:
+                if 'RUNTIME_VERSION_W_DOTS' in line:
+                    matlab_version = line.split('=')[1].strip()
+                    break
+        if matlab_version:
+            with open(os.path.join(self.build_lib, 'pace_neutrons_cli',
+                                   '_matlab_version.py'), 'w') as m_ver:
+                m_ver.write(f'RUNTIME_VERSION_W_DOTS = {matlab_version}\n')
 
 
 with open("README.md", "r") as fh:
     LONG_DESCRIPTION = fh.read()
+
+
+cmdclass = versioneer.get_cmdclass()
+cmdclass['build_ext'] = CMakeBuild
 
 
 KEYWORDARGS = dict(
@@ -155,13 +171,14 @@ KEYWORDARGS = dict(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     ext_modules=[CMakeExtension('pace_neutrons')],
-    packages=['pace_neutrons', 'euphonic_sqw_models'],
+    packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
     package_data={'pace_neutrons':['requiredMCRProducts.txt', 'setup.py', 'readme.txt',
                                    'pace/__init__.py', 'pace/pace.ctf']},
-    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1'],
+    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1',
+                        'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=0.6.2', 'brille>=0.5.4'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
-    cmdclass=dict(build_ext=CMakeBuild),
-    entry_points={'console_scripts': ['pace_neutrons = pace_neutrons.cli:main']},
+    cmdclass=cmdclass,
+    entry_points={'console_scripts': ['pace_neutrons = pace_neutrons_cli:main']},
     url="https://github.com/pace-neutrons/pace-python",
     zip_safe=False,
     classifiers=[

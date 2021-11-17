@@ -20,15 +20,20 @@ Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
 Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
 
-$wheels = Get-ChildItem dist -Filter *.whl
+$wheels = Get-ChildItem dist -Filter *cp37*.whl
 Write-and-Invoke "python -m pip install .\dist\$($wheels[-1].Name)"
 
-# Hard code to use R2020a as it is the mininum version needed for pace_neutrons
+# Hard code to use R2020b as it is the mininum version needed for python 3.8
 Try {
-    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.8" -ErrorAction Stop
-    $Env:Path += ";$($MATLAB_REG.MATLABROOT)\runtime\win64"
+    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.9" -ErrorAction Stop
+    $MATLAB_EXE = $MATLAB_REG.MATLABROOT + "\bin\matlab.exe"
 } Catch {
-    Write-Output "Could not find Matlab R2020a folder. Will guess Matlab."
+    Write-Output "Could not find Matlab R2020b folder. Using default Matlab"
+    $MATLAB_EXE = "matlab.exe"
 }
 
-Write-and-Invoke "python test/run_test.py"
+Try {
+    Write-and-Invoke "python test/run_test.py"
+} Catch {
+    Write-and-Invoke "python test/run_test.py"
+}

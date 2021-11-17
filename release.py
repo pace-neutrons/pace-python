@@ -8,7 +8,7 @@ import subprocess
 from importlib_resources import open_text
 import yaml
 from pace_neutrons import __version__
-from pace_neutrons.utils import release_exists
+from pace_neutrons_cli.utils import release_exists
 
 def main():
     parser = get_parser()
@@ -95,13 +95,14 @@ def _create_gh_release(payload):
 
 
 def _upload_assets(upload_url):
-    wheelfile = None
+    wheelpaths = None
     if os.path.exists('dist'):
         wheelpaths = [os.path.join('dist', ff) for ff in os.listdir('dist')]
     elif os.path.exists('wheelhouse'):
         wheelpaths = [os.path.join('wheelhouse', ff) for ff in os.listdir('wheelhouse') if 'manylinux' in ff]
-    if wheelfile is not None:
+    if wheelpaths is not None:
         for wheelpath in wheelpaths:
+            wheelfile = os.path.basename(wheelpath)
             print(f'Uploading wheel {wheelpath}')
             with open(wheelpath, 'rb') as f:
                 upload_response = requests.post(
@@ -111,8 +112,11 @@ def _upload_assets(upload_url):
                     data=f.read())
                 print(upload_response.text)
 
-    installer_path = os.path.join('installer', 'Pace_Python_Installer')
-    if os.path.exists(installer_path):
+    _, installer_path, _ = next(os.walk('installer'))
+    if installer_path:
+        installer_path = [p for p in installer_path if 'Pace_Python_Installer' in p]
+    if installer_path:
+        installer_path = os.path.join('installer', installer_path[0])
         installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]
         installer_file = installer_file0.replace('MyAppInstaller', f'pace_neutrons_installer_{sys.platform}')
         print(f'Uploading installer {installer_file}')

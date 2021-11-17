@@ -14,7 +14,7 @@ if hec.is_default || parc.is_default
         ' >>parallel_config)',...
         ' to ensure these configurations are correct.'])
     ocp = opt_config_manager();
-    ocp.load_configuration('-set_config','-change_only_default','-force_save');
+    %ocp.load_configuration('-set_config','-change_only_default','-force_save');
 end
 %
 
@@ -63,7 +63,7 @@ if hc.is_default ||hpcc.is_default
         ' to ensure these configurations are correct.'])
     % load and apply configuration, assumed to be optimal for this kind of the machine.
     conf_c = opt_config_manager();
-    conf_c.load_configuration('-set_config','-change_only_default','-force_save');
+    %conf_c.load_configuration('-set_config','-change_only_default','-force_save');
 end
 
 if check_mex

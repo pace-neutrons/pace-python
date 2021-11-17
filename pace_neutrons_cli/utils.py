@@ -4,8 +4,13 @@ import six
 
 
 def get_runtime_version():
+    try:
+        from ._matlab_version import RUNTIME_VERSION_W_DOTS
+        return RUNTIME_VERSION_W_DOTS
+    except ImportError:
+        pass
     # Looks in the Matlab generated __init__ file to determine the required Matlab version
-    with open(os.path.join(os.path.dirname(__file__), 'pace', '__init__.py'), 'r') as pace_init:
+    with open(os.path.join(os.path.dirname(__file__), '..', '..', 'pace', '__init__.py'), 'r') as pace_init:
         for line in pace_init:
             if 'RUNTIME_VERSION_W_DOTS' in line:
                 return line.split('=')[1].strip().replace("'",'')
@@ -273,59 +278,98 @@ def checkPath(runtime_version, mlPath):
             print('Found: ' + os.environ.get(obj.path_var))
 
 
-def release_exists(tag_name, retval='upload_url'):
-    import requests
+def release_exists(tag_name, retval='upload_url', use_auth=True):
+    import requests, json, re
+    headers = {}
+    if use_auth:
+        headers = {"Authorization": "token " + os.environ["GITHUB_TOKEN"]}
     response = requests.get(
         'https://api.github.com/repos/pace-neutrons/pace-python/releases',
-        headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"]})
+        headers=headers)
     if response.status_code != 200:
         raise RuntimeError('Could not query Github if release exists')
     response = json.loads(response.text)
     desired_release = [v for v in response if v['tag_name'] == tag_name]
     if desired_release:
-        upload_url = re.search('^(.*)\{\?', desired_release['upload_url']).groups()[0]
-        return desired_release[retval]
+        return desired_release[0][retval]
     else:
         return False
 
 
-def download_github(url, local_filename=None):
+def download_github(url, local_filename=None, use_auth=True):
     import requests
+    headers = {"Accept":"application/octet-stream"}
+    if use_auth:
+        headers["Authorization"] = "token " + os.environ["GITHUB_TOKEN"]
     if not local_filename:
         local_filename = url.split('/')[-1]
-    with requests.get(url, stream=True,
-                      headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
-                               "Accept":"application/octet-stream"}) as r:
+    with requests.get(url, stream=True, headers=headers) as r:
         with open(local_filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
     return local_filename
 
 
-def install_MCR():
+def install_MCR(interactive=False):
     """
     Downloads an installer from github which would install the required MCR components only
     This relies on there being the correct version of the installer available
     """
-    import requests, tempfile, subprocess
+    if interactive:
+        p = input('Do you want to automatically install the MCR? ("y" or "n")')
+        if not p.lower().startswith('y'):
+            return
+    import tempfile, subprocess
+    try:
+        import requests, json
+    except ImportError:
+        # Try to pip install it internally
+        proc = subprocess.run([sys.executable, '-m', 'pip', 'install', '--user', 'requests', 'json'],
+                              capture_output=True)
+        if proc.returncode != 0:
+            raise RuntimeError('Could not import or install the requests module to communicate with github')
+        print(proc.stdout.decode())
     from pace_neutrons import __version__
-    assets_url = release_exists('v' + __version__, retval='assets_url')
+    assets_url = release_exists('v' + __version__, retval='assets_url', use_auth=False)
     if not assets_url:
         raise RuntimeError(f'No Github release exists for pace_neutrons version {__version__}')
-    response = requests.get(assets_url, headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"]})
+    response = requests.get(assets_url)
     if response.status_code != 200:
         raise RuntimeError('Could not query Github for list of assets')
     response = json.loads(response.text)
-    INSTALLERS = {'Windows':'pace_neutrons_installer_win32.exe', 'Linux':'pace_neutron_installer_linux.install'}
+    INSTALLERS = {'Windows':'pace_neutrons_installer_win32.exe', 'Linux':'pace_neutrons_installer_linux.install'}
     system = platform.system()
     try:
         installer_name = INSTALLERS[system]
     except KeyError:
         raise RuntimeError(f'No installer exists for OS: {system}')
-    installer_url = [a['url'] for a in response if a == installer_name][0]
+    try:
+        installer_url = [a['url'] for a in response if installer_name in a['name']][0]
+    except IndexError:
+        raise RuntimeError(f'Could not find the installer in the Github release')
+    if interactive:
+        lic_file = os.path.join(os.path.dirname(__file__), 'MCR_license.txt')
+        with open(lic_file, 'r') as lic:
+            print(lic.read())
+        p = input('Do agree with the above license? ("y" or "n")')
+        if not p.lower().startswith('y'):
+            return
+    else:
+        print(('By running this you agree to the Matlab MCR license.\n'
+               'A copy can be found at:\n'
+               'https://github.com/pace-neutrons/pace-python/tree/main/pace_neutrons/MCR_license.txt'))
     with tempfile.TemporaryDirectory() as dd:
         installer_file = os.path.join(dd, installer_name)
-        download_github(url, local_filename=installer_file)
-        pr = subprocess.Popen([installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
-                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-        print(pr)
+        download_github(installer_url, local_filename=installer_file, use_auth=False)
+        if system != 'Windows':
+            os.chmod(installer_file, 0o755)
+        print('------------------------------------')
+        print('Running the Matlab installer now.')
+        print('This could take some time (15-30min)')
+        print('------------------------------------')
+        proc = subprocess.run([installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
+                              capture_output=True)
+        if proc.returncode != 0:
+            print(proc.stderr.decode())
+            raise RuntimeError('Could not install the Matlab MCR')
+        print(proc.stdout.decode())

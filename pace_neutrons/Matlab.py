@@ -1,7 +1,7 @@
 import os, sys
 import platform
 from .funcinspect import lhs_info
-from .utils import get_runtime_version, checkPath
+from pace_neutrons_cli.utils import get_runtime_version, checkPath
 
 # On Windows/Conda we need to load numpy DLLs before Matlab starts
 import numpy
@@ -11,7 +11,10 @@ import numpy
 if platform.system() == 'Linux':
     old_flags = sys.getdlopenflags()
     sys.setdlopenflags(os.RTLD_NOW | os.RTLD_DEEPBIND)
-    import scipy.linalg
+    try:
+        import scipy.linalg
+    except ImportError:
+        pass
     sys.setdlopenflags(old_flags)
 
 # Import brille here to load its C module before Matlab gets loaded

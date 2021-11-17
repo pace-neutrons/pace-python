@@ -51,7 +51,7 @@ Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
 Write-and-Invoke "python -m pip install --upgrade pip"
 Write-and-Invoke "python -m pip install numpy scipy matplotlib"
 Invoke-CmdScript "$Env:VS2019_VCVARSALL" x86_amd64
-Write-and-Invoke "python -m pip install --force-reinstall euphonic brille"
+Write-and-Invoke "python -m pip install --force-reinstall euphonic[phonopy_reader] brille"
 
 # Hard code to use R2020b as it is the mininum version needed for python 3.8
 Try {

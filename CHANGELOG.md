@@ -1,6 +1,17 @@
+# [v0.1.4](https://github.com/pace-neutrons/pace-python/compare/v0.1.3...v0.1.4)
+
+* New features
+  - New `pace_neutrons` wrapper script to launch PACE, setting all needed paths
+  - Can also launch jupyter or spyder with `pace_neutrons --spyder` or `pace_neutrons --jupyter`
+  - Facility to download and install MCR automatically or on first use
+
+* Bugfixes
+  - If neither spyder or jupyter installed will use IPython (now a dependency)
+  - Fix logic error in searching for MCR runtime DLL. Will use registry on Windows.
+
 # [v0.1.3](https://github.com/pace-neutrons/pace-python/compare/v0.1.1...v0.1.3)
 
-Updated to Horace 3.6.0.
+Updated to Horace 3.6.1.
 
 * Bugfixes
   - Fix MatlabProxyObject `__setattr__` - can now do e.g. `h = m.herbert_config(); h.use_mex = True`
