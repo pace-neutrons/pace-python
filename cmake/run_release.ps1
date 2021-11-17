@@ -18,12 +18,12 @@ $Env:_CONDA_ROOT = "$conda_root_dir"
 $Env:_CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
-# Hard code to use R2020a as it is the mininum version needed for pace_neutrons
+# Hard code to use R2020b as it is the mininum version needed for python 3.8
 Try {
-    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.8" -ErrorAction Stop
+    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.9" -ErrorAction Stop
     $MATLAB_EXE = $MATLAB_REG.MATLABROOT + "\bin\matlab.exe"
 } Catch {
-    Write-Output "Could not find Matlab R2020a folder. Using default Matlab"
+    Write-Output "Could not find Matlab R2020b folder. Using default Matlab"
     $MATLAB_EXE = "matlab.exe"
 }
 

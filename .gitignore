@@ -38,6 +38,7 @@ src/CTF
 
 build
 dist
+wheelhouse
 
 installer/Pace_Python_Installer/
 installer/mccExcludedFiles.log
@@ -65,3 +66,9 @@ pace_python.egg-info
 pace_neutrons.egg-info
 
 Matlab
+
+demo
+test/demo
+
+tmp
+temp

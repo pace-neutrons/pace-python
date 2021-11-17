@@ -53,12 +53,23 @@ Write-and-Invoke "python -m pip install numpy scipy matplotlib"
 Invoke-CmdScript "$Env:VS2019_VCVARSALL" x86_amd64
 Write-and-Invoke "python -m pip install --force-reinstall euphonic brille"
 
-# Hard code to use R2020a as it is the mininum version needed for pace_neutrons
+# Hard code to use R2020b as it is the mininum version needed for python 3.8
 Try {
-    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.8" -ErrorAction Stop
+    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Mathworks\MATLAB\9.9" -ErrorAction Stop
     $Env:MATLAB_DIR = $MATLAB_REG.MATLABROOT
 } Catch {
-    Write-Output "Could not find Matlab R2020a folder. Using default Matlab"
+    Write-Output "Could not find Matlab R2020b folder. Using default Matlab"
 }
 
+Write-and-Invoke "python setup.py bdist_wheel"
+
+# Build Python 3.8 version for Mantid
+Write-and-Invoke "conda env remove -n pace_neutrons38 -y"
+Try {
+    Write-and-Invoke "Remove-Item -Force -Recurse -Path $conda_root_dir\envs\pace_neutrons38"
+} Catch {
+    Write-Output "Could not remove '$conda_root_dir\envs\pace_neutrons'`n$($_.Exception)"
+}
+Write-and-Invoke "conda create -n pace_neutrons38 -c conda-forge python=3.8 -y"
+Write-and-Invoke "Enter-CondaEnvironment pace_neutrons38"
 Write-and-Invoke "python setup.py bdist_wheel"

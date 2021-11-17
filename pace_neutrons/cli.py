@@ -1,5 +1,7 @@
-#!python -i
-
+import sys, os
+import platform
+from pace_neutrons.utils import DetectMatlab, get_runtime_version, PaceConfiguration, get_mantid
+import argparse
 
 def _prepend_QT_libs():
     import os
@@ -25,8 +27,6 @@ def _prepend_QT_libs():
     
 
 def _set_env(input_path='', force_reload=False):
-    import sys, os
-    from pace_neutrons.utils import DetectMatlab, get_runtime_version, PaceConfiguration
     cf = PaceConfiguration()
     # If the environment variables are not set, we need to restart with execv
     DET = DetectMatlab(get_runtime_version())
@@ -52,13 +52,11 @@ def _set_env(input_path='', force_reload=False):
         if input_path and input_path in mlPath:
             cf.CachedMatlabDirs = mlPath
             cf.save()
-        import os
         if DET.system != 'Windows':
             os.execv(sys.executable, [sys.executable]+sys.argv)
 
 
 def _get_args():
-    import argparse
     parser = argparse.ArgumentParser(description='A wrapper script to run the PACE module')
     parser.add_argument('-d', '--matlab-dir', help='Directory where Matlab MCR is installed')
     parser.add_argument('-s', '--spyder', action='store_true', help='Runs under Spyder IDE')
@@ -68,21 +66,11 @@ def _get_args():
     return parser
 
 
-def main(*args):
-    import platform, sys, os
+def main(args=None):
     is_windows = platform.system() == 'Windows'
-    try:
-        args = _get_args().parse_args(args)
-    except:
-        if __name__ == '__main__' and ('-h' in args or '--help' in args):
-            os._exit(0)
-        else:
-            raise RuntimeError(f'Invalid arguments {args}.')
-    non_basic_envs = sum([args.spyder, args.jupyter, args.mantid])
-    if non_basic_envs > 1:
+    args = _get_args().parse_args(args if args else sys.argv[1:])
+    if sum([args.spyder, args.jupyter, args.mantid]) > 1:
         raise RuntimeError('You can only specify one of --spyder, --jupyter or --mantid')
-    elif non_basic_envs == 0 and not is_windows:
-        sys.argv.insert(0, '-i')
     if args.install_mcr:
         from pace_neutrons.utils import install_MCR
         install_MCR(interactive=False)
@@ -96,7 +84,6 @@ def main(*args):
     _set_env(mlPath, force_reload)
     # Launches other environments if asked for
     if args.spyder:
-        import sys
         sys.argv = ['']
         try:
             import spyder.app.start
@@ -104,23 +91,25 @@ def main(*args):
             raise RuntimeError('Spyder is not installed')
         else:
             print('Running Spyder')
-            try:
-                spyder.app.start.main()
-            except SystemExit:
-                os._exit(0)
+            spyder.app.start.main()
     elif args.jupyter:
-        import sys
         sys.argv = ['']
         try:
             import notebook.notebookapp
         except ImportError:
             raise RuntimeError('Jupyter notebook is not installed')
         else:
-            print('Running Jupyter')
+            print('Running Jupyter-Notebook')
             notebook.notebookapp.main()
-            os._exit(0)
-
-
-if __name__ == '__main__':
-    import sys
-    main(*sys.argv[1:])
+    elif args.mantid:
+        mantid_dir = get_mantid()
+        if not mantid_dir:
+            raise RuntimeError('Cannot find Mantid or Mantid is not installed')
+        for dirs in ['plugins', 'lib', 'bin']:
+            sys.path.insert(0, os.path.join(mantid_dir, dirs))
+        import mantidqt.dialogs.errorreports.main
+        sys.argv[1:] = ['--exitcode=0', '--application=workbench']
+        mantidqt.dialogs.errorreports.main.main()
+    else:
+        import IPython
+        IPython.embed()

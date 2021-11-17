@@ -97,20 +97,19 @@ def _create_gh_release(payload):
 def _upload_assets(upload_url):
     wheelfile = None
     if os.path.exists('dist'):
-        wheelfile = [ff for ff in os.listdir('dist')][0]
-        wheelpath = os.path.join('dist', wheelfile)
+        wheelpaths = [os.path.join('dist', ff) for ff in os.listdir('dist')]
     elif os.path.exists('wheelhouse'):
-        wheelfile = [ff for ff in os.listdir('wheelhouse') if 'manylinux' in ff][0]
-        wheelpath = os.path.join('wheelhouse', wheelfile)
+        wheelpaths = [os.path.join('wheelhouse', ff) for ff in os.listdir('wheelhouse') if 'manylinux' in ff]
     if wheelfile is not None:
-        print(f'Uploading wheel {wheelpath}')
-        with open(wheelpath, 'rb') as f:
-            upload_response = requests.post(
-                f"{upload_url}?name={wheelfile}",
-                headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
-                         "Content-type": "application/octet-stream"},
-                data=f.read())
-            print(upload_response.text)
+        for wheelpath in wheelpaths:
+            print(f'Uploading wheel {wheelpath}')
+            with open(wheelpath, 'rb') as f:
+                upload_response = requests.post(
+                    f"{upload_url}?name={wheelfile}",
+                    headers={"Authorization": "token " + os.environ["GITHUB_TOKEN"],
+                             "Content-type": "application/octet-stream"},
+                    data=f.read())
+                print(upload_response.text)
 
     installer_path = os.path.join('installer', 'Pace_Python_Installer')
     if os.path.exists(installer_path):

@@ -33,6 +33,46 @@ def get_matlab_from_registry(version=None):
     return retval
 
 
+def get_mantid():
+    mantid_dir = None
+    # If Mantid is installed on the path, can just import it
+    try:
+        import mantid
+    except ImportError:
+        pass
+    else:
+        return os.path.abspath(os.path.join(os.path.dirname(mantid.__file__), '..', '..'))
+    # On Windows can look at the registry
+    try:
+        import winreg
+    except ImportError:
+        pass
+    else:
+        key_string = (r'SOFTWARE\ISIS Rutherford Appleton Laboratory UKRI, '
+                      r'NScD Oak Ridge National Laboratory, '
+                      r'European Spallation Source and Institut Laue - Langevin')
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_string) as key:
+                mantids = {}
+                for k in range(winreg.QueryInfoKey(key)[0]):
+                    distro = winreg.EnumKey(key, k)
+                    mantids[distro] = winreg.QueryValue(key, distro)
+        except (FileNotFoundError, OSError):
+            pass
+        else:
+            return mantids['mantid'] if 'mantid' in mantids else mantids.values()[0]
+    # Else search standard paths
+    GUESSES = {'Windows': [r'C:\MantidInstall', r'D:\MantidInstall', r'C:\MantidNightlyInstall',
+                           r'C:\Program Files\Mantid', r'C:\Program Files (x86)\Mantid'], 
+               'Linux': ['/opt/Mantid', '/opt/mantidnightly', '/usr/local/Mantid'],
+               'Darwin': ['/Applications/Mantid']}
+    for possible_dir in GUESSES[platform.system()]:
+        if os.path.isdir(possible_dir):
+            if os.path.exists(os.path.join(possible_dir, 'lib', 'mantid', '__init__.py')):
+                return possible_dir
+    return None
+
+
 class PaceConfiguration(object):
     def __init__(self):
         import configparser

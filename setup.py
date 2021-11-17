@@ -158,10 +158,10 @@ KEYWORDARGS = dict(
     packages=['pace_neutrons', 'euphonic_sqw_models'],
     package_data={'pace_neutrons':['requiredMCRProducts.txt', 'setup.py', 'readme.txt',
                                    'pace/__init__.py', 'pace/pace.ctf']},
-    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4'],
+    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=dict(build_ext=CMakeBuild),
-    scripts=['scripts/pace_neutrons'],
+    entry_points={'console_scripts': ['pace_neutrons = pace_neutrons.cli:main']},
     url="https://github.com/pace-neutrons/pace-python",
     zip_safe=False,
     classifiers=[
