@@ -1,12 +1,36 @@
 #!python -i
 
-def _set_env(input_path=''):
+
+def _prepend_QT_libs():
+    import os
+    # We only need to care about PyQt5 since Matlab only bundles Qt5,
+    # and Spyder removed support for PySide2
+    # Addendum: Spyder reinstated PySide2 support in Aug 2021,
+    # https://github.com/spyder-ide/spyder/pull/16322
+    # But current the pypi version still just use PyQt5
+    try:
+        import PyQt5
+    except ImportError:
+        pass
+    else:
+        libdir = os.path.join(os.path.dirname(PyQt5.__file__), 'Qt', 'lib')
+        if 'LD_LIBRARY_PATH' in os.environ:
+            if libdir not in os.environ['LD_LIBRARY_PATH']:
+                os.environ['LD_LIBRARY_PATH'] = libdir + ':' + os.environ['LD_LIBRARY_PATH']
+                return True
+        else:
+            os.environ['LD_LIBRARY_PATH'] = libdir
+            return True
+    return False
+    
+
+def _set_env(input_path='', force_reload=False):
     import sys, os
     from pace_neutrons.utils import DetectMatlab, get_runtime_version, PaceConfiguration
     cf = PaceConfiguration()
     # If the environment variables are not set, we need to restart with execv
     DET = DetectMatlab(get_runtime_version())
-    if DET.env_not_set():
+    if DET.env_not_set() or force_reload:
         mlPath = DET.guess_path([input_path] + cf.CachedMatlabDirs)
         if not mlPath:
             if cf.IsFirstRun:
@@ -28,9 +52,9 @@ def _set_env(input_path=''):
         if input_path and input_path in mlPath:
             cf.CachedMatlabDirs = mlPath
             cf.save()
-        args = [f'"{v}"' for v in [sys.executable]+sys.argv]
+        import os
         if DET.system != 'Windows':
-            os.execv(sys.executable, args)
+            os.execv(sys.executable, [sys.executable]+sys.argv)
 
 
 def _get_args():
@@ -45,22 +69,31 @@ def _get_args():
 
 
 def main(*args):
+    import platform, sys, os
+    is_windows = platform.system() == 'Windows'
     try:
         args = _get_args().parse_args(args)
     except:
         if __name__ == '__main__' and ('-h' in args or '--help' in args):
-            import sys
-            sys.exit()
+            os._exit(0)
         else:
             raise RuntimeError(f'Invalid arguments {args}.')
-    if sum([args.spyder, args.jupyter, args.mantid]) > 1:
+    non_basic_envs = sum([args.spyder, args.jupyter, args.mantid])
+    if non_basic_envs > 1:
         raise RuntimeError('You can only specify one of --spyder, --jupyter or --mantid')
+    elif non_basic_envs == 0 and not is_windows:
+        sys.argv.insert(0, '-i')
     if args.install_mcr:
         from pace_neutrons.utils import install_MCR
         install_MCR(interactive=False)
-    mlPath = args.matlab_dir if args.matlab_dir is not None else ''
+    # Need to set the Qt library folder first if we're using Spyder,
+    # or get conflict with bundled Matlab libraries on Linux
+    force_reload = False
+    if args.spyder and not is_windows:
+        force_reload = _prepend_QT_libs()
     # Run set env first before any more imports because we might need to restart the process
-    _set_env(mlPath)
+    mlPath = args.matlab_dir if args.matlab_dir is not None else ''
+    _set_env(mlPath, force_reload)
     # Launches other environments if asked for
     if args.spyder:
         import sys
@@ -71,7 +104,10 @@ def main(*args):
             raise RuntimeError('Spyder is not installed')
         else:
             print('Running Spyder')
-            spyder.app.start.main()
+            try:
+                spyder.app.start.main()
+            except SystemExit:
+                os._exit(0)
     elif args.jupyter:
         import sys
         sys.argv = ['']
@@ -82,6 +118,7 @@ def main(*args):
         else:
             print('Running Jupyter')
             notebook.notebookapp.main()
+            os._exit(0)
 
 
 if __name__ == '__main__':

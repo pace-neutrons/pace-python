@@ -181,6 +181,8 @@ class DetectMatlab(object):
 
     def env_not_set(self):
         # Determines if the environment variables required by the MCR are set
+        if self.path_var not in os.environ:
+            return True
         rt = os.path.join('runtime', self.arch)
         pv = os.getenv(self.path_var).split(self.sep)
         for path in [dd for dd in pv if rt in dd]:
