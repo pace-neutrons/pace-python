@@ -64,6 +64,7 @@ def _get_args():
     parser.add_argument('-s', '--spyder', action='store_true', help='Runs under Spyder IDE')
     parser.add_argument('-j', '--jupyter', action='store_true', help='Runs in Jupyter notebook server')
     parser.add_argument('-m', '--mantid', action='store_true', help='Runs under Mantid Workbench')
+    parser.add_argument('--mantid-nosad', action='store_true', help='Runs Mantid without error reporter')
     parser.add_argument('--install-mcr', action='store_true', help='Installs the Matlab MCR')
     return parser
 
@@ -103,15 +104,20 @@ def main(args=None):
         else:
             print('Running Jupyter-Notebook')
             notebook.notebookapp.main()
-    elif args.mantid:
+    elif args.mantid or args.mantid_nosad:
         mantid_dir = get_mantid()
         if not mantid_dir:
             raise RuntimeError('Cannot find Mantid or Mantid is not installed')
         for dirs in ['plugins', 'lib', 'bin']:
             sys.path.insert(0, os.path.join(mantid_dir, dirs))
-        import mantidqt.dialogs.errorreports.main
-        sys.argv[1:] = ['--exitcode=0', '--application=workbench']
-        mantidqt.dialogs.errorreports.main.main()
+        if args.mantid:
+            import mantidqt.dialogs.errorreports.main
+            sys.argv[1:] = ['--exitcode=0', '--application=workbench']
+            mantidqt.dialogs.errorreports.main.main()
+        else:
+            import workbench.app.main
+            sys.argv = ['']
+            workbench.app.main.main()
     else:
         import IPython
         IPython.embed()

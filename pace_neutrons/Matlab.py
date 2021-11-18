@@ -129,9 +129,14 @@ def register_ipython_magics():
         import IPython 
     except ImportError:
         return None
+    else:
+        running_kernel = IPython.get_ipython()
+        # Only register these magics when running in a notebook / lab
+        # Other values seen are: 'TerminalInteractiveShell' and 'InteractiveShellEmbed'
+        if running_kernel.__class__.__name__ != 'ZMQInteractiveShell':
+            return None
     global _has_registered_magic
     _has_registered_magic = True
-    running_kernel = IPython.get_ipython()
     if running_kernel is None or sys.__stdout__ is None or sys.__stderr__ is None:
         return None
     from . import IPythonMagics

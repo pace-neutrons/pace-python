@@ -36,7 +36,7 @@ def release_github(test=True):
         if pace_ver != ver:
             raise Exception(f'version mismatch! __version__: {pace_ver}; {ver_name}: {ver}')
 
-    desc = re.search('# \[v[0-9\.]*\]\(http.*\)\n(.*?)# \[v[0-9\.]*\]', changelog,
+    desc = re.search('# \[v[0-9\.]*\]\(http.*?\)\n(.*?)# \[v[0-9\.]*\]', changelog,
                      re.DOTALL | re.MULTILINE).groups()[0].strip()
     payload = {
         "tag_name": pace_ver,
