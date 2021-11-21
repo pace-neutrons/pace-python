@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PACE: Proper Analysis of Coherent Excitations in Python &mdash; PACE 0.1.4+2.ga007a48 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> PACE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">PACE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>PACE: Proper Analysis of Coherent Excitations in Python</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="pace-proper-analysis-of-coherent-excitations-in-python">
+<h1>PACE: Proper Analysis of Coherent Excitations in Python<a class="headerlink" href="#pace-proper-analysis-of-coherent-excitations-in-python" title="Permalink to this headline"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">PACE</span></code> is a suite of programs for data analysis of inelastic neutron scattering spectra,
+written in both Python and Matlab.</p>
+<p>The packages included in PACE are:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/pace-neutrons/Horace/">Horace</a> -
+A Matlab program for the visualisation and analysis of large datasets
+from time-of-flight neutron inelastic scattering spectrometers.</p></li>
+<li><p><a class="reference external" href="https://github.com/pace-neutrons/euphonic">Euphonic</a> -
+A Python program for simulating phonon spectra from DFT output (CASTEP or Phonopy).</p></li>
+<li><p><a class="reference external" href="https://github.com/brille/brille">Brille</a> -
+A C++/Python program for Brillouin zone interpolation.</p></li>
+<li><p><a class="reference external" href="https://github.com/spinw/spinw">SpinW</a> -
+A Matlab program for simulating spin wave (magnon) spectra.</p></li>
+</ul>
+<p>The Python programs have separate PyPI packages
+(<a class="reference external" href="https://pypi.org/project/euphonic/">Euphonic</a> and <a class="reference external" href="https://pypi.org/project/brille/">Brille</a>),
+whilst this package provides a Python module for the Matlab codes using a compiled Matlab library,
+which does not require a Matlab license.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#matlab-compiler-runtime">Matlab Compiler Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#restrictions">Restrictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#idaaas-installation">IDAaaS Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#demonstration-repository">Demonstration repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#starting-pace-neutrons">Starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#initialisation">Initialisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#using-horace-to-look-at-ins-data">Using Horace to look at INS data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#using-spinw-to-model-spin-waves">Using SpinW to model spin waves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#using-euphonic-to-model-lattice-vibrations">Using Euphonic to model lattice vibrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#defining-a-python-model-function-for-horace">Defining a Python model function for Horace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#modelling-ins-data-with-instrument-resolution-convolution">Modelling INS data with instrument resolution convolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#modelling-horace-data-with-spinw-or-euphonic">Modelling Horace data with SpinW or Euphonic</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021 PACE Authors.
+      <span class="lastupdated">Last updated on Nov 21, 2021, 6:11:50 PM.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
