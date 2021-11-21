@@ -51,6 +51,30 @@ class _MatlabInstance(object):
             raise RuntimeError('Matlab interface is not open')
 
 
+class NamespaceWrapper(object):
+    def __init__(self, matlab, name):
+        self._matlab = matlab
+        self._interface = matlab.interface
+        self._converter = matlab.converter
+        self._name = name
+
+    def __getattr__(self, name):
+        return NamespaceWrapper(self._matlab, f'{self._name}.{name}')
+
+    def __call__(self, *args, **kwargs):
+        nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
+        nreturn = lhs_info(output_type='nreturns')
+        if nargout is None:
+            mnargout, undetermined = self._interface.getArgOut(self._name, nargout=2)
+            if not undetermined:
+                nargout = max(min(int(mnargout), nreturn), 1)
+            else:
+                nargout = max(nreturn, 1)
+        m_args = [self._converter.encode(ar) for ar in args]
+        results = self._interface.call_method(self._name, [], m_args, nargout=nargout)
+        return self._converter.decode(results)
+
+
 class Matlab(object):
     def __init__(self, mlPath=None):
         """
@@ -89,24 +113,7 @@ class Matlab(object):
         :param name: The function/class to be called.
         :return: MatlabProxyObject of class/function given by name
         """
-
-        def method(*args, **kwargs):
-            nargout = kwargs.pop('nargout') if 'nargout' in kwargs.keys() else None
-            nreturn = lhs_info(output_type='nreturns')
-            try:
-                if nargout is None:
-                    mnargout, undetermined = self.interface.getArgOut(name, nargout=2)
-                    if not undetermined:
-                        nargout = max(min(int(mnargout), nreturn), 1)
-                    else:
-                        nargout = max(nreturn, 1)
-                m_args = [self.converter.encode(ar) for ar in args] 
-                results = self.interface.call_method(name, [], m_args, nargout=nargout)
-                return self.converter.decode(results)
-            except Exception as e:
-                print(e)
-                return []
-        return method
+        return NamespaceWrapper(self, name)
 
     def __del__(self):
         """
@@ -133,7 +140,8 @@ def register_ipython_magics():
         running_kernel = IPython.get_ipython()
         # Only register these magics when running in a notebook / lab
         # Other values seen are: 'TerminalInteractiveShell' and 'InteractiveShellEmbed'
-        if running_kernel.__class__.__name__ != 'ZMQInteractiveShell':
+        if (running_kernel.__class__.__name__ != 'ZMQInteractiveShell'
+            and running_kernel.__class__.__name__ != 'SpyderShell'):
             return None
     global _has_registered_magic
     _has_registered_magic = True

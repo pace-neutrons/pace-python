@@ -205,11 +205,11 @@ end
 %% Module-private functions
 
 function rv = install_pace(py_exec, app)
-    app.InfoLabel.Text = sprintf('Installing pace-python to %s\n', py_exec);
+    app.InfoLabel.Text = sprintf('Installing pace-neutrons to %s\n', py_exec);
     drawnow;
-    [rv, out] = system([py_exec ' -m pip install -i https://test.pypi.org/simple/ pace-python']);
+    [rv, out] = system([py_exec ' -m pip install pace-neutrons']);
     if rv ~= 0
-        report_error(sprintf('Could not install pace-python module: Error message is: %s', out), app);
+        report_error(sprintf('Could not install pace-neutrons module: Error message is: %s', out), app);
     end
 end
 
@@ -314,7 +314,7 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, ap
         end
     end
 
-    app.InfoLabel.Text = sprintf('%sPlease wait while the pace-python module is installed\n', prefixtext);
+    app.InfoLabel.Text = sprintf('%sPlease wait while the pace-neutrons module is installed\n', prefixtext);
     drawnow;
     % Install pace_neutrons itself using pip
     if ispc
@@ -322,9 +322,9 @@ function conda_exec = install_miniconda(inst_path, inst_jupyter, inst_spyder, ap
     else
         pip_exec = [inst_path '/envs/pace_neutrons/bin/pip'];
     end
-    [rv, out] = system([pip_exec ' install -i https://test.pypi.org/simple/ pace-python']);
+    [rv, out] = system([pip_exec ' install pace-neutrons']);
     if rv ~= 0
-        report_error(sprintf('Could not install pace-python module: Error message is: %s', out));
+        report_error(sprintf('Could not install pace-neutrons module: Error message is: %s', out));
         return
     end
     app.InfoLabel.Text = 'Installation Complete';

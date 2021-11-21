@@ -133,15 +133,17 @@ class MatlabMagics(Magics):
 
     It defines several magic functions:
 
-    %pace_neutrons - sets up the plotting environment (default 'inline')
+    %pace - sets up the plotting environment (default 'inline')
     %matlab_fig - defines the inline figure size and resolution for the next plot only
     """
 
     def __init__(self, shell, interface):
         super(MatlabMagics, self).__init__(shell)
         self.m = interface
+        self.shell = get_ipython().__class__.__name__
         self.output = 'inline'
-        self.plot_type = 'inline'
+        self.plot_type = 'inline' if self.shell == 'ZMQInteractiveShell' \
+                else 'windowed'
         self.width = 400
         self.height = 300
         self.resolution = 300
