@@ -178,7 +178,9 @@ KEYWORDARGS = dict(
                         'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=0.6.2', 'brille>=0.5.4'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=cmdclass,
-    entry_points={'console_scripts': ['pace_neutrons = pace_neutrons_cli:main']},
+    entry_points={'console_scripts': [
+        'pace_neutrons = pace_neutrons_cli:main',
+        'worker_v2 = pace_neutrons_cli.worker:main']},
     url="https://github.com/pace-neutrons/pace-python",
     zip_safe=False,
     classifiers=[

@@ -43,7 +43,7 @@ endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
-    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v -N
+    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"

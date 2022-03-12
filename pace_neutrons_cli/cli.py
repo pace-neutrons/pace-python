@@ -34,7 +34,7 @@ def _set_env(input_path='', force_reload=False):
         mlPath = DET.guess_path([input_path] + cf.CachedMatlabDirs)
         if not mlPath:
             if cf.IsFirstRun:
-                from pace_neutrons.utils import install_MCR
+                from pace_neutrons_cli.utils import install_MCR
                 print(('This is the first time PACE has been run, '
                        'and we could not find a suitable Matlab Compiler Runtime (MCR) installed.'))
                 mlPath = install_MCR(interactive=True)
@@ -75,8 +75,11 @@ def main(args=None):
     if sum([args.spyder, args.jupyter, args.mantid]) > 1:
         raise RuntimeError('You can only specify one of --spyder, --jupyter or --mantid')
     if args.install_mcr:
-        from pace_neutrons.utils import install_MCR
+        from pace_neutrons_cli.utils import install_MCR
         install_MCR(interactive=False)
+    # Sets the environment variable for the parallelisation worker
+    worker_path = os.path.join(os.path.dirname(sys.argv[0]), 'worker_v2')
+    os.environ['PACE_WORKER'] = worker_path + '.exe' if is_windows else worker_path
     # Need to set the Qt library folder first if we're using Spyder,
     # or get conflict with bundled Matlab libraries on Linux
     force_reload = False

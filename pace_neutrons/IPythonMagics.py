@@ -71,15 +71,18 @@ def showPlot(self=None, result=None):
 
 class Redirection(object):
     # Class which redirects a C-level file descriptor to the equiv. IPython stream
+
+    thread = None
+    stop_flag = None
+    saved_fd = None
+    read_pipe = None
+    exc_info = None
+
     def __init__(self, target='stdout'):
         self.target = {'stdout':sys.__stdout__, 'stderr':sys.__stderr__}[target].fileno()
         self.output = {'stdout':sys.stdout, 'stderr':sys.stderr}[target]
-        self.thread = None
-        self.stop_flag = None
-        self.saved_fd = None
-        self.read_pipe = None
-        self.exc_info = None
         self.ip = get_ipython()
+        self.flush = lambda: None
 
     def not_redirecting(self):
         return (
@@ -102,6 +105,7 @@ class Redirection(object):
                     raw = os.read(self.read_pipe, 1000)
                     if raw:
                         self.output.write(raw.decode())
+                        self.flush()
             except Exception:
                 self.exc_info = sys.exc_info()
 
@@ -109,6 +113,9 @@ class Redirection(object):
         self.thread = threading.Thread(target=redirect_thread)
         self.thread.daemon = True  # Makes the thread non-blocking
         self.thread.start()
+
+    def showtraceback(self):
+        self.ip.showtraceback()
 
     def post(self):
         if self.not_redirecting() or self.saved_fd == None:
@@ -123,7 +130,7 @@ class Redirection(object):
         self.thread = None
         self.saved_fd = None
         if self.exc_info:
-            self.ip.showtraceback()
+            self.showtraceback()
 
 
 @magics_class
