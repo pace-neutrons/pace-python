@@ -1,0 +1,205 @@
+diff --git a/Herbert/classes/MPIFramework/@ClusterMPI/ClusterMPI.m b/HORACE-build/Herbert/classes/MPIFramework/@ClusterMPI/ClusterMPI.m
+index 55c7b5f..b243cc8 100644
+--- a/Herbert/classes/MPIFramework/@ClusterMPI/ClusterMPI.m
++++ b/Herbert/classes/MPIFramework/@ClusterMPI/ClusterMPI.m
+@@ -172,9 +172,20 @@ classdef ClusterMPI < ClusterWrapper
+             rootpath = fileparts(which('herbert_init'));
+             external_dll_dir = fullfile(rootpath, 'DLL','external');
+             if ispc()
+-                % only one version of mpiexec is used now. May change in the
+-                % future.
+-                mpi_exec = fullfile(external_dll_dir, 'mpiexec.exe');
++                [rs, rv] = system('where mpiexec');
++                if rs == 0
++                    mpi_exec = strip(rv);
++                    mpis = splitlines(mpi_exec);
++                    if numel(mpis) > 1
++                        % If multiple mpiexec on path, prefer user installed MS MPI
++                        mpi_id = find(cellfun(@(x) ~isempty(strfind(x,'Microsoft')), mpis), 1);
++                        if isempty(mpi_id), mpi_id = 1; end
++                        mpi_exec = mpis{mpi_id};
++                    end
++                else
++                    % No mpiexec on path, use pre-packaged version
++                    mpi_exec = fullfile(external_dll_dir, 'mpiexec.exe');
++                end
+             else
+                 mpi_exec = fullfile(external_dll_dir, 'mpiexec');
+                 
+diff --git a/Herbert/classes/MPIFramework/@ClusterParpoolWrapper/ClusterParpoolWrapper.m b/HORACE-build/Herbert/classes/MPIFramework/@ClusterParpoolWrapper/ClusterParpoolWrapper.m
+index 65203ef..f0dda50 100644
+--- a/Herbert/classes/MPIFramework/@ClusterParpoolWrapper/ClusterParpoolWrapper.m
++++ b/Herbert/classes/MPIFramework/@ClusterParpoolWrapper/ClusterParpoolWrapper.m
+@@ -137,7 +137,11 @@ classdef ClusterParpoolWrapper < ClusterWrapper
+             % variables, but if the cluster is remote, the envriomental
+             % variables transfer should be investigated
+             obj.set_env();
+-            h_worker = str2func(obj.worker_name_);
++            if obj.is_compiled_script_
++                h_worker = @worker_v2;
++            else
++                h_worker = str2func(obj.worker_name_);
++            end
+             task = createTask(cjob,h_worker,0,{cs});
+             
+             obj.cluster_ = cl;
+diff --git a/Herbert/classes/MPIFramework/@ClusterWrapper/ClusterWrapper.m b/HORACE-build/Herbert/classes/MPIFramework/@ClusterWrapper/ClusterWrapper.m
+index 46b75c5..42953ef 100644
+--- a/Herbert/classes/MPIFramework/@ClusterWrapper/ClusterWrapper.m
++++ b/Herbert/classes/MPIFramework/@ClusterWrapper/ClusterWrapper.m
+@@ -213,11 +213,9 @@ classdef ClusterWrapper
+                 obj.matlab_starter_= fullfile(obj.matlab_starter_,'matlab');
+             end
+             if obj.is_compiled_script_
+-                % TODO -- need checking and may be expansion when compiled
+-                % horace ticket is executed.
+-                obj.common_env_var_('HERBERT_PARALLEL_EXECUTOR')= obj.worker_name_;
++                obj.common_env_var_('HERBERT_PARALLEL_EXECUTOR') = obj.worker_name_;
+             else
+-                obj.common_env_var_('HERBERT_PARALLEL_EXECUTOR') =  obj.matlab_starter_;
++                obj.common_env_var_('HERBERT_PARALLEL_EXECUTOR') = obj.matlab_starter_;
+             end
+             % additional Matlab m-files search path to be available to
+             % workers
+@@ -461,12 +459,10 @@ classdef ClusterWrapper
+             % Should throw PARALLEL_CONFIG:not_avalable exception
+             % if the particular framework is not available.
+             worker = config_store.instance.get_value('parallel_config','worker');
+-            pkp = which(worker);
+-            if isempty(pkp)
+-                error('HERBERT:ClusterWrapper:not_available',...
+-                    'Parallel worker %s is not on Matlab path. Parallel extensions are not available',...
+-                    worker);
+-            end
++            assert(~isempty(which(worker)) || exist(worker, 'file'), ...
++                'HERBERT:ClusterWrapper:not_available',...
++                'Parallel worker %s is not on Matlab path. Parallel extensions are not available',...
++                worker);
+         end
+         % The property returns the list of the configurations, available for
+         % usage by the
+diff --git a/Herbert/classes/MPIFramework/@parallel_config/parallel_config.m b/HORACE-build/Herbert/classes/MPIFramework/@parallel_config/parallel_config.m
+index 885e4e1..27e0e61 100644
+--- a/Herbert/classes/MPIFramework/@parallel_config/parallel_config.m
++++ b/Herbert/classes/MPIFramework/@parallel_config/parallel_config.m
+@@ -215,22 +215,19 @@ classdef parallel_config<config_base
+         %-----------------------------------------------------------------
+         % overloaded getters
+         function wrkr = get.worker(obj)
+-            wrkr= get_or_restore_field(obj,'worker');
++            wrkr = get_or_restore_field(obj, 'worker');
+         end
+         function wrkr = get.is_compiled(obj)
+-            % incomplete! Should be derived from worker
+-            wrkr= obj.is_compiled_;
++            wrkr = get_or_restore_field(obj, 'is_compiled');
+         end
+         
+         function frmw =get.parallel_cluster(obj)
+             %
+             wrkr = config_store.instance.get_value(obj,'worker');
+-            pkp = which(wrkr);
+-            if isempty(pkp)
+-                frmw = 'none';
+-                return
++            frmw = 'none';
++            if ~isempty(which(wrkr)) || exist(wrkr, 'file')
++                frmw = get_or_restore_field(obj, 'parallel_cluster');
+             end
+-            frmw = get_or_restore_field(obj,'parallel_cluster');
+         end
+         function conf = get.cluster_config(obj)
+             conf = get_or_restore_field(obj,'cluster_config');
+@@ -452,4 +449,4 @@ classdef parallel_config<config_base
+             the_opt = select_option_(opt,arg);
+         end
+     end
+-end
+\ No newline at end of file
++end
+diff --git a/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_cluster_.m b/HORACE-build/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_cluster_.m
+index cc02773..dff4237 100644
+--- a/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_cluster_.m
++++ b/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_cluster_.m
+@@ -7,13 +7,11 @@ function obj = check_and_set_cluster_(obj,cluster_name)
+ % The cluster name (can be defined by single symbol)
+ % or by a cluster number in the list of clusters
+ %
+-wrkr = which(obj.worker_);
+-mff = MPI_clusters_factory.instance();
++    assert(~isempty(which(obj.worker)) || exist(obj.worker, 'file'), ...
++        'HERBERT:parallel_config:not_available', ...
++        'Parallel worker is not on the Matlab path so parallel features are not available');
+ 
+-if isempty(wrkr)
+-    error('HERBERT:parallel_config:not_available',...
+-        'Parallel worker is not on the Matlab path so parallel features are not available')
+-else
++    mff = MPI_clusters_factory.instance();
+     known_clusters = mff.known_cluster_names;
+     full_cl_name = obj.select_option(known_clusters,cluster_name);
+     mff.parallel_cluster = full_cl_name;
+diff --git a/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_worker_.m b/HORACE-build/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_worker_.m
+index e173e45..dede0a3 100644
+--- a/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_worker_.m
++++ b/Herbert/classes/MPIFramework/@parallel_config/private/check_and_set_worker_.m
+@@ -9,6 +9,14 @@ if ~ischar(new_wrkr)
+ end
+ scr_path = which(new_wrkr);
+ if isempty(scr_path)
++    % Check if it is a compiled worker
++    new_wrkr = check_compiled_(new_wrkr);
++    if ~isempty(new_wrkr)
++        config_store.instance().store_config(obj, 'worker', new_wrkr);
++        config_store.instance().store_config(obj, 'is_compiled', true);
++        return
++    end
++
+     def_wrkr = obj.worker_;
+     if strcmp(new_wrkr,def_wrkr)
+         cur_fmw = get_or_restore_field(obj,'parallel_cluster');
+@@ -32,6 +40,23 @@ if isempty(scr_path)
+         
+     end
+ else % worker function is available.
+-    config_store.instance().store_config(obj,'worker',new_wrkr);
++    config_store.instance().store_config(obj, 'worker', new_wrkr);
++    config_store.instance().store_config(obj, 'is_compiled', false);
+ end
++end % function
+ 
++function out = check_compiled_(worker)
++    out = '';
++    if exist(worker, 'file')
++        % Assume if input is full path to file, then it is a compiled worker
++        out = worker;
++    else
++        if ispc(), cmd = 'where'; else, cmd = 'which'; end
++        [rs, rv] = system([cmd ' ' worker]);
++        if rs == 0
++            % Assume if it is on the system path, then it is a compiled worker
++            out = splitlines(strip(rv));
++            out = out{1}; % Only take first path if there is more than one
++        end
++    end
++end
+diff --git a/Horace/configuration/@hpc_config/hpc_config.m b/HORACE-build/Horace/configuration/@hpc_config/hpc_config.m
+index 4d54cc0..198d1e5 100644
+--- a/Horace/configuration/@hpc_config/hpc_config.m
++++ b/Horace/configuration/@hpc_config/hpc_config.m
+@@ -297,9 +297,12 @@ classdef hpc_config < config_base
+                 accum = false;
+             end
+             if accum
+-                [ok,mess] = check_worker_configured(this);
+-                if ~ok
+-                    warning('HPC_CONFIG:invalid_argument',...
++                wrkr = parallel_config().worker;
++                if isempty(fileparts(which(wrkr))) && ~exist(wrkr, 'file')
++                    html = 'https://pace-neutrons.github.io/Horace/v3.6.2/introduction/Download_and_setup.html#troubleshooting';
++                    mess=['Can not find worker on a data search path; See: ' html, ...
++                          'for the details on how to set it up'];
++                    warning('HPC_CONFIG:invalid_argument', ...
+                         ' Can not start accumulating in separate process as: %s',...
+                         mess);
+                     accum = false;

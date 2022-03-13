@@ -1,5 +1,6 @@
 import os, sys
 import platform
+import shutil
 from .funcinspect import lhs_info
 from pace_neutrons_cli.utils import get_runtime_version, checkPath
 
@@ -23,6 +24,21 @@ try:
 except ImportError:
     pass
 
+
+def _disable_umr():
+    # Mark Matlab libraries so Spyder does not reload (*delete*) them
+    if 'spydercustomize' not in sys.modules:
+        return
+    ll = '_internal,_internal.mlarray_utils,_internal.mlarray_sequence,mlarray,' \
+         'mlexceptions,matlab,matlab_pysdk,matlab_pysdk.runtime.errorhandler,' \
+         'matlab_pysdk.runtime.futureresult,matlab_pysdk.runtime.deployablefunc,' \
+         'matlab_pysdk.runtime.deployableworkspace,matlab_pysdk.runtime,' \
+         'matlab_pysdk.runtime.deployablepackage,matlabruntimeforpython3_8'
+
+    if 'matlab_pysdk' not in sys.modules['spydercustomize'].__umr__.namelist:
+        sys.modules['spydercustomize'].__umr__.namelist += ll.split(',')
+
+
 # Store the Matlab engine as a module global wrapped inside a class
 # When the global ref is deleted (e.g. when Python exits) the __del__ method is called
 # Which then gracefully shutsdown Matlab, else we get a segfault.
@@ -37,6 +53,21 @@ class _MatlabInstance(object):
         self._interface = pace.initialize()
         print('Interface opened')
         self._interface.call('pyhorace_init', [], nargout=0)
+        if 'SPYDER_ARGS' in os.environ:
+            _disable_umr()
+        # Sets the parallel worker to the compiled worker if it exists
+        if 'worker' not in sys.argv[0]:
+            is_windows = platform.system() == 'Windows'
+            worker_path = os.path.join(os.path.dirname(sys.argv[0]), 'worker_v2')
+            if is_windows:
+                worker_path = worker_path + '.exe'
+            if not os.path.exists(worker_path):
+                # Tries to search for it on the path
+                worker_path = shutil.which('worker_v2')
+            if worker_path:
+                pc = self._interface.call('parallel_config', [], nargout=1)
+                access = self._interface.call('substruct', ['.', 'worker'])
+                self._interface.call('subsasgn', [pc, access, worker_path])
 
     def __del__(self):
         if self._interface:
@@ -74,6 +105,10 @@ class NamespaceWrapper(object):
         results = self._interface.call_method(self._name, [], m_args, nargout=nargout)
         return self._converter.decode(results)
 
+    def getdoc(self):
+        # To avoid error message printing in Matlab
+        raise NotImplementedError
+
 
 class Matlab(object):
     def __init__(self, mlPath=None):
@@ -84,7 +119,7 @@ class Matlab(object):
         :param mlPath: Path to the SDK i.e. '/MATLAB/MATLAB_Runtime/v96' or to the location where matlab is installed
         (MATLAB root directory)
         """
- 
+
         self.interface = None
         self.pyMatlab = None
         self.converter = None
@@ -97,7 +132,7 @@ class Matlab(object):
         :return: None. obj has been filled with initialization pars.
         """
         global _global_matlab_ref
-        if _global_matlab_ref is None: 
+        if _global_matlab_ref is None:
             _global_matlab_ref = _MatlabInstance(get_runtime_version(), mlPath)
         self.interface = _global_matlab_ref
         import matlab as pyMatlab
@@ -133,7 +168,7 @@ class Matlab(object):
 
 def register_ipython_magics():
     try:
-        import IPython 
+        import IPython
     except ImportError:
         return None
     else:

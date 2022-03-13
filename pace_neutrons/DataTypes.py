@@ -6,6 +6,8 @@ from .MatlabFunction import MatlabFunction
 from .TypeWrappers import as_matlab, as_numpy
 from .FunctionWrapper import pymatpy
 
+NPY_INT = [np.uint8, np.int8, np.uint16, np.int16, np.uint32, np.int32, np.uint64, np.int64, np.bool_]
+
 class DataTypes:
 
     def __init__(self, interface, pyMatlab):
@@ -41,7 +43,10 @@ class DataTypes:
                 data = self._unwrap(data)
             # If the list is not one of numbers leave it for Matlab to convert to a cell array
         elif isinstance(data, np.ndarray):
-            data = as_matlab(data)
+            if data.size < 1000 and data.dtype in NPY_INT:
+                data = self.matlab.double(list(data))
+            else:
+                data = as_matlab(data)
         elif isinstance(data, Number):
             # Case 4)
             data = float(data)

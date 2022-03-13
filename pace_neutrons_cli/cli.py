@@ -77,9 +77,6 @@ def main(args=None):
     if args.install_mcr:
         from pace_neutrons_cli.utils import install_MCR
         install_MCR(interactive=False)
-    # Sets the environment variable for the parallelisation worker
-    worker_path = os.path.join(os.path.dirname(sys.argv[0]), 'worker_v2')
-    os.environ['PACE_WORKER'] = worker_path + '.exe' if is_windows else worker_path
     # Need to set the Qt library folder first if we're using Spyder,
     # or get conflict with bundled Matlab libraries on Linux
     force_reload = False

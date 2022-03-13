@@ -83,6 +83,34 @@ we recommend that you install ``pace_neutrons`` in a Python virtual environment 
 or `conda <https://docs.conda.io>`__.
 
 
+Parallization
+-------------
+
+You can activate the parallization framework using:
+
+.. code-block:: python
+
+   from pace_neutrons import Matlab
+   m = Matlab()
+   m.hpc('on')
+
+or deactivate it with :code:`m.hpc('off')`. You can select different types of parallelisation using:
+
+.. code-block:: python
+
+   m.hpc_config().parallel_cluster = 'parpool'
+
+(The compiled matlab code includes the parallelisation toolbox so :code:`parpool` will work.)
+
+Other options are :code:`'herbert'` (file-based communications) or :code:`'mpiexec_mpi'`.
+The last options needs an MPI installation, and a properly configured firewall.
+On Windows you can use `MSMPI <https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi>`__.
+Horace does bundle a version of ``mpiexec`` for Windows but it may be blocked by the firewall in some
+cases where the official Microsoft version is not blocked.
+(The Matlab version of Horace also has an addition option :code:`'slurm_mpi'` but this only works
+on certain versions of the IDAaaS system.)
+
+
 IDAaaS Installation
 -------------------
 

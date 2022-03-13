@@ -43,6 +43,7 @@ endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
+    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
     COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
