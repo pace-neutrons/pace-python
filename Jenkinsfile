@@ -6,7 +6,7 @@ def get_agent(String jobname) {
       return "${agent}"
     }
   } else if (jobname.contains('windows')) {
-    withCredentials([string(credentialsId: 'win10_agent', variable: 'agent')]) {
+    withCredentials([string(credentialsId: 'pacewin_agent', variable: 'agent')]) {
       return "${agent}"
     }
   } else {
@@ -81,6 +81,17 @@ pipeline {
             } else {
               bat """
                 git checkout -f "${env.PACE_VERSION}"
+              """
+            }
+          }
+          else {
+            if (isUnix()) {
+              sh """
+                git checkout -f "${env.SHA}"
+              """
+            } else {
+              bat """
+                git checkout -f "${env.SHA}"
               """
             }
           }
