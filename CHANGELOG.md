@@ -1,3 +1,14 @@
+# [v0.2.0](https://github.com/pace-neutrons/pace-python/compare/v0.1.4...v0.2.0)
+
+Updated to Horace 3.6.2
+
+* New features
+  - Add support for Horace parallel framework. Use `m.hpc('on')` to activate and then set the cluster type `m.hpc_config().parallel_cluster = <x>` where `<x> = 'parpool'`, `'herbert'` or `'mpiexec_mpi'`.
+
+* Bugfixes
+  - Fix bug where Matlab `+namespaces` were not accessible in Python
+  - Several small bugs when using with Spyder.
+
 # [v0.1.4](https://github.com/pace-neutrons/pace-python/compare/v0.1.3...v0.1.4)
 
 * New features

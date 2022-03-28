@@ -73,17 +73,6 @@ pipeline {
     stage("Build-Pace-Python") {
       steps {
         script {
-          if (env.PACE_VERSION) {
-            if (isUnix()) {
-              sh """
-                git checkout -f "${env.PACE_VERSION}"
-              """
-            } else {
-              bat """
-                git checkout -f "${env.PACE_VERSION}"
-              """
-            }
-          }
           if (isUnix()) {
             sh '''
                 podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/manylinux/jenkins_build_script.sh
@@ -113,7 +102,7 @@ pipeline {
 
     stage("Run-Pace-Python-Tests") {
       environment {
-        LD_LIBRARY_PATH = "/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64"
+        LD_LIBRARY_PATH = "/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64"
         LD_PRELOAD = "/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so"
       }
       steps {
@@ -144,7 +133,7 @@ pipeline {
       }
       steps {
         script {
-          if (env.PACE_VERSION) {
+          if (env.ref_type == 'tag') {
             if (isUnix()) {
               sh '''
                 podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh

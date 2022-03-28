@@ -7,9 +7,9 @@ else
     execname = 'pace_neutrons_installer';
 end
 % Make sure we install the required products:
-% 35000=Core, 35010=Numerics, 35055=Python
+% 35000=Core, 35010=Numerics, 35055=Python, 35180=Parallel Toolbox
 % Installer only has 35000 and 35010
 fid = fopen('requiredMCRProducts.txt', 'w');
-fprintf(fid, '35000	35010	35055\n');
+fprintf(fid, '35000	35010	35180	35055\n');
 fclose(fid);
 compiler.package.installer(execname, 'requiredMCRProducts.txt', 'ApplicationName', 'Pace_Python_Installer')
