@@ -30,11 +30,14 @@ python setup.py install --user
 
 The build will download the necessary Matlab packages (i.e. Horace and SpinW) and compile them.
 You will need a Matlab installation with the Matlab Compiler SDK toolbox installed.
+The Parallel Computation toolbox is also needed if you want build with Horace with `parpool` parallelisation.
+If you don't need this, also comment ou the relevant number in
+[make_package.m](https://github.com/pace-neutrons/pace-python/blob/main/installer/make_package.m#L13).
 In addition, you will need `cmake`, and a Matlab supported C compiler for your OS
 (generally `gcc-6`, `Visual Studio 2017` or `xcode-10.13` or newer).
 
 Note that Matlab only supports [certain Python versions](https://www.mathworks.com/content/dam/mathworks/mathworks-dot-com/support/sysreq/files/python-compatibility.pdf). 
-In particular, no Matlab versions supports Python 3.9, and only Matlab R2020b and newer supports Python 3.8.
+In particular, no Matlab versions supports Python 3.10 or higher, and only Matlab R2020b and newer supports Python 3.8.
 
 The build will install `pace_neutrons` as a module which can be imported.
 
@@ -53,7 +56,7 @@ If you have [chocolatey](https://chocolatey.org/) installed, you can install all
 
 ```
 choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-choco install -y visualstudio2019community --package-parameters "--includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop
+choco install -y visualstudio2019community --package-parameters "--includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop"
 choco install -y miniconda git
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/majkinetor/posh/master/MM_Admin/Invoke-Environment.ps1 -OutFile C:\windows\system32\Invoke-Environment.psm1
 ```
