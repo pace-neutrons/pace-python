@@ -50,6 +50,7 @@ def _get_args():
     parser.add_argument('-nosplash', action='store_true', help='Do not show splash screen')
     parser.add_argument('-nojvm', action='store_true', help='Do not start JVM')
     parser.add_argument('-nodesktop', action='store_true', help='Do not start desktop')
+    parser.add_argument('-softwareopengl', action='store_true', help='Use software OpenGL')
     parser.add_argument('ctrl_str', metavar='C', nargs='*', default='', help='Worker control string')
     return parser
 

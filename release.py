@@ -8,7 +8,7 @@ import subprocess
 from importlib_resources import open_text
 import yaml
 from pace_neutrons import __version__
-from pace_neutrons_cli.utils import release_exists
+from pace_neutrons_cli.utils import release_exists, download_github
 
 def main():
     parser = get_parser()
@@ -58,11 +58,27 @@ def release_github(test=True):
 
 
 def release_pypi(test=True):
-    subprocess.run(['rm','-r','dist'])
-    subprocess.run(['rm','-r','build'])
-    subprocess.run(['python', 'setup.py', 'sdist'])
+    # Downloads wheels from github and upload to PyPI
+    response = requests.get(
+        'https://api.github.com/repos/pace-neutrons/pace-python/releases')
+    # Get the latest release
+    releases = response.json()
+    ids = [r['id'] for r in releases]
+    latest = [r for r in releases if r['id'] == max(ids)][0]
+    # Creates a custom wheelhouse folder
+    try:
+        os.mkdir('pace_wheelhouse')
+    except FileExistsError:
+        pass
+    # Loops through assets and downloads all the wheels
+    headers = {"Accept":"application/octet-stream"}
+    for asset in latest['assets']:
+        if asset['name'].endswith('whl'):
+            print('Downloading %s' % (asset['name']))
+            localfile = os.path.join('pace_wheelhouse', asset['name'])
+            download_github(asset['url'], localfile, use_auth=False)
     if not test:
-        subprocess.run(['twine', 'upload', 'dist/*'])
+        subprocess.run(['twine', 'upload', 'pace_wheelhouse/*'])
 
 
 def get_parser():
