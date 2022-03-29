@@ -7,7 +7,6 @@ import requests
 import subprocess
 from importlib_resources import open_text
 import yaml
-from pace_neutrons import __version__
 from pace_neutrons_cli.utils import release_exists, download_github
 
 def main():
@@ -23,6 +22,7 @@ def main():
 
 
 def release_github(test=True):
+    from pace_neutrons import __version__
     with open('CHANGELOG.md') as f:
         changelog = f.read()
     with open('CITATION.cff') as f:
