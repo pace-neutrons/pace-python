@@ -348,7 +348,7 @@ def install_MCR(interactive=False):
     except IndexError:
         raise RuntimeError(f'Could not find the installer in the Github release')
     if interactive:
-        lic_file = os.path.join(os.path.dirname(__file__), 'MCR_license.txt')
+        lic_file = os.path.join(os.path.dirname(__file__), '..', 'pace_neutrons', 'MCR_license.txt')
         with open(lic_file, 'r') as lic:
             print(lic.read())
         p = input('Do agree with the above license? ("y" or "n")')
