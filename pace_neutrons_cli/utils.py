@@ -1,6 +1,9 @@
-import os, sys
+import os
+import sys
+import glob
 import platform
 import six
+from pathlib import Path
 
 
 def get_runtime_version():
@@ -170,7 +173,6 @@ class DetectMatlab(object):
     def find_version(self, root_dir):
         def find_file(path, filename, max_depth=2):
             """ Finds a file, will return first match"""
-            import glob
             for depth in range(max_depth + 1):
                 dirglobs = f'*{os.sep}'*depth
                 files = glob.glob(f'{path}{os.sep}{dirglobs}{filename}')
@@ -180,7 +182,6 @@ class DetectMatlab(object):
             return None
         lib_file = find_file(root_dir, self.file_to_find)
         if lib_file is not None:
-            from pathlib import Path
             lib_path = Path(lib_file)
             arch_dir = lib_path.parts[-2]
             self.arch = arch_dir
