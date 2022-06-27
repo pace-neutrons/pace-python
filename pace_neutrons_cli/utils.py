@@ -1,6 +1,9 @@
-import os, sys
+import os
+import sys
+import glob
 import platform
 import six
+from pathlib import Path
 
 
 def get_runtime_version():
@@ -168,39 +171,28 @@ class DetectMatlab(object):
             raise RuntimeError(f'Operating system {self.system} is not supported.')
 
     def find_version(self, root_dir):
-        def check_lib_file(obj, ver, runtime_dir):
-            arch = next(os.walk(runtime_dir))[1]
-            if len(arch) == 1 and os.path.exists(os.path.join(runtime_dir, arch[0], self.file_to_find)):
-                self.ver, self.arch = (ver, arch[0])
-                rv = os.path.dirname(runtime_dir)
-                print(f'Found Matlab {ver} {self.arch} at {rv}')
-                return rv
+        def find_file(path, filename, max_depth=2):
+            """ Finds a file, will return first match"""
+            for depth in range(max_depth + 1):
+                dirglobs = f'*{os.sep}'*depth
+                files = glob.glob(f'{path}{os.sep}{dirglobs}{filename}')
+                files = list(filter(os.path.isfile, files))
+                if len(files) > 0:
+                    return files[0]
             return None
-        root_dir = os.path.abspath(root_dir)
-        if os.path.basename(root_dir) == 'runtime':
-            rv = check_lib_file(self, self.ver, root_dir)
-            if rv: return rv
-        sub_dirs = next(os.walk(root_dir))[1]
-        for sub_dir in sub_dirs:
-            # We use the highest version
-            if sub_dir == 'runtime':
-                rv = check_lib_file(self, self.ver, os.path.join(root_dir, sub_dir))
-                if rv: return rv
-            runtime_dir = os.path.join(root_dir, sub_dir, 'runtime')
-            if os.path.isdir(runtime_dir):
-                rv = check_lib_file(self, sub_dir, runtime_dir)
-                if rv: return rv
-            else:
-                # Search one more level ('MATLAB_Runtime' is often below 'MATLAB' for MCRs)
-                full_subdir = os.path.join(root_dir, sub_dir)
-                subsubs = next(os.walk(full_subdir))[1]
-                subsubs.sort()
-                for subsub in subsubs[::-1]:
-                    sub_runtime = os.path.join(full_subdir, subsub)
-                    if os.path.isdir(sub_runtime):
-                        rv = check_lib_file(self, subsub, sub_runtime)
-                        if rv: return rv
-        return None
+        lib_file = find_file(root_dir, self.file_to_find)
+        if lib_file is not None:
+            lib_path = Path(lib_file)
+            arch_dir = lib_path.parts[-2]
+            self.arch = arch_dir
+            ml_subdir = lib_path.parts[-3]
+            if ml_subdir != 'runtime':
+                self.ver = ml_subdir
+            ml_path = os.path.abspath(lib_path.parents[2])
+            print(f'Found Matlab {self.ver} {self.arch} at {ml_path}')
+            return ml_path
+        else:
+            return None
 
     def guess_path(self, mlPath=[]):
         GUESSES = {'Windows': [r'C:\Program Files\MATLAB', r'C:\Program Files (x86)\MATLAB', 
