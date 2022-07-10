@@ -37,14 +37,14 @@ class DataTypes:
             data = self.matlab.logical([data])
         elif isinstance(data, list) or isinstance(data, range):
             # Case 1)
-            if all([isinstance(d, Number) for d in data]):
+            try:
                 data = self.matlab.double(data)
-            else:  # Make sure to wrap / unwrap our own stuff
+            except ValueError:
                 data = self._unwrap(data)
             # If the list is not one of numbers leave it for Matlab to convert to a cell array
         elif isinstance(data, np.ndarray):
             if data.size < 1000 and data.dtype in NPY_INT:
-                data = self.matlab.double(list(data))
+                data = self.matlab.double(data.tolist())
             else:
                 data = as_matlab(data)
         elif isinstance(data, Number):
