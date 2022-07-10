@@ -1,0 +1,66 @@
+diff --git a/Horace/change_crystal_horace.m b/Horace/change_crystal_horace.m
+index 550aa25..e2fee4b 100644
+--- a/Horace/change_crystal_horace.m
++++ b/Horace/change_crystal_horace.m
+@@ -51,8 +51,6 @@ function varargout=change_crystal_horace(varargin)
+ 
+ if nargin<1 ||nargin>5
+     error('Check number of input arguments')
+-elseif nargout>0
+-    error('No output arguments returned by this function')
+ end
+ 
+ [varargout,mess] = horace_function_call_method (nargout, @change_crystal, '$hor', varargin{:});
+diff --git a/Horace/lattice_functions/bragg_positions_view.m b/Horace/lattice_functions/bragg_positions_view.m
+index aa8f5e5..f1b1d86 100644
+--- a/Horace/lattice_functions/bragg_positions_view.m
++++ b/Horace/lattice_functions/bragg_positions_view.m
+@@ -44,14 +44,16 @@ end
+ % Plot peaks
+ ipk=1; icmp=1;
+ plot_cut_peak(wcut(ipk,icmp),wpeak(ipk,icmp),ipk,icmp)
++prefix = '';
++prompt_str = ['%s', ...
++              'Enter one of the following:\n', ...
++              '  - peak number (1-%i) and scan number (1-3) e.g. %i,3\n', ...
++              '  - <CR> to continue from present peak and scan (%i,%i)\n', ...
++              '  - Q or q to quit'];
+ while true
+-    disp('---------------------------------------------------------------------------------')
+-    disp( 'Enter one of the following:')
+-    disp(['  - peak number (1-',num2str(npk),') and scan number (1-3) e.g. ',num2str(npk),',3'])
+-    disp(['  - <CR> to continue from present peak and scan (',num2str(ipk),',',num2str(icmp),')'])
+-    disp( '  - Q or q to quit');
+-    disp(' ')
+-    opt=input('Type option: ','s');
++    prompt = sprintf(prompt_str, prefix, npk, npk, ipk, icmp);
++    opt = inputdlg(prompt); opt = opt{1};
++    prefix = '';
+     if isempty(opt)
+         icmp=icmp+1;
+         if icmp>3
+@@ -73,11 +75,9 @@ while true
+             % Plot:
+             plot_cut_peak(wcut(ipk,icmp),wpeak(ipk,icmp),ipk,icmp)
+         else
+-            disp(' ')
+-            disp('*** INVALID INPUT. Try again:')
++            prefix = sprintf('*** INVALID INPUT. Try again:\n\n');
+         end
+     end
+-    disp(' ')
+ end
+ 
+ %-----------------------------------------------------------------------------
+diff --git a/Horace/sqw/@SQWDnDBase/change_crystal.m b/Horace/sqw/@SQWDnDBase/change_crystal.m
+index 110ad7e..442c9ff 100644
+--- a/Horace/sqw/@SQWDnDBase/change_crystal.m
++++ b/Horace/sqw/@SQWDnDBase/change_crystal.m
+@@ -72,6 +72,7 @@ if w.source_is_file
+         ld.delete();
+     end
+     argout = {};
++    return
+ else
+     argout{1} = w.data;
+     for i = 1:numel(w.data)
