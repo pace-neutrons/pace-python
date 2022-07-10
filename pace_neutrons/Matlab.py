@@ -106,7 +106,7 @@ class NamespaceWrapper(object):
         return self._converter.decode(results)
 
     def getdoc(self):
-        # To avoid error message printing in Matlab
+        # To avoid error message printing in Spyder
         raise NotImplementedError
 
 
@@ -188,9 +188,11 @@ def register_ipython_magics():
     magics = IPythonMagics.MatlabMagics(shell, None)
     running_kernel.register_magics(magics)
     running_kernel.events.register('post_run_cell', IPythonMagics.showPlot)
-    redirect_stdout = IPythonMagics.Redirection(target='stdout')
-    running_kernel.events.register('pre_run_cell', redirect_stdout.pre)
-    running_kernel.events.register('post_run_cell', redirect_stdout.post)
+    # Only do redirection for Jupyter notebooks - causes errors on Spyder
+    if running_kernel == 'ZMQInteractiveShell':
+        redirect_stdout = IPythonMagics.Redirection(target='stdout')
+        running_kernel.events.register('pre_run_cell', redirect_stdout.pre)
+        running_kernel.events.register('post_run_cell', redirect_stdout.post)
 
 if not _has_registered_magic:
     register_ipython_magics()
