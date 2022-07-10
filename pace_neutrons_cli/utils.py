@@ -171,7 +171,7 @@ class DetectMatlab(object):
             raise RuntimeError(f'Operating system {self.system} is not supported.')
 
     def find_version(self, root_dir):
-        def find_file(path, filename, max_depth=2):
+        def find_file(path, filename, max_depth=3):
             """ Finds a file, will return first match"""
             for depth in range(max_depth + 1):
                 dirglobs = f'*{os.sep}'*depth
