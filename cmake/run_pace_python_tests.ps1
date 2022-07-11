@@ -3,12 +3,13 @@ function Write-and-Invoke([string]$command) {
     Invoke-Expression "$command"
 }
 
-Try {
-    $reg = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Python\ContinuumAnalytics\Anaconda39-64\InstallPath"
-} Catch [System.Management.Automation.ItemNotFoundException] {
-    Write-Error("Could not find Anaconda key in registry")
-}
-$conda_root_dir = "$($reg.'(default)')"
+$conda_root_dir = "C:\programming\miniconda3"
+#Try {
+#    $reg = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Python\ContinuumAnalytics\Anaconda39-64\InstallPath"
+#    $conda_root_dir = "$($reg.'(default)')"
+#} Catch [System.Management.Automation.ItemNotFoundException] {
+#    Write-Error("Could not find Anaconda key in registry")
+#}
 $conda_env_dir = "$conda_root_dir\envs\pace_neutrons"
 
 $Env:CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
