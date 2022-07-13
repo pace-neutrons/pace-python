@@ -3,6 +3,7 @@ from io import StringIO
 from .MatlabFunction import MatlabFunction
 from .funcinspect import lhs_info
 import re
+import uuid
 
 
 class MatlabProxyObject(object):
@@ -113,16 +114,20 @@ class MatlabProxyObject(object):
 
     def __setattr__(self, name, value):
         if self._is_thinwrapper:
-            vstr = str(uuid.uuid4()).replace('-','_')
+            vstr = 'obj{}'.format(str(uuid.uuid4()).replace('-',''))
             self.interface.call('assignin', ['base', vstr, value])
-            self.interface.call('evalin', ['base', '{}.{} = {}'.format(self._objstr, name, vstr)])
+            self.interface.call('evalin', ['base', '{}.{} = {}'.format(self._objstr, name, vstr)], nargout=0)
         else:
             access = self.interface.call('substruct', ['.', name])
             self.interface.call('subsasgn', [self.handle, access, value])
 
     def __repr__(self):
-        # getclass = self.interface.str2func('class')
-        return "<proxy for Matlab {} object>".format(self.interface.call('class', [self.handle]))
+        if self._is_thinwrapper:
+            out = StringIO()
+            objtype = self.interface.call('evalin', ['base', f"class({self._objstr})"], nargout=1, stdout=out)
+            return "<thin proxy for Matlab {} object>".format(objtype)
+        else:
+            return "<proxy for Matlab {} object>".format(self.interface.call('class', [self.handle]))
 
     def __str__(self):
         # remove pseudo-html tags from Matlab output
@@ -135,6 +140,94 @@ class MatlabProxyObject(object):
 
     def __dir__(self):
         return list(set(super(MatlabProxyObject, self).__dir__() + list(self.__dict__.keys()) + self._getAttributeNames()))
+
+    def __getitem__(self, key):
+        if not (isinstance(key, int) or (hasattr(key, 'is_integer') and key.is_integer())) or key < 0:
+            raise RuntimeError('Matlab container indices must be positive integers')
+        key = [self.converter.encode(key + 1)]   # Matlab uses 1-based indexing
+        return self.converter.decode(self.interface.call('subsref', [self.handle, self.interface.call('substruct', ['()', key])]))
+
+    def __setitem__(self, key, value):
+        if not (isinstance(key, int) or (hasattr(key, 'is_integer') and key.is_integer())) or key < 0:
+            raise RuntimeError('Matlab container indices must be positive integers')
+        if not isinstance(value, MatlabProxyObject) or repr(value) != self.__repr__():
+            raise RuntimeError('Matlab container items must be same type.')
+        key = key + 1   # Matlab uses 1-based indexing
+        if self._is_thinwrapper:
+            self.interface.call('evalin', ['base', '{}({}) = {}'.format(self._objstr, key, value._objstr)], nargout=0)
+        else:
+            access = self.interface.call('substruct', ['()', [self.converter.encode(key)]])
+            self.__dict__['handle'] = self.interface.call('subsasgn', [self.handle, access, self.converter.encode(value)])
+
+    def __len__(self):
+        return int(self.converter.decode(self.interface.call('numel', [self.handle], nargout=1)))
+
+    # Operator overloads
+    def __eq__(self, other):
+        return self.converter.decode(self.interface.call_method('eq', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __ne__(self, other):
+        return self.converter.decode(self.interface.call_method('ne', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __lt__(self, other):
+        return self.converter.decode(self.interface.call_method('lt', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __gt__(self, other):
+        return self.converter.decode(self.interface.call_method('gt', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __le__(self, other):
+        return self.converter.decode(self.interface.call_method('le', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __ge__(self, other):
+        return self.converter.decode(self.interface.call_method('ge', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __bool__(self):
+        return self.converter.decode(self.interface.call_method('logical', self.handle, [], nargout=1))
+
+    def __and__(self, other):  # bit-wise & operator (not `and` keyword)
+        return self.converter.decode(self.interface.call_method('and', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __or__(self, other):   # bit-wise | operator (not `or` keyword)
+        return self.converter.decode(self.interface.call_method('or', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __invert__(self):      # bit-wise ~ operator (not `not` keyword)
+        return self.converter.decode(self.interface.call_method('not', self.handle, [], nargout=1))
+
+    def __pos__(self):
+        return self.converter.decode(self.interface.call_method('uplus', self.handle, [], nargout=1))
+
+    def __neg__(self):
+        return self.converter.decode(self.interface.call_method('uminus', self.handle, [], nargout=1))
+
+    def __abs__(self):
+        return self.converter.decode(self.interface.call_method('abs', self.handle, [], nargout=1))
+
+    def __add__(self, other):
+        return self.converter.decode(self.interface.call_method('plus', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __radd__(self, other):
+        return self.converter.decode(self.interface.call_method('plus', self.converter.encode(other), [self.handle], nargout=1))
+
+    def __sub__(self, other):
+        return self.converter.decode(self.interface.call_method('minus', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __rsub__(self, other):
+        return self.converter.decode(self.interface.call_method('minus', self.converter.encode(other), [self.handle], nargout=1))
+
+    def __mul__(self, other):
+        return self.converter.decode(self.interface.call_method('mtimes', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __rmul__(self, other):
+        return self.converter.decode(self.interface.call_method('mtimes', self.converter.encode(other), [self.handle], nargout=1))
+
+    def __truediv__(self, other):
+        return self.converter.decode(self.interface.call_method('mrdivide', self.handle, [self.converter.encode(other)], nargout=1))
+
+    def __rtruediv__(self, other):
+        return self.converter.decode(self.interface.call_method('mrdivide', self.converter.encode(other), [self.handle], nargout=1))
+
+    def __pow__(self, other):
+        return self.converter.decode(self.interface.call_method('mpower', self.handle, [self.converter.encode(other)], nargout=1))
 
     @property
     def __doc__(self):

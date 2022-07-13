@@ -174,7 +174,7 @@ KEYWORDARGS = dict(
     packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
     package_data={'pace_neutrons':['MCR_license.txt', 'requiredMCRProducts.txt', 'setup.py',
                                    'readme.txt', 'pace/__init__.py', 'pace/pace.ctf']},
-    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1',
+    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests',
                         'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=0.6.2', 'brille>=0.5.4'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=cmdclass,
