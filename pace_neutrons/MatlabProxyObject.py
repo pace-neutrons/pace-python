@@ -111,8 +111,6 @@ class MatlabProxyObject(object):
                     return self.interface.call('help', ['{0}.{1}'.format(classname, name)], nargout=1)
 
             return matlab_method()
-        else:
-            raise RuntimeError('Matlab "{}" class does not have a method "{}"'.format(self.interface.call('class', [self.handle]), name))
 
     def __setattr__(self, name, value):
         if self._is_thinwrapper:
