@@ -36,7 +36,8 @@ StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &
 #include <stdexcept>
 #include <cstring>
 #include <sstream>
-#include <dlfcn.h>
+#include <fstream>
+//#include <dlfcn.h>
 
 //using namespace pybind11::literals;
 
@@ -431,53 +432,89 @@ CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factor
 }
 
 // Imported Matlab functions
+#ifdef _WIN32
+#include <libloaderapi.h>
+#else
 #include <dlfcn.h>
+#endif
 
 // Global declaration of libraries
 void *_LIBDATAARRAY, *_LIBENGINE, *_LIBCPPSHARED;
+std::string _MLVERSTR;
+
+void *_loadlib(std::string path, const char* libname, std::string mlver="") {
+#if defined _WIN32 
+    void* lib = (void*)LoadLibrary((path + "/win64/" + libname + mlver + ".dll").c_str());
+#elif defined __APPLE__
+    void* lib = dlopen((path + "/glnxa64/" + libname + mlver + ".dylib").c_str(), RTLD_LAZY);
+#else
+    void* lib = dlopen((path + "/glnxa64/" + libname + mlver + ".so").c_str(), RTLD_LAZY);
+#endif
+    if (!lib) {
+        throw std::runtime_error(std::string("Cannot load ") + libname);
+    }
+    return lib;
+}
+void *_resolve(void* lib, const char* sym) {
+#ifdef _WIN32
+    return (void*)GetProcAddress((HMODULE)lib, sym);
+#else
+    return dlsym(lib, sym);
+#endif
+}
+std::string _getMLversion(std::string mlroot) {
+    if (_MLVERSTR.length()==0) {
+        std::ifstream verfile(mlroot + "/VersionInfo.xml", std::ifstream::in);
+        std::ostringstream verstr;
+        verstr << verfile.rdbuf();
+        std::string vs = verstr.str();
+        vs.replace(0, vs.find("version>")+8, ""); 
+        vs.replace(vs.find(".", 3), vs.length(), "");
+        vs.replace(vs.find("."), 1, "_");
+        _MLVERSTR = vs;
+    }
+    return _MLVERSTR;
+}
 
 void _loadlibraries(std::string matlabroot) {
     if (!_LIBCPPSHARED) {
-        _LIBDATAARRAY = dlopen((matlabroot + "/extern/bin/glnxa64/libMatlabDataArray.so").c_str(), RTLD_LAZY);
-        if (!_LIBDATAARRAY) { throw std::runtime_error("Cannot load libMatlabDataArray.so"); }
-        _LIBENGINE = dlopen((matlabroot +  "/extern/bin/glnxa64/libMatlabEngine.so").c_str(), RTLD_LAZY);
-        if (!_LIBENGINE) { throw std::runtime_error("Cannot load libMatlabEngine.so"); }
-        _LIBCPPSHARED = dlopen((matlabroot + "/runtime/glnxa64/libMatlabCppSharedLib.so").c_str(), RTLD_LAZY);
-        if (!_LIBCPPSHARED) { throw std::runtime_error("Cannot load libMatlabCppSharedLib.so"); }
+        _LIBDATAARRAY = _loadlib(matlabroot + "/extern/bin/", "libMatlabDataArray");
+        //_LIBENGINE = _loadlib(matlabroot +  "/extern/bin/", "libMatlabEngine");
+        _LIBCPPSHARED = _loadlib(matlabroot + "/runtime/", "libMatlabCppSharedLib", _getMLversion(matlabroot));
     }
 }
 void _checklibs() {
-    if (!_LIBDATAARRAY || !_LIBENGINE || !_LIBCPPSHARED) {
+    if (!_LIBDATAARRAY /*|| !_LIBENGINE*/ || !_LIBCPPSHARED) {
         throw std::runtime_error("Matlab libraries must be initialised first.");
     }
 }
 // Utils
 void util_destroy_utf8(char* utf8) {
     _checklibs();
-    return ((void(*)(char*))dlsym(_LIBCPPSHARED, "util_destroy_utf8"))(utf8);
-    //void (*f)(char*) = (void(*)(char*))dlsym(_LIBCPPSHARED, "util_destroy_utf8");
+    return ((void(*)(char*))_resolve(_LIBCPPSHARED, "util_destroy_utf8"))(utf8);
+    //void (*f)(char*) = (void(*)(char*))_resolve(_LIBCPPSHARED, "util_destroy_utf8");
     //if (!f) { throw std::runtime_error("Cannot find util_destroy_utf8"); }
     //return f(utf8);
 }
-void util_destroy_utf16(char16_t* utf16) { _checklibs(); return ((void(*)(char16_t*))dlsym(_LIBCPPSHARED, "util_destroy_utf16"))(utf16); }
+void util_destroy_utf16(char16_t* utf16) { _checklibs(); return ((void(*)(char16_t*))_resolve(_LIBCPPSHARED, "util_destroy_utf16"))(utf16); }
 void util_utf8_to_utf16(const char* utf8, char16_t** utf16, size_t* errType) {
-    _checklibs(); return ((void(*)(const char*, char16_t**, size_t*))dlsym(_LIBCPPSHARED, "util_utf8_to_utf16"))(utf8, utf16, errType); }
+    _checklibs(); return ((void(*)(const char*, char16_t**, size_t*))_resolve(_LIBCPPSHARED, "util_utf8_to_utf16"))(utf8, utf16, errType); }
 void util_utf16_to_utf8(const char16_t* utf16, char** utf8, size_t* errType) {
-    _checklibs(); return ((void(*)(const char16_t*, char**, size_t*))dlsym(_LIBCPPSHARED, "util_utf16_to_utf8"))(utf16, utf8, errType); }
+    _checklibs(); return ((void(*)(const char16_t*, char**, size_t*))_resolve(_LIBCPPSHARED, "util_utf16_to_utf8"))(utf16, utf8, errType); }
 // CPP_SHARED_LIB
 void runtime_create_session(char16_t** options, size_t size) {
-    _checklibs(); return ((void(*)(char16_t**, size_t))dlsym(_LIBCPPSHARED, "runtime_create_session"))(options, size); }
-void runtime_terminate_session() { _checklibs(); return ((void(*)())dlsym(_LIBCPPSHARED, "runtime_terminate_session"))(); }
+    _checklibs(); return ((void(*)(char16_t**, size_t))_resolve(_LIBCPPSHARED, "runtime_create_session"))(options, size); }
+void runtime_terminate_session() { _checklibs(); return ((void(*)())_resolve(_LIBCPPSHARED, "runtime_terminate_session"))(); }
 uint64_t create_mvm_instance_async(const char16_t* name) {
-    _checklibs(); return ((uint64_t(*)(const char16_t*))dlsym(_LIBCPPSHARED, "create_mvm_instance_async"))(name); }
+    _checklibs(); return ((uint64_t(*)(const char16_t*))_resolve(_LIBCPPSHARED, "create_mvm_instance_async"))(name); }
 uint64_t create_mvm_instance(const char16_t* name, bool* errFlag) {
-    _checklibs(); return ((uint64_t(*)(const char16_t*, bool*))dlsym(_LIBCPPSHARED, "create_mvm_instance"))(name, errFlag); }
+    _checklibs(); return ((uint64_t(*)(const char16_t*, bool*))_resolve(_LIBCPPSHARED, "create_mvm_instance"))(name, errFlag); }
 void terminate_mvm_instance(const uint64_t mvmHandle) {
-    _checklibs(); return ((void(*)(const uint64_t))dlsym(_LIBCPPSHARED, "terminate_mvm_instance"))(mvmHandle); }
+    _checklibs(); return ((void(*)(const uint64_t))_resolve(_LIBCPPSHARED, "terminate_mvm_instance"))(mvmHandle); }
 void wait_for_figures_to_close(const uint64_t mvmHandle) {
-    _checklibs(); return ((void(*)(const uint64_t))dlsym(_LIBCPPSHARED, "wait_for_figures_to_close"))(mvmHandle); }
+    _checklibs(); return ((void(*)(const uint64_t))_resolve(_LIBCPPSHARED, "wait_for_figures_to_close"))(mvmHandle); }
 void cppsharedlib_destroy_handles(uintptr_t* handles) {
-    _checklibs(); return ((void(*)(uintptr_t*))dlsym(_LIBCPPSHARED, "cppsharedlib_destroy_handles"))(handles); }
+    _checklibs(); return ((void(*)(uintptr_t*))_resolve(_LIBCPPSHARED, "cppsharedlib_destroy_handles"))(handles); }
 uintptr_t cppsharedlib_feval_with_completion(const uint64_t matlabHandle, const char* function, size_t nlhs, bool scalar,
                                              matlab::data::impl::ArrayImpl** args, size_t nrhs,
                                              void(*success)(void*, size_t, bool, matlab::data::impl::ArrayImpl**),
@@ -488,37 +525,38 @@ uintptr_t cppsharedlib_feval_with_completion(const uint64_t matlabHandle, const 
     return ((uintptr_t(*)(const uint64_t, const char*, size_t, bool, matlab::data::impl::ArrayImpl**, size_t,
                           void(*)(void*, size_t, bool, matlab::data::impl::ArrayImpl**),
                           void(*)(void*, size_t, bool, size_t, const void*), void*, void*, void*,
-                          void(*)(void*, const char16_t*, size_t), void(*)(void*)))dlsym(_LIBCPPSHARED, "cppsharedlib_feval_with_completion"))
+                          void(*)(void*, const char16_t*, size_t), void(*)(void*)))_resolve(_LIBCPPSHARED, "cppsharedlib_feval_with_completion"))
                           (matlabHandle, function, nlhs, scalar, args, nrhs, success, exception, p, output, error, write, deleter);
 }
 bool cppsharedlib_cancel_feval_with_completion(uintptr_t taskHandle, bool allowInteruption) {
-    _checklibs(); return ((bool(*)(uintptr_t, bool))dlsym(_LIBCPPSHARED, "cppsharedlib_cancel_feval_with_completion"))(taskHandle, allowInteruption); }
+    _checklibs(); return ((bool(*)(uintptr_t, bool))_resolve(_LIBCPPSHARED, "cppsharedlib_cancel_feval_with_completion"))(taskHandle, allowInteruption); }
 void cppsharedlib_destroy_task_handle(uintptr_t taskHandle) {
-    _checklibs(); return ((void(*)(uintptr_t))dlsym(_LIBCPPSHARED, "cppsharedlib_destroy_task_handle"))(taskHandle); }
+    _checklibs(); return ((void(*)(uintptr_t))_resolve(_LIBCPPSHARED, "cppsharedlib_destroy_task_handle"))(taskHandle); }
 size_t cppsharedlib_get_stacktrace_number(const uintptr_t frameHandle) {
-    _checklibs(); return ((size_t(*)(const uintptr_t))dlsym(_LIBCPPSHARED, "cppsharedlib_get_stacktrace_number"))(frameHandle); }
+    _checklibs(); return ((size_t(*)(const uintptr_t))_resolve(_LIBCPPSHARED, "cppsharedlib_get_stacktrace_number"))(frameHandle); }
 const char* cppsharedlib_get_stacktrace_message(const uintptr_t frameHandle) {
-    _checklibs(); return ((const char*(*)(const uintptr_t))dlsym(_LIBCPPSHARED, "cppsharedlib_get_stacktrace_message"))(frameHandle); }
+    _checklibs(); return ((const char*(*)(const uintptr_t))_resolve(_LIBCPPSHARED, "cppsharedlib_get_stacktrace_message"))(frameHandle); }
 const char16_t* cppsharedlib_get_stackframe_file(const uintptr_t frameHandle, size_t frameNumber) {
-    _checklibs(); return ((const char16_t*(*)(const uintptr_t, size_t))dlsym(_LIBCPPSHARED, "cppsharedlib_get_stackframe_file"))(frameHandle, frameNumber); }
+    _checklibs(); return ((const char16_t*(*)(const uintptr_t, size_t))_resolve(_LIBCPPSHARED, "cppsharedlib_get_stackframe_file"))(frameHandle, frameNumber); }
 const char* cppsharedlib_get_stackframe_func(const uintptr_t frameHandle, size_t frameNumber) {
-    _checklibs(); return ((const char*(*)(const uintptr_t, size_t))dlsym(_LIBCPPSHARED, "cppsharedlib_get_stackframe_func"))(frameHandle, frameNumber); }
+    _checklibs(); return ((const char*(*)(const uintptr_t, size_t))_resolve(_LIBCPPSHARED, "cppsharedlib_get_stackframe_func"))(frameHandle, frameNumber); }
 uint64_t cppsharedlib_get_stackframe_line(const uintptr_t frameHandle, size_t frameNumber) {
-    _checklibs(); return ((uint64_t(*)(const uintptr_t, size_t))dlsym(_LIBCPPSHARED, "cppsharedlib_get_stackframe_line"))(frameHandle, frameNumber); }
+    _checklibs(); return ((uint64_t(*)(const uintptr_t, size_t))_resolve(_LIBCPPSHARED, "cppsharedlib_get_stackframe_line"))(frameHandle, frameNumber); }
 int cppsharedlib_run_main(int(*mainfcn)(int, const char**), int argc, const char** argv) {
-    _checklibs(); return ((int(*)(int(*)(int, const char**), int, const char**))dlsym(_LIBCPPSHARED, "cppsharedlib_run_main"))(mainfcn, argc, argv); }
+    _checklibs(); return ((int(*)(int(*)(int, const char**), int, const char**))_resolve(_LIBCPPSHARED, "cppsharedlib_run_main"))(mainfcn, argc, argv); }
 // ENGINE
-void cpp_engine_create_session() { _checklibs(); return ((void(*)())dlsym(_LIBENGINE, "cpp_engine_create_session"))(); }
+/*
+void cpp_engine_create_session() { _checklibs(); return ((void(*)())_resolve(_LIBENGINE, "cpp_engine_create_session"))(); }
 uint64_t cpp_engine_create_out_of_process_matlab(char16_t** options, size_t size, bool* errFlag) {
-    _checklibs(); return ((uint64_t(*)(char16_t**, size_t, bool*))dlsym(_LIBENGINE, "cpp_engine_create_out_of_process_matlab"))(options, size, errFlag); }
+    _checklibs(); return ((uint64_t(*)(char16_t**, size_t, bool*))_resolve(_LIBENGINE, "cpp_engine_create_out_of_process_matlab"))(options, size, errFlag); }
 uint64_t cpp_engine_attach_shared_matlab(const char16_t* name, bool* errFlag) {
-    _checklibs(); return ((uint64_t(*)(const char16_t*, bool*))dlsym(_LIBENGINE, "cpp_engine_attach_shared_matlab"))(name, errFlag); }
+    _checklibs(); return ((uint64_t(*)(const char16_t*, bool*))_resolve(_LIBENGINE, "cpp_engine_attach_shared_matlab"))(name, errFlag); }
 size_t cpp_engine_find_shared_matlab(char16_t*** names) {
-    _checklibs(); return ((size_t(*)(char16_t***))dlsym(_LIBENGINE, "cpp_engine_find_shared_matlab"))(names); }
+    _checklibs(); return ((size_t(*)(char16_t***))_resolve(_LIBENGINE, "cpp_engine_find_shared_matlab"))(names); }
 void cpp_engine_destroy_names(char16_t** names, size_t size) {
-    _checklibs(); return ((void(*)(char16_t**, size_t))dlsym(_LIBENGINE, "cpp_engine_destroy_names"))(names, size); }
+    _checklibs(); return ((void(*)(char16_t**, size_t))_resolve(_LIBENGINE, "cpp_engine_destroy_names"))(names, size); }
 void cpp_engine_destroy_handles(uintptr_t* handles) {
-    _checklibs(); return ((void(*)(uintptr_t*))dlsym(_LIBENGINE, "cpp_engine_destroy_handles"))(handles); }
+    _checklibs(); return ((void(*)(uintptr_t*))_resolve(_LIBENGINE, "cpp_engine_destroy_handles"))(handles); }
 uintptr_t cpp_engine_feval_with_completion(const uint64_t matlabHandle, const char* function, size_t nlhs, bool scalar,
                                            matlab::data::impl::ArrayImpl** args, size_t nrhs,
                                            void(*success)(void*, size_t, bool, matlab::data::impl::ArrayImpl**),
@@ -529,28 +567,29 @@ uintptr_t cpp_engine_feval_with_completion(const uint64_t matlabHandle, const ch
     return ((uintptr_t(*)(const uint64_t, const char*, size_t, bool, matlab::data::impl::ArrayImpl**, size_t,
                           void(*)(void*, size_t, bool, matlab::data::impl::ArrayImpl**),
                           void(*)(void*, size_t, bool, size_t, const void*), void*, void*, void*,
-                          void(*)(void*, const char16_t*, size_t), void(*)(void*)))dlsym(_LIBENGINE, "cpp_engine_feval_with_completion"))
+                          void(*)(void*, const char16_t*, size_t), void(*)(void*)))_resolve(_LIBENGINE, "cpp_engine_feval_with_completion"))
                           (matlabHandle, function, nlhs, scalar, args, nrhs, success, exception, p, output, error, write, deleter);
 }
 void cpp_engine_eval_with_completion(const uint64_t matlabHandle, const char16_t* statement, void(*success)(void*), void(*exception)(void*, size_t, const void*),
                                      void* p, void* output, void* error, void(*write)(void*, const char16_t*, size_t), void(*deleter)(void*), uintptr_t** handles) {
     _checklibs();
     return ((void(*)(const uint64_t, const char16_t*, void(*)(void*), void(*)(void*, size_t, const void*), void*, void*, void*,
-                     void(*)(void*, const char16_t*, size_t), void(*)(void*), uintptr_t**))dlsym(_LIBENGINE, "cpp_engine_eval_with_completion"))
+                     void(*)(void*, const char16_t*, size_t), void(*)(void*), uintptr_t**))_resolve(_LIBENGINE, "cpp_engine_eval_with_completion"))
                      (matlabHandle, statement, success, exception, p, output, error, write, deleter, handles);
 }
 bool cpp_engine_cancel_feval_with_completion(uintptr_t taskHandle, bool allowInteruption) {
-    _checklibs(); return ((bool(*)(uintptr_t, bool))dlsym(_LIBENGINE, "cpp_engine_cancel_feval_with_completion"))(taskHandle, allowInteruption); }
+    _checklibs(); return ((bool(*)(uintptr_t, bool))_resolve(_LIBENGINE, "cpp_engine_cancel_feval_with_completion"))(taskHandle, allowInteruption); }
 void cpp_engine_destroy_task_handle(uintptr_t taskHandle) {
-    _checklibs(); return ((void(*)(uintptr_t))dlsym(_LIBENGINE, "cpp_engine_destroy_task_handle"))(taskHandle); }
+    _checklibs(); return ((void(*)(uintptr_t))_resolve(_LIBENGINE, "cpp_engine_destroy_task_handle"))(taskHandle); }
 void cpp_engine_terminate_out_of_process_matlab(const uint64_t matlabHandle) {
-    _checklibs(); return ((void(*)(const uintptr_t))dlsym(_LIBENGINE, "cpp_engine_terminate_out_of_process_matlab"))(matlabHandle); }
+    _checklibs(); return ((void(*)(const uintptr_t))_resolve(_LIBENGINE, "cpp_engine_terminate_out_of_process_matlab"))(matlabHandle); }
 void cpp_engine_terminate_session() {
-    _checklibs(); return ((void(*)())dlsym(_LIBENGINE, "cpp_engine_terminate_session"))(); }
+    _checklibs(); return ((void(*)())_resolve(_LIBENGINE, "cpp_engine_terminate_session"))(); }
 void* cpp_engine_get_function_ptr(int fcn) {
-    _checklibs(); return ((void*(*)(int))dlsym(_LIBENGINE, "cpp_engine_get_function_ptr"))(fcn); }
+    _checklibs(); return ((void*(*)(int))_resolve(_LIBENGINE, "cpp_engine_get_function_ptr"))(fcn); }
+*/
 // DATA_ARRAY
-void* get_function_ptr(int fcn) { _checklibs(); return ((void*(*)(int))dlsym(_LIBDATAARRAY, "get_function_ptr"))(fcn); }
+void* get_function_ptr(int fcn) { _checklibs(); return ((void*(*)(int))_resolve(_LIBDATAARRAY, "get_function_ptr"))(fcn); }
 
 
 // -------------------------
@@ -618,6 +657,8 @@ class pacecpp {
     py::tuple call(const std::u16string &funcname, py::args args, py::kwargs& kwargs) {
         const size_t nlhs = 0;
         // Clears the streams
+        _m_output.get()->str(std::basic_string<char16_t>());
+        _m_error.get()->str(std::basic_string<char16_t>());
         //_outputstream.str(std::basic_string<char16_t>());
         //_errorstream.str(std::basic_string<char16_t>());
         // Runs the command and returns the output string
@@ -669,7 +710,7 @@ class pacecpp {
     }
 };
 
-PYBIND11_MODULE(libpace, m) {
+PYBIND11_MODULE(libctf, m) {
     py::class_<pacecpp>(m, "pace")
         .def(py::init<std::string>(), py::arg("matlabroot")="/usr/local/MATLAB/R2020a/")
         .def("call", &pacecpp::call);
