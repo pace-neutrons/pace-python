@@ -33,6 +33,7 @@ StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &
 #include <Python.h>
 #include <algorithm>
 #include <vector>
+#include <map>
 #include <stdexcept>
 #include <cstring>
 #include <sstream>
@@ -108,8 +109,7 @@ template <typename T> PyObject* matlab_to_python_t (const matlab::data::Array ar
     // See: https://github.com/pybind/pybind11/issues/323
     const T &tmp = *arr_t.begin();
     py::array_t<T> retval(dims, strides, (T*)(&tmp), owner);
-    PyObject* rv = retval.ptr();
-    Py_INCREF(rv);
+    PyObject* rv = retval.release().ptr();
     return rv;
 }
 // Specialisations for other types to generate the appropriate Python type
@@ -326,7 +326,8 @@ template <typename T> CellArray fill_vec_from_pyobj(std::vector<PyObject*> &objs
     std::vector<T> vec;
     vec.resize(objs.size());
     std::transform (objs.begin(), objs.end(), vec.begin(), convert_py_obj<T>);
-    return factory.createCellArray({1, 1}, factory.createArray<T>({1, vec.size()}, (T*)(&(*vec.begin())), (T*)(&(*vec.end()))));
+    return factory.createCellArray({1, 1}, factory.createArray<std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end()));
+    //return factory.createCellArray({1, 1}, factory.createArray<T>({1, vec.size()}, (T*)(&(*vec.begin())), (T*)(&(*vec.end()))));
 }
 
 CharArray python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
@@ -448,7 +449,9 @@ void *_loadlib(std::string path, const char* libname, std::string mlver="") {
 #elif defined __APPLE__
     void* lib = dlopen((path + "/glnxa64/" + libname + mlver + ".dylib").c_str(), RTLD_LAZY);
 #else
-    void* lib = dlopen((path + "/glnxa64/" + libname + mlver + ".so").c_str(), RTLD_LAZY);
+    if (mlver.length() > 0)
+        mlver = "." + mlver;
+    void* lib = dlopen((path + "/glnxa64/" + libname + ".so" + mlver).c_str(), RTLD_LAZY);
 #endif
     if (!lib) {
         throw std::runtime_error(std::string("Cannot load ") + libname);
@@ -470,7 +473,9 @@ std::string _getMLversion(std::string mlroot) {
         std::string vs = verstr.str();
         vs.replace(0, vs.find("version>")+8, ""); 
         vs.replace(vs.find(".", 3), vs.length(), "");
+#ifdef _WIN32
         vs.replace(vs.find("."), 1, "_");
+#endif
         _MLVERSTR = vs;
     }
     return _MLVERSTR;
@@ -600,6 +605,17 @@ typedef std::basic_stringbuf<char16_t> StringBuffer;
 
 namespace libPace {
 
+namespace {
+    void _destroy_array(PyObject *capsule) {
+        const char* name = PyCapsule_GetName(capsule);
+        std::cout << "--- deleting capsule |" << name << "| ===\n";
+        if(std::strncmp(name, "mw", 2) == 0) {
+            void* addr = PyCapsule_GetPointer(capsule, name);
+            static_cast<std::map<std::string, matlab::data::Array>*>(addr)->erase(std::string(name));
+        }
+    }
+}
+
 class pacecpp {
     protected:
     // Properties
@@ -611,7 +627,10 @@ class pacecpp {
     std::shared_ptr<StringBuffer> _m_error = std::make_shared<StringBuffer>();
     std::shared_ptr<StreamBuffer> _m_output_buf = std::static_pointer_cast<StreamBuffer>(_m_output);
     std::shared_ptr<StreamBuffer> _m_error_buf = std::static_pointer_cast<StreamBuffer>(_m_error);
-    PyObject* _parent = PyList_New(1);
+    PyObject* _parent = PyCapsule_New(this, "MatlabEnvironment", nullptr);
+    std::vector<char*> _cache_indices;
+    //std::vector< std::vector<char> > _cache_indices;
+    std::map<std::string, matlab::data::Array> _cached_arrays;
 
     matlab::data::Array _convert_to_matlab(PyObject *input) {
         matlab::data::ArrayFactory factory;
@@ -626,7 +645,15 @@ class pacecpp {
             output = python_string_to_matlab(input, factory);
         } else if (PyDict_Check(input)) {
             output = python_dict_to_matlab(input, factory);
-        } else if (input != Py_None) {
+        } else if (PyLong_Check(input)) {
+            output = factory.createScalar<int64_t>(PyLong_AsLong(input));
+        } else if (PyFloat_Check(input)) {
+            output = factory.createScalar<double>(PyFloat_AsDouble(input));
+        } else if (PyComplex_Check(input)) {
+            output = factory.createScalar(std::complex<double>(PyComplex_RealAsDouble(input), PyComplex_ImagAsDouble(input)));
+        } else if (input == Py_None) {
+            output = factory.createArray<double>({0});
+        } else {
             throw std::runtime_error("Unrecognised Python type");
         }
         return output;
@@ -651,6 +678,36 @@ class pacecpp {
         }
         return nargout;
     }
+
+    char* _get_next_cached_id() {
+        char* next = new char[10]();  // Enough for 1e8 variables
+        std::strcpy(next, std::string("mw" + std::to_string(_cache_indices.size())).c_str());
+        _cache_indices.push_back(next);
+        return _cache_indices.back();
+        //std::string next = "mw" + std::to_string(_cache_indices.size()) + "\0";
+        //_cache_indices.push_back(std::vector<char>(next.begin(), next.end()));
+        //return &(*(_cache_indices.back().begin()));
+    }
+
+    PyObject* _matlab_to_python(matlab::data::Array input) {
+        matlab::data::ArrayType type = input.getType();
+        PyObject *rv;
+        if (type == matlab::data::ArrayType::CHAR || type == matlab::data::ArrayType::MATLAB_STRING) {
+            // For strings we construct new PyObjects by copying, no need to cache
+            rv = matlab_to_python(input, _parent);
+        } else {
+            char* id = _get_next_cached_id();
+            _cached_arrays[std::string(id)] = input;
+            PyObject *owner = PyCapsule_New(static_cast<void*>(&_cached_arrays), id, _destroy_array);
+            //owner = py::capsule(static_cast<void*>(&_cached_arrays), id.c_str(), _destroy_array);
+            //owner = _parent;
+            rv = matlab_to_python(input, owner);
+            // PyBind auto increfs the base because PyArray_SetBaseObject steals the ref - but we want this
+            Py_DECREF(owner);
+        }
+        return rv;
+    }
+
 
     public:
     // Calls Matlab function
@@ -689,7 +746,8 @@ class pacecpp {
             if (outputs[idx].getNumberOfElements() == 0) {
                 retval[idx] = py::none();
             } else {
-                retval[idx] = matlab_to_python(outputs[idx], _parent);
+                // Call the CPython function directly because we _want_ to steal a ref to the output
+                PyTuple_SetItem(retval.ptr(), idx, _matlab_to_python(outputs[idx]));
             }
         }
         PyGILState_Release(gstate);  // GIL}
@@ -698,21 +756,34 @@ class pacecpp {
 
     // Constructor
     //pacecpp(std::string matlabroot = "/usr/local/MATLAB/R2020a/") {
-    pacecpp(std::string matlabroot) { 
+    pacecpp(const std::u16string ctfname, std::string matlabroot) { 
         _loadlibraries(matlabroot);
 	    auto mode = matlab::cpplib::MATLABApplicationMode::IN_PROCESS;
 	    // Specify MATLAB startup options
+#ifdef __linux__
 	    std::vector<std::u16string> options = {u"-nodisplay"};
+#else
+	    std::vector<std::u16string> options = {u""};
+#endif
         _app = matlab::cpplib::initMATLABApplication(mode, options);
-        _lib = matlab::cpplib::initMATLABLibrary(_app, u"libpace.ctf");
+        _lib = matlab::cpplib::initMATLABLibrary(_app, ctfname);
         //_outputstream_buf = std::shared_ptr<StreamBuffer>(_outputstream.rdbuf());
         //_errorstream_buf = std::shared_ptr<StreamBuffer>(_errorstream.rdbuf());
     }
-};
+
+    ~pacecpp() {
+        // Renames the cache indices to invalidate them to ensure we don't double free
+        for (size_t ii=0; ii<_cache_indices.size(); ii++) {
+            strcpy(_cache_indices[ii], std::string("x" + std::to_string(ii)).c_str());
+        }
+    }
+
+};  // class pacecpp
 
 PYBIND11_MODULE(libctf, m) {
     py::class_<pacecpp>(m, "pace")
-        .def(py::init<std::string>(), py::arg("matlabroot")="/usr/local/MATLAB/R2020a/")
+        .def(py::init<const std::u16string, std::string>(),
+             py::arg("ctfname")=u"libpace.ctf", py::arg("matlabroot")="/usr/local/MATLAB/R2020a/") 
         .def("call", &pacecpp::call);
 }
 
