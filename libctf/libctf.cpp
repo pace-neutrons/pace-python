@@ -36,6 +36,7 @@ StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &
 #include <map>
 #include <stdexcept>
 #include <cstring>
+#include <cstdio>
 #include <sstream>
 #include <fstream>
 //#include <dlfcn.h>
@@ -63,6 +64,7 @@ using namespace matlab::data;
 //using matlab::mex::ArgumentList;
 namespace py = pybind11;
 
+/*
 template <typename T> PyObject* matlab_to_python_t (const matlab::data::Array arr, py::handle owner);
 template <> PyObject* matlab_to_python_t<char16_t>(const matlab::data::Array input, py::handle owner);
 template <> PyObject* matlab_to_python_t<std::basic_string<char16_t>>(const matlab::data::Array input, py::handle owner);
@@ -82,7 +84,36 @@ template <typename T> CellArray fill_vec_from_pyobj(std::vector<PyObject*> &objs
 CharArray python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory);
 CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory);
 StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory);
+*/
 
+void _print_ml_type(matlab::data::Array input) {
+    matlab::data::ArrayType type = input.getType();
+    switch(type) {
+        case matlab::data::ArrayType::DOUBLE:         std::cout << " --- double\n"; break;
+        case matlab::data::ArrayType::SINGLE:         std::cout << " --- single\n"; break;
+        case matlab::data::ArrayType::COMPLEX_SINGLE: std::cout << " --- complex single\n"; break;
+        case matlab::data::ArrayType::COMPLEX_DOUBLE: std::cout << " --- complex double\n"; break;
+        case matlab::data::ArrayType::LOGICAL:        std::cout << " --- logical\n"; break;
+        case matlab::data::ArrayType::INT8:           std::cout << " --- int8\n"; break;
+        case matlab::data::ArrayType::INT16:          std::cout << " --- int16\n"; break;
+        case matlab::data::ArrayType::INT32:          std::cout << " --- int32\n"; break;
+        case matlab::data::ArrayType::INT64:          std::cout << " --- int64\n"; break;
+        case matlab::data::ArrayType::UINT8:          std::cout << " --- uint8\n"; break;
+        case matlab::data::ArrayType::UINT16:         std::cout << " --- uint16\n"; break;
+        case matlab::data::ArrayType::UINT32:         std::cout << " --- uint32\n"; break;
+        case matlab::data::ArrayType::UINT64:         std::cout << " --- uint64\n"; break;
+        case matlab::data::ArrayType::CHAR:           std::cout << " --- char\n"; break;
+        case matlab::data::ArrayType::MATLAB_STRING:  std::cout << " --- string\n"; break;
+        case matlab::data::ArrayType::STRUCT:         std::cout << " --- struct\n"; break;
+        case matlab::data::ArrayType::CELL:           std::cout << " --- cell\n"; break;
+        case matlab::data::ArrayType::VALUE_OBJECT:   std::cout << " --- value object\n"; break;
+        case matlab::data::ArrayType::HANDLE_OBJECT_REF: std::cout << " --- handle object ref\n"; break;
+        case matlab::data::ArrayType::ENUM:           std::cout << " --- enum\n"; break;
+        case matlab::data::ArrayType::SPARSE_DOUBLE:  std::cout << " --- sparse double\n"; break;
+        case matlab::data::ArrayType::UNKNOWN:        std::cout << " --- unknown\n"; break;
+        default:                                      std::cout << " --- default\n";
+    }
+}
 
 // -------------------------------------------------------------------------------------------------------
 // Code to translate Matlab types to Python types
@@ -255,17 +286,17 @@ template <typename T> TypedArray<T> raw_to_matlab_contiguous(T* begin, size_t sz
     }
 }
 
-CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
+matlab::data::Array python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
     // Cast the result to the PyArray C struct and its corresponding dtype struct
     py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
     py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
     if (arr->nd == 0) {            // 0-dimensional array - return a scalar
         if (dtype->kind == 'f') {
-            if (dtype->elsize == sizeof(double)) return factory.createCellArray({1, 1}, factory.createScalar(*((double*)(arr->data))));
-            else if (dtype->elsize == sizeof(float)) return factory.createCellArray({1, 1}, factory.createScalar(*((float*)(arr->data))));
+            if (dtype->elsize == sizeof(double)) return factory.createScalar(*((double*)(arr->data)));
+            else if (dtype->elsize == sizeof(float)) return factory.createScalar(*((float*)(arr->data)));
         } else if (dtype->kind == 'c') {
-            if (dtype->elsize == sizeof(std::complex<double>)) return factory.createCellArray({1, 1}, factory.createScalar(*((std::complex<double>*)(arr->data))));
-            else if (dtype->elsize == sizeof(std::complex<float>)) return factory.createCellArray({1, 1}, factory.createScalar(*((std::complex<float>*)(arr->data))));
+            if (dtype->elsize == sizeof(std::complex<double>)) return factory.createScalar(*((std::complex<double>*)(arr->data)));
+            else if (dtype->elsize == sizeof(std::complex<float>)) return factory.createScalar(*((std::complex<float>*)(arr->data)));
         }
     }
     std::vector<size_t> dims;
@@ -284,29 +315,29 @@ CellArray python_array_to_matlab(void *result, matlab::data::ArrayFactory &facto
     if (dtype->kind == 'f') {       // Floating point array
         if (dtype->elsize == sizeof(double)) {
             if (f_or_c_contiguous)
-                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((double*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+                return raw_to_matlab_contiguous((double*)begin, numel, dims, f_or_c_contiguous==-1, factory);
             else
-                return factory.createCellArray({1, 1}, raw_to_matlab<double>(begin, numel, dims, arr->strides, factory));
+                return raw_to_matlab<double>(begin, numel, dims, arr->strides, factory);
         }
         else if(dtype->elsize == sizeof(float)) {
             if (f_or_c_contiguous)
-                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((float*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+                return raw_to_matlab_contiguous((float*)begin, numel, dims, f_or_c_contiguous==-1, factory);
             else
-                return factory.createCellArray({1, 1}, raw_to_matlab<float>(begin, numel, dims, arr->strides, factory));
+                return raw_to_matlab<float>(begin, numel, dims, arr->strides, factory);
         }
     }
     else if (dtype->kind == 'c') {  // Complex array
         if (dtype->elsize == sizeof(std::complex<double>)) {
             if (f_or_c_contiguous)
-                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((std::complex<double>*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+                return raw_to_matlab_contiguous((std::complex<double>*)begin, numel, dims, f_or_c_contiguous==-1, factory);
             else
-                return factory.createCellArray({1, 1}, raw_to_matlab<std::complex<double>>(begin, numel, dims, arr->strides, factory));
+                return raw_to_matlab<std::complex<double>>(begin, numel, dims, arr->strides, factory);
         }
         else if(dtype->elsize == sizeof(std::complex<float>)) {
             if (f_or_c_contiguous)
-                return factory.createCellArray({1, 1}, raw_to_matlab_contiguous((std::complex<float>*)begin, numel, dims, f_or_c_contiguous==-1, factory));
+                return raw_to_matlab_contiguous((std::complex<float>*)begin, numel, dims, f_or_c_contiguous==-1, factory);
             else
-                return factory.createCellArray({1, 1}, raw_to_matlab<std::complex<float>>(begin, numel, dims, arr->strides, factory));
+                return raw_to_matlab<std::complex<float>>(begin, numel, dims, arr->strides, factory);
         }
     }
     else
@@ -322,11 +353,12 @@ template <> double convert_py_obj (PyObject *obj) {
 template <> std::complex<double> convert_py_obj (PyObject *obj) {
     return std::complex<double>(PyComplex_RealAsDouble(obj), PyComplex_ImagAsDouble(obj)); }
 
-template <typename T> CellArray fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::ArrayFactory &factory) {
+template <typename T> TypedArray<T> fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::ArrayFactory &factory) {
     std::vector<T> vec;
     vec.resize(objs.size());
     std::transform (objs.begin(), objs.end(), vec.begin(), convert_py_obj<T>);
-    return factory.createCellArray({1, 1}, factory.createArray<std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end()));
+    return factory.createArray<std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end());
+    //return factory.createCellArray({1, 1}, factory.createArray<std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end()));
     //return factory.createCellArray({1, 1}, factory.createArray<T>({1, vec.size()}, (T*)(&(*vec.begin())), (T*)(&(*vec.end()))));
 }
 
@@ -340,7 +372,7 @@ CharArray python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &
     return factory.createCharArray(std::string(str, str_sz));
 }
 
-CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory);
+Array listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory);
 StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
     Py_ssize_t pos = 0;
     PyObject *key, *val;
@@ -380,7 +412,7 @@ StructArray python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &
     return retval;
 }
 
-CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
+Array listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
     size_t obj_size = PyTuple_Check(result) ? (size_t)PyTuple_Size(result) : (size_t)PyList_Size(result);
     CellArray cell_out = factory.createCellArray({1, obj_size});
     auto npy_api = py::detail::npy_api::get();
@@ -420,6 +452,7 @@ CellArray listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factor
             throw std::runtime_error("Unknown return type from Python function.");
         }
     }
+    //for (auto cell_el: cell_out) { _print_ml_type(cell_el); }
     if (typeflags == MYINTEGER) {
         return fill_vec_from_pyobj<int64_t>(objs, factory);
     } else if (typeflags == MYFLOAT) {
@@ -605,6 +638,59 @@ typedef std::basic_stringbuf<char16_t> StringBuffer;
 
 namespace libPace {
 
+struct mxArray_header_2020a { // 96 bytes long
+    std::int64_t *refcount;  // Pointer to the number of shared copies 
+    void *unknown1;          // Seems to be zero
+    std::int64_t ClassID;    // https://mathworks.com/help/matlab/apiref/mxclassid.html
+    std::int64_t flags;      // ???
+    union {
+        std::int64_t M;      // Row size for 2D matrices, or
+        std::int64_t *dims;  // Pointer to dims array for nD > 2 arrays
+    } Mdims;
+    union {
+        std::int64_t N;      // Column size for 2D matrices, or
+        std::int64_t ndims;  // Number of dimemsions for nD > 2 arrays
+    } Nndim;
+    void *unknown_addr1;     // Something related to structs and cells
+    void *pr;                // Pointer to the data
+    void *unknown_addr2;     // Something related to structs or sparse
+    void *unknown_addr3;     // Something related to sparse
+    void *unknown2;          // Seems to be zero
+    void *unknown3;          // Seems to be zero
+};
+
+struct impl_header_col_major {
+    void *ad1;               // Class address?
+    std::int64_t *unity;     // Seems to be always 1
+    void *data_ptr;          // Pointer to another struct that points to a mxArray
+    std::int64_t *flags;     // Some kind of flags?
+    std::int64_t *dims;      // Pointer to dimensions array
+    void *unknown1;
+    void *unknown2;
+    void *unknown3;
+    void *unknown4;
+    void *mxArray;           // Pointer to mxArray in the *data_ptr struct
+};
+
+struct impl_header_row_major {
+    void *unk_addr1;
+    std::int64_t unk_i1;     // seems to be some kind of flags?
+    std::int64_t *dims;      // Pointer to dimensions array
+    void *unk_addr2;
+    void *unk_addr3;
+    std::int64_t n_elem;     // Number of elements in array
+    void *unk_addr4;
+    void *deleter;           // Pointer to deleter function
+    void *junk1;
+    void *junk2;
+    void *junk3;
+    void *junk4;
+    void *junk5;
+    void *unk_addr5;
+    void *buffer;            // Pointer to buffer (data)
+    std::int64_t flags;      // More flags?
+};
+
 namespace {
     void _destroy_array(PyObject *capsule) {
         const char* name = PyCapsule_GetName(capsule);
@@ -613,6 +699,55 @@ namespace {
             void* addr = PyCapsule_GetPointer(capsule, name);
             static_cast<std::map<std::string, matlab::data::Array>*>(addr)->erase(std::string(name));
         }
+    }
+
+    void _print_mem(void *data, int n_bytes=192) {
+        unsigned char *mem = static_cast<unsigned char *>(data);
+        std::cout << "::: memory at " << data << "\n";
+        for (int i = 0; i < n_bytes; i++) {
+            printf("%.2x ", mem[i]);
+            if ((i+1) % 16 == 0) std::cout << "\n";
+        } std::cout << "\n";
+    }
+
+    std::int64_t _print_dims(std::int64_t* dims, std::int64_t n_elem, std::int64_t ndims=0) {
+        std::cout << "dims = [";
+        std::int64_t nel = 1;
+        if (ndims == 0) {
+            for (ndims = 0; ndims<10; ndims++) {
+                std::cout << dims[ndims] << " ";
+                nel *= dims[ndims]; if (nel == n_elem) break;
+            } std::cout << "]\n";
+            return ndims;
+        } else if (n_elem == 0) {
+            for (size_t ii = 0; ii < ndims; ii++) {
+                std::cout << dims[ii] << " "; nel *= dims[ii];
+            } std::cout << "]\n";
+            return nel;
+        } else {
+            throw std::runtime_error("Either one of n_elem or ndims must be zero");
+        }
+    }
+
+    void _print_mw_info(matlab::data::Array arr) {
+        matlab::data::impl::ArrayImpl* imp = matlab::data::detail::Access::getImpl<matlab::data::impl::ArrayImpl>(arr);
+        if (arr.getMemoryLayout() == matlab::data::MemoryLayout::COLUMN_MAJOR) {
+            struct impl_header_col_major* m0 = static_cast<struct impl_header_col_major*>(static_cast<void*>(imp));
+            struct impl_header_col_major* m1 = static_cast<struct impl_header_col_major*>(m0->data_ptr);
+            struct mxArray_header_2020a* mx = static_cast<struct mxArray_header_2020a*>(m1->mxArray);
+            std::cout << "::: data at " << mx << ", pr = " << mx->pr << ", ClassID = " << mx->ClassID << "\n";
+            if (mx->Mdims.M > 100000000000) {
+                std::cout << "::: #dims = " << mx->Nndim.ndims << ", "; _print_dims(mx->Mdims.dims, 0, mx->Nndim.ndims);
+            } else {
+                std::cout << "::: dims = [" << mx->Mdims.M << ", " << mx->Nndim.N << "]\n";
+            }
+        } else {
+            struct impl_header_row_major* mx = static_cast<struct impl_header_row_major*>(static_cast<void*>(imp));
+            std::cout << "::: data at " << mx << ", buffer = " << mx->buffer << ", deleter = " << mx->deleter << "\n";
+            std::cout << "::: #elements = " << mx->n_elem << ", "; _print_dims(mx->dims, mx->n_elem);
+            //double *datbac = static_cast<double*>(mx->buffer); std::cout << "::: data readback = " << datbac[0] << "\n";
+        }
+        //_print_mem(static_cast<void*>(imp), 512);
     }
 }
 
@@ -631,6 +766,44 @@ class pacecpp {
     std::vector<char*> _cache_indices;
     //std::vector< std::vector<char> > _cache_indices;
     std::map<std::string, matlab::data::Array> _cached_arrays;
+    std::vector<matlab::data::Array> _input_cache;
+
+    template <typename T> TypedArray<T> _to_matlab_nocopy(T* begin, std::vector<size_t> dims, bool f_contigous, matlab::data::ArrayFactory &factory) {
+        // Creates a Matlab Array from POD without copying
+        buffer_ptr_t<T> buf = buffer_ptr_t<T>(begin, [](void* ptr){});
+        if (f_contigous || dims.size() == 1) {
+            return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
+        } else {
+            return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::ROW_MAJOR);
+        }
+    }
+
+    matlab::data::Array _python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
+        // Cast the result to the PyArray C struct and its corresponding dtype struct
+        py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
+        py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
+
+        if (arr->nd > 0 &&
+            (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_) ||
+             py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_C_CONTIGUOUS_)) ) {
+            bool f_contigous = py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_);
+            std::vector<size_t> dims;
+            for (size_t id = 0; id < arr->nd; id++) {
+                dims.push_back(arr->dimensions[id]);
+            }
+            matlab::data::Array rv;
+            if (dtype->kind == 'f')         // Floating point array
+                rv = _to_matlab_nocopy((double*)arr->data, dims, f_contigous, factory);
+            else if (dtype->kind == 'c')    // Complex array
+                rv = _to_matlab_nocopy((std::complex<double>*)arr->data, dims, f_contigous, factory);
+            else
+                throw std::runtime_error("Non-floating point numpy array inputs not allowed.");
+            _input_cache.push_back(rv);     // Make a shared data copy
+            return rv;
+        } else {
+            return python_array_to_matlab(result, factory);
+        }
+    }
 
     matlab::data::Array _convert_to_matlab(PyObject *input) {
         matlab::data::ArrayFactory factory;
@@ -638,7 +811,8 @@ class pacecpp {
         auto npy_api = py::detail::npy_api::get();
         bool is_arr = npy_api.PyArray_Check_(input);
         if (is_arr) {
-            output = python_array_to_matlab((void*)input, factory);
+            output = _python_array_to_matlab((void*)input, factory);
+            //_print_mw_info(output);
         } else if (PyTuple_Check(input) || PyList_Check(input)) {
             output = listtuple_to_cell(input, factory);
         } else if (PyUnicode_Check(input)) {
@@ -708,6 +882,22 @@ class pacecpp {
         return rv;
     }
 
+    void _release_buffer(matlab::data::Array arr) {
+        //_print_mw_info(arr);
+        if (arr.getMemoryLayout() == matlab::data::MemoryLayout::ROW_MAJOR) {
+            // Row-major arrays use a new format (not a wrapped mxArray) which accepts a custom deleter
+            // so we don't need to hack it
+            return;
+        }
+        matlab::data::ArrayFactory factory;
+        matlab::data::impl::ArrayImpl* imp = matlab::data::detail::Access::getImpl<matlab::data::impl::ArrayImpl>(arr);
+        struct impl_header_col_major* m0 = static_cast<struct impl_header_col_major*>(static_cast<void*>(imp));
+        struct impl_header_col_major* m1 = static_cast<struct impl_header_col_major*>(m0->data_ptr);
+        struct mxArray_header_2020a* mx = static_cast<struct mxArray_header_2020a*>(m1->mxArray);
+        buffer_ptr_t<double> buf = factory.createBuffer<double>(1);
+        // Hack - switch the memory for a Matlab created buffer
+        mx->pr = static_cast<void*>(buf.release());
+    }
 
     public:
     // Calls Matlab function
@@ -737,8 +927,10 @@ class pacecpp {
         }
         PyGILState_STATE gstate = PyGILState_Ensure(); // GIL{
         // Prints outputs and errors
-        py::print(_m_output.get()->str(), py::arg("flush")=true);
-        py::print(_m_error.get()->str(), py::arg("file")=py::module::import("sys").attr("stderr"), py::arg("flush")=true);
+        if(_m_output.get()->in_avail() > 0) {
+            py::print(_m_output.get()->str(), py::arg("flush")=true); }
+        if(_m_error.get()->in_avail() > 0) {
+            py::print(_m_error.get()->str(), py::arg("file")=py::module::import("sys").attr("stderr"), py::arg("flush")=true); }
         // Converts outputs to Python types
         size_t n_out = outputs.size();
         py::tuple retval(n_out);
@@ -751,6 +943,11 @@ class pacecpp {
             }
         }
         PyGILState_Release(gstate);  // GIL}
+        // Now clear temporary Matlab arrays created from Numpy array data inputs
+        for (size_t ii = 0; ii < _input_cache.size(); ii++) {
+            _release_buffer(_input_cache[ii]);
+        }
+        _input_cache.clear();
         return retval;
     }
 
