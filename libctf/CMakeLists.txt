@@ -9,5 +9,5 @@ get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
 
 add_subdirectory(pybind11)
 
-pybind11_add_module(libctf libctf.cpp)
+pybind11_add_module(libctf type_converter.cpp libpymcr.cpp)
 target_include_directories(libctf PRIVATE ${Matlab_INCLUDE_DIRS})
