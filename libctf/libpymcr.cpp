@@ -126,6 +126,7 @@ namespace {
 
 namespace libpymcr {
 
+
     template <typename T> TypedArray<T> matlab_env::_to_matlab_nocopy(T* begin, std::vector<size_t> dims, bool f_contigous, matlab::data::ArrayFactory &factory) {
         // Creates a Matlab Array from POD without copying using createArrayFromBuffer(), but as
         // noted here: https://www.mathworks.com/matlabcentral/answers/514456 this causes an issue
@@ -216,6 +217,8 @@ namespace libpymcr {
             output = factory.createArray<double>({0});
         } else if (PyCallable_Check(input)) {
             output = _wrap_python_function(input);
+        } else if (PyObject_TypeCheck(input, _py_matlab_wrapper_t)) {
+            output = ((matlab_wrapper*)input)->matlab_array;
         } else {
             throw std::runtime_error("Unrecognised Python type");
         }
@@ -258,6 +261,10 @@ namespace libpymcr {
             // For strings we construct new PyObjects by copying, no need to cache
             rv = matlab_to_python(input, _parent);
         } else if (type == matlab::data::ArrayType::VALUE_OBJECT || type == matlab::data::ArrayType::HANDLE_OBJECT_REF) {
+            // Wrap a Matlab class in an opaque Python container
+            matlab_wrapper* container = PyObject_New(matlab_wrapper, _py_matlab_wrapper_t);
+            container->matlab_array = input;
+            rv = (PyObject*) container;
         } else {
             char* id = _get_next_cached_id();
             _cached_arrays[std::string(id)] = input;
@@ -334,6 +341,7 @@ namespace libpymcr {
     #endif
         _app = matlab::cpplib::initMATLABApplication(mode, options);
         _lib = matlab::cpplib::initMATLABLibrary(_app, ctfname);
+        _py_matlab_wrapper_t = (PyTypeObject*) PyType_FromSpec(&spec_matlab_wrapper);
     }
 
     matlab_env::~matlab_env() {

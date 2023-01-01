@@ -46,6 +46,34 @@ namespace libpymcr {
         void *mxArray;           // Pointer to mxArray in the *data_ptr struct
     };
 
+    // Define a CPython class here so we can use it in matlab_env without Pybind bindings
+    typedef struct {
+        PyObject_HEAD
+        matlab::data::Array matlab_array;
+    } matlab_wrapper;
+
+    PyObject *matlab_wrapper_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
+        matlab_wrapper* self = (matlab_wrapper*) subtype->tp_alloc(subtype, 0);
+        return (PyObject*) self;
+    }
+    PyObject *matlab_wrapper_str(PyObject *self) {
+        return PyUnicode_FromString("An opaque container for a Matlab object");
+    }
+
+    static PyType_Slot matlab_wrapper_slots[] = {
+        {Py_tp_new, (void*)matlab_wrapper_new},
+        {Py_tp_str, (void*)matlab_wrapper_str},
+        {0, 0}
+    };
+
+    static PyType_Spec spec_matlab_wrapper = {
+        "libpymcr.matlab_wrapper",                // tp_name
+        sizeof(matlab_wrapper),                   // tp_basicsize
+        0,                                        // tp_itemsize
+        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
+        matlab_wrapper_slots                      // slots
+    };
+
     class matlab_env {
     protected:
         // Properties
@@ -59,6 +87,7 @@ namespace libpymcr {
         std::vector<char*> _cache_indices;
         std::map<std::string, matlab::data::Array> _cached_arrays;
         std::vector<matlab::data::Array> _input_cache;
+        PyTypeObject* _py_matlab_wrapper_t;
         // Methods
         template <typename T> TypedArray<T> _to_matlab_nocopy(T* begin, std::vector<size_t> dims,
                                                               bool f_contigous, matlab::data::ArrayFactory &factory);
@@ -74,15 +103,6 @@ namespace libpymcr {
         py::tuple call(py::args args, py::kwargs& kwargs);
         matlab_env(const std::u16string ctfname, std::string matlabroot);
         ~matlab_env();
-    };
-
-    class matlab_wrapper_cpp {
-    protected:
-        matlab::data::Array _m;
-        friend class pacecpp;
-
-    public:
-        matlab_wrapper_cpp(matlab::data::Array input) : _m(input) {}
     };
 
 
