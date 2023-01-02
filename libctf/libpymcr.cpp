@@ -113,117 +113,7 @@ int cppsharedlib_run_main(int(*mainfcn)(int, const char**), int argc, const char
 void* get_function_ptr(int fcn) { _checklibs(); return ((void*(*)(int))_resolve(_LIBDATAARRAY, "get_function_ptr"))(fcn); }
 
 
-namespace {
-    void _destroy_array(PyObject *capsule) {
-        // Deleter function for matlab array outputs which are wrapped as numpy arrays
-        const char* name = PyCapsule_GetName(capsule);
-        if(std::strncmp(name, "mw", 2) == 0) {
-            void* addr = PyCapsule_GetPointer(capsule, name);
-            static_cast<std::map<std::string, matlab::data::Array>*>(addr)->erase(std::string(name));
-        }
-    }
-}
-
 namespace libpymcr {
-
-
-    template <typename T> TypedArray<T> matlab_env::_to_matlab_nocopy(T* begin, std::vector<size_t> dims, bool f_contigous, matlab::data::ArrayFactory &factory) {
-        // Creates a Matlab Array from POD without copying using createArrayFromBuffer(), but as
-        // noted here: https://www.mathworks.com/matlabcentral/answers/514456 this causes an issue
-        // when Matlab tries to delete the buffer. Now it seems that ROW_MAJOR (C-style) arrays use
-        // a new type which supports custom deleter, but COLUMN_MAJOR (Fortran-style) arrays are
-        // just wrappers around the old mxArray type which has its own (static) deleter.
-        buffer_ptr_t<T> buf = buffer_ptr_t<T>(begin, [](void* ptr){});
-        if (f_contigous || dims.size() == 1) {
-            return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
-        } else {
-            return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::ROW_MAJOR);
-        }
-    }
-
-    void matlab_env::_release_buffer(matlab::data::Array arr) {
-        // Hack to safely release a buffer for a no-copy Matlab array converted from numpy
-        if (arr.getMemoryLayout() == matlab::data::MemoryLayout::ROW_MAJOR) {
-            // Row-major arrays use a new format (not a wrapped mxArray) which accepts a custom deleter
-            // so we don't need to hack it
-            return;
-        }
-        // For Column-major arrays, which are wrappers around a mxArray type, we have to use a hack
-        // where we create a small buffer using createBuffer() and overwrite the mxArray->pr pointer
-        // to point to this instead of the numpy array. Then when this array is deleted Matlab will
-        // free the newly created buffer instead of the numpy array and cause a heap memory error
-        matlab::data::ArrayFactory factory;
-        matlab::data::impl::ArrayImpl* imp = matlab::data::detail::Access::getImpl<matlab::data::impl::ArrayImpl>(arr);
-        struct impl_header_col_major* m0 = static_cast<struct impl_header_col_major*>(static_cast<void*>(imp));
-        struct impl_header_col_major* m1 = static_cast<struct impl_header_col_major*>(m0->data_ptr);
-        struct mxArray_header_2020a* mx = static_cast<struct mxArray_header_2020a*>(m1->mxArray);
-        buffer_ptr_t<double> buf = factory.createBuffer<double>(1);
-        // Hack - switch the memory for a Matlab created buffer
-        mx->pr = static_cast<void*>(buf.release());
-    }
-
-    matlab::data::Array matlab_env::_numpy_array_to_matlab(void *result, matlab::data::ArrayFactory &factory) {
-        // Cast the result to the PyArray C struct and its corresponding dtype struct
-        py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
-        py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
-
-        if (arr->nd > 0 &&
-            (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_) ||
-             py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_C_CONTIGUOUS_)) ) {
-            bool f_contigous = py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_);
-            std::vector<size_t> dims;
-            for (size_t id = 0; id < arr->nd; id++) {
-                dims.push_back(arr->dimensions[id]);
-            }
-            matlab::data::Array rv;
-            if (dtype->kind == 'f')         // Floating point array
-                rv = _to_matlab_nocopy((double*)arr->data, dims, f_contigous, factory);
-            else if (dtype->kind == 'c')    // Complex array
-                rv = _to_matlab_nocopy((std::complex<double>*)arr->data, dims, f_contigous, factory);
-            else
-                throw std::runtime_error("Non-floating point numpy array inputs not allowed.");
-            _input_cache.push_back(rv);     // Make a shared data copy
-            return rv;
-        } else {
-            return python_array_to_matlab(result, factory);
-        }
-    }
-
-    matlab::data::Array matlab_env::_wrap_python_function(PyObject *input) {
-        // Wraps a Python function so it can be called using a mex function
-        throw std::runtime_error("Not implemented");
-    }
-
-    matlab::data::Array matlab_env::_convert_to_matlab(PyObject *input) {
-        matlab::data::ArrayFactory factory;
-        matlab::data::Array output;
-        auto npy_api = py::detail::npy_api::get();
-        bool is_arr = npy_api.PyArray_Check_(input);
-        if (is_arr) {
-            output = _numpy_array_to_matlab((void*)input, factory);
-        } else if (PyTuple_Check(input) || PyList_Check(input)) {
-            output = listtuple_to_cell(input, factory);
-        } else if (PyUnicode_Check(input)) {
-            output = python_string_to_matlab(input, factory);
-        } else if (PyDict_Check(input)) {
-            output = python_dict_to_matlab(input, factory);
-        } else if (PyLong_Check(input)) {
-            output = factory.createScalar<int64_t>(PyLong_AsLong(input));
-        } else if (PyFloat_Check(input)) {
-            output = factory.createScalar<double>(PyFloat_AsDouble(input));
-        } else if (PyComplex_Check(input)) {
-            output = factory.createScalar(std::complex<double>(PyComplex_RealAsDouble(input), PyComplex_ImagAsDouble(input)));
-        } else if (input == Py_None) {
-            output = factory.createArray<double>({0});
-        } else if (PyCallable_Check(input)) {
-            output = _wrap_python_function(input);
-        } else if (PyObject_TypeCheck(input, _py_matlab_wrapper_t)) {
-            output = ((matlab_wrapper*)input)->matlab_array;
-        } else {
-            throw std::runtime_error("Unrecognised Python type");
-        }
-        return output;
-    }
 
     size_t matlab_env::_parse_inputs(std::vector<matlab::data::Array>& m_args,
                          py::args py_args,
@@ -231,7 +121,7 @@ namespace libpymcr {
         matlab::data::ArrayFactory factory;
         size_t nargout = 1;
         for (auto item: py_args) {
-            m_args.push_back(_convert_to_matlab(item.ptr()));
+            m_args.push_back(_converter.to_matlab(item.ptr()));
         }
         for (auto item: py_kwargs) {
             std::string key(py::str(item.first));
@@ -239,44 +129,10 @@ namespace libpymcr {
                 nargout = item.second.cast<size_t>();
             } else {
                 m_args.push_back(factory.createCharArray(std::string(py::str(item.first))));
-                m_args.push_back(_convert_to_matlab(item.second.ptr()));
+                m_args.push_back(_converter.to_matlab(item.second.ptr()));
             }
         }
         return nargout;
-    }
-
-    char* matlab_env::_get_next_cached_id() {
-        // We need to cache Matlab created Arrays in this class as we wrap numpy arrays around its data
-        // and need to ensure that the matlab::data::Arrays are not deleted before the numpy arrays
-        char* next = new char[10]();  // Enough for 1e8 variables
-        std::strcpy(next, std::string("mw" + std::to_string(_cache_indices.size())).c_str());
-        _cache_indices.push_back(next);
-        return _cache_indices.back();
-    }
-
-    PyObject* matlab_env::_matlab_to_python(matlab::data::Array input) {
-        matlab::data::ArrayType type = input.getType();
-        PyObject *rv;
-        if (type == matlab::data::ArrayType::CHAR || type == matlab::data::ArrayType::MATLAB_STRING) {
-            // For strings we construct new PyObjects by copying, no need to cache
-            rv = matlab_to_python(input, _parent);
-        } else if (type == matlab::data::ArrayType::VALUE_OBJECT || type == matlab::data::ArrayType::HANDLE_OBJECT_REF) {
-            // Wrap a Matlab class in an opaque Python container
-            matlab_wrapper* container = PyObject_New(matlab_wrapper, _py_matlab_wrapper_t);
-            container->matlab_array = input;
-            rv = (PyObject*) container;
-        } else {
-            char* id = _get_next_cached_id();
-            _cached_arrays[std::string(id)] = input;
-            // We create a PyCapsule with its deleter knowning how to delete the Matlab array whose
-            // data we are wrapping in a numpy array so it is not deleted while the numpy one exists
-            // https://numpy.org/devdocs/reference/c-api/data_memory.html
-            PyObject *owner = PyCapsule_New(static_cast<void*>(&_cached_arrays), id, _destroy_array);
-            rv = matlab_to_python(input, owner);
-            // PyBind auto increfs the base because PyArray_SetBaseObject steals the ref - but we want this
-            Py_DECREF(owner);
-        }
-        return rv;
     }
 
     py::tuple matlab_env::feval(const std::u16string &funcname, py::args args, py::kwargs& kwargs) {
@@ -312,15 +168,12 @@ namespace libpymcr {
                 retval[idx] = py::none();
             } else {
                 // Call the CPython function directly because we _want_ to steal a ref to the output
-                PyTuple_SetItem(retval.ptr(), idx, _matlab_to_python(outputs[idx]));
+                PyTuple_SetItem(retval.ptr(), idx, _converter.to_python(outputs[idx]));
             }
         }
         PyGILState_Release(gstate);  // GIL}
         // Now clear temporary Matlab arrays created from Numpy array data inputs
-        for (size_t ii = 0; ii < _input_cache.size(); ii++) {
-            _release_buffer(_input_cache[ii]);
-        }
-        _input_cache.clear();
+        _converter.clear_py_cache();
         return retval;
     }
 
@@ -341,17 +194,11 @@ namespace libpymcr {
     #endif
         _app = matlab::cpplib::initMATLABApplication(mode, options);
         _lib = matlab::cpplib::initMATLABLibrary(_app, ctfname);
-        _py_matlab_wrapper_t = (PyTypeObject*) PyType_FromSpec(&spec_matlab_wrapper);
+        _converter = pymat_converter(pymat_converter::NumpyConversion::WRAP);
     }
 
-    matlab_env::~matlab_env() {
-        // Renames the cache indices to invalidate them to ensure we don't double free
-        for (size_t ii=0; ii<_cache_indices.size(); ii++) {
-            strcpy(_cache_indices[ii], std::string("x" + std::to_string(ii)).c_str());
-        }
-    }
 
-}
+} // namespace libpymcr
 
 
 PYBIND11_MODULE(libpymcr, m) {

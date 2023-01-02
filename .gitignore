@@ -34,9 +34,13 @@ cmake_install.cmake
 CMakeCache.txt
 
 extern-pybind11
+pybind11
 src/CTF
+src/mccExcludedFiles.log
+src/readme.txt
+src/setup.py
 
-build
+build*
 dist
 wheelhouse
 
@@ -48,6 +52,9 @@ installer/pace_python_installer
 installer/pace_neutrons_installer
 installer/readme.txt
 installer/requiredMCRProducts.txt
+installer/Pace_Python_Installerinstaller/
+installer/includedSupportPackages.txt
+installer/unresolvedSymbols.txt
 
 requiredMCRProducts.txt
 
