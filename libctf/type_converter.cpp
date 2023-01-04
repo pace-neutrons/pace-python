@@ -53,7 +53,10 @@ template <typename T> PyObject* pymat_converter::matlab_to_python_t (matlab::dat
     PyObject* wrapper = is_wrapped_np_data(mx->pr);
     if (wrapper != nullptr) {
         // If so, just return the original numpy array, but need to INCREF it as returning new reference
-        Py_INCREF(wrapper);
+        if (!m_mex_flag) {
+            // For case where an np array is created in a mex file, its REFCNT was INC in the cache
+            Py_INCREF(wrapper);
+        }
         return wrapper;
     }
     std::vector<size_t> strides = {sizeof(T)};
@@ -208,18 +211,6 @@ PyObject* pymat_converter::matlab_to_python(matlab::data::Array input, py::handl
     }
 }
 
-/*
-py::tuple convMat2np(ArgumentList inputs, py::handle owner, size_t lastInd=-1) {
-    // Note that this function must be called when we have the GIL
-    size_t narg = inputs.size() + lastInd;
-    py::tuple retval(narg);
-    for (size_t idx = 1; idx <= narg; idx++) {
-        retval[idx - 1] = matlab_to_python(inputs[idx], owner);
-    }
-    return retval;
-}
-*/
-
 char* pymat_converter::get_next_cached_id() {
     // We need to cache Matlab created Arrays in this class as we wrap numpy arrays around its data
     // and need to ensure that the matlab::data::Arrays are not deleted before the numpy arrays
@@ -284,6 +275,9 @@ template <typename T> Array pymat_converter::raw_to_matlab_contiguous(T* begin, 
     if (m_numpy_conv_flag == NumpyConversion::WRAP) {
         // For wrapped arrays, we store a shared-data copy in a cache in this object to prevent Matlab
         // from deleting it before we are ready to release the buffer.
+        if (m_mex_flag) {
+            Py_INCREF(obj);
+        }
         m_py_cache.push_back(std::make_pair(rv, obj));
     }
     return rv;
@@ -457,7 +451,7 @@ Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::ArrayFa
 
 matlab::data::Array pymat_converter::wrap_python_function(PyObject *input) {
     // Wraps a Python function so it can be called using a mex function
-    throw std::runtime_error("Not implemented");
+    throw std::runtime_error("Python callable conversion not implemented");
 }
 
 matlab::data::Array pymat_converter::python_to_matlab_single(PyObject *input, matlab::data::ArrayFactory &factory) {
@@ -505,8 +499,9 @@ void pymat_converter::clear_py_cache() {
     }
 }
 
-matlab::data::Array pymat_converter::to_matlab(PyObject *input) {
+matlab::data::Array pymat_converter::to_matlab(PyObject *input, bool mex_flag) {
     matlab::data::ArrayFactory factory;
+    m_mex_flag = mex_flag;
     return python_to_matlab_single(input, factory);
 }
 

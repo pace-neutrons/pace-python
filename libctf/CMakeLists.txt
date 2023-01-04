@@ -11,3 +11,13 @@ add_subdirectory(pybind11)
 
 pybind11_add_module(libpymcr type_converter.cpp libpymcr.cpp)
 target_include_directories(libpymcr PRIVATE ${Matlab_INCLUDE_DIRS})
+
+matlab_add_mex(
+    NAME call_python
+    SRC call_python.cpp type_converter.cpp
+)
+target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
+target_include_directories(call_python PUBLIC "${pybind11_SOURCE_DIR}/include")
+if(WIN32)
+    target_link_libraries(call_python ${PYTHON_LIBRARIES})
+endif()

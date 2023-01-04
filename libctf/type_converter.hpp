@@ -13,7 +13,6 @@
 #include <cstring>
 #include <map>
 
-#define MATLABERROR(errmsg) matlabPtr->feval(u"error", 0, std::vector<matlab::data::Array>({ factory.createScalar(errmsg) }));
 #define MYINTEGER 1
 #define MYFLOAT 2
 #define MYCOMPLEX 4
@@ -113,6 +112,7 @@ namespace libpymcr {
         NumpyConversion m_numpy_conv_flag;
         std::vector< std::pair<matlab::data::Array, void*> > m_py_cache;
         PyTypeObject* m_py_matlab_wrapper_t;
+        bool m_mex_flag;
         // Methods to convert from Matlab to Python
         char* get_next_cached_id();
         PyObject* is_wrapped_np_data(void* addr);
@@ -140,7 +140,7 @@ namespace libpymcr {
         void clear_py_cache();
         pymat_converter(NumpyConversion np_behaviour=NumpyConversion::COPY);
         ~pymat_converter();
-        matlab::data::Array to_matlab(PyObject *input);
+        matlab::data::Array to_matlab(PyObject *input, bool mex_flag=false);
         PyObject* to_python(matlab::data::Array input);
     };
 

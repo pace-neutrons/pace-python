@@ -22,10 +22,11 @@ namespace libpymcr {
         std::shared_ptr<StreamBuffer> _m_output_buf = std::static_pointer_cast<StreamBuffer>(_m_output);
         std::shared_ptr<StreamBuffer> _m_error_buf = std::static_pointer_cast<StreamBuffer>(_m_error);
         pymat_converter _converter;
+        matlab::data::Array _conv_to_matlab(PyObject* input);
         size_t _parse_inputs(std::vector<matlab::data::Array>& m_args, py::args py_args, py::kwargs& py_kwargs);
     public:
-        py::tuple feval(const std::u16string &funcname, py::args args, py::kwargs& kwargs);
-        py::tuple call(py::args args, py::kwargs& kwargs);
+        py::object feval(const std::u16string &funcname, py::args args, py::kwargs& kwargs);
+        py::object call(py::args args, py::kwargs& kwargs);
         matlab_env(const std::u16string ctfname, std::string matlabroot);
     };
 
