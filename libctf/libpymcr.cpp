@@ -121,9 +121,9 @@ namespace libpymcr {
             matlab::data::ArrayFactory factory;
             std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(input);
             std::uintptr_t conv = reinterpret_cast<std::uintptr_t>(&_converter);
-            rv = _lib->feval(u"call", std::vector<Array>({factory.createCharArray("pythonFunctionWrapper"),
-                                                          factory.createScalar<uint64_t>(addr),
-                                                          factory.createScalar<uint64_t>(conv)}));
+            rv = factory.createStructArray({1, 1}, std::vector<std::string>({"func_ptr", "converter"}));
+            rv[0]["func_ptr"] = factory.createScalar<uint64_t>(addr);
+            rv[0]["converter"] = factory.createScalar<uint64_t>(conv);
         } else {
             rv = _converter.to_matlab(input);
         }
@@ -192,8 +192,10 @@ namespace libpymcr {
                     PyTuple_SetItem(retval.ptr(), idx, _converter.to_python(outputs[idx]));
                 }
             }
-        } else {
+        } else if (n_out == 1) {
             retval = py::reinterpret_steal<py::object>(_converter.to_python(outputs[0]));
+        } else {
+            retval = py::cast<py::none>(Py_None);
         }
         // Now clear temporary Matlab arrays created from Numpy array data inputs
         _converter.clear_py_cache();

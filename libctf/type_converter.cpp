@@ -152,6 +152,23 @@ template <> PyObject* pymat_converter::matlab_to_python_t<py::list>(matlab::data
     return retval;
 }
 
+template <> PyObject* pymat_converter::matlab_to_python_t<bool>(matlab::data::Array input, py::handle owner) {
+    const matlab::data::TypedArray<bool> in_arr(input);
+    size_t n_elem = in_arr.getNumberOfElements();
+    if (n_elem == 1) {
+        return PyBool_FromLong(static_cast<long>(in_arr[0]));
+    } else {
+        PyObject* retval = PyList_New(n_elem);
+        size_t idx = 0;
+        for (auto elem: in_arr) {
+            if(PyList_SetItem(retval, idx++, PyBool_FromLong(static_cast<long>(elem))) == -1) {
+                throw std::runtime_error("Error constructing python bool list from array");
+            }
+        }
+        return retval;
+    }
+}
+
 void matlab_wrapper_del(PyObject* pyself) {
     PyObject *error_type, *error_value, *error_traceback;
     PyErr_Fetch(&error_type, &error_value, &error_traceback); // Save the current exception, if any.
@@ -224,63 +241,64 @@ char* pymat_converter::get_next_cached_id() {
 // Code to translate Python types to Matlab types
 // -------------------------------------------------------------------------------------------------------
 
-// Slower copy methods - follow data strides for non-contiguous arrays
 template <typename T> Array pymat_converter::raw_to_matlab(char *raw, size_t sz, std::vector<size_t> dims,
-                                                           ssize_t *strides, matlab::data::ArrayFactory &factory) {
-    buffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
-    T* ptr = buf.get();
-    std::vector<size_t> stride;
-    std::vector<size_t> k = {dims[0]};
-    for (size_t i=1; i<dims.size(); i++)
-        k.push_back(k[i-1] * dims[i]);      // Cumulative product of dimensions
-    for (size_t i=0; i<dims.size(); i++) {
-        if (strides[i] > -1)
-            stride.push_back(static_cast<size_t>(strides[i]));
-        else
-            throw std::runtime_error("Invalid stride in numpy array");
-    }
-    for (size_t i=0; i<sz; i++) {
-        size_t offset = 0, idx = i, vi;
-        // This computes the N-Dim indices (i0,i1,i2,...) and multiplies it by the strides
-        // The algorithm is taken from the ind2sub.m function in Matlab
-        for (size_t d=dims.size(); d>0; d--) {
-            vi = idx % k[d-1];
-            offset += ((idx - vi) / k[d-1]) * stride[d];
-            idx = vi;
+                                                           ssize_t *strides, int f_or_c_continuous, 
+                                                           matlab::data::ArrayFactory &factory, void* obj) {
+    if (f_or_c_continuous == 0) {
+        // Slower copy methods - follow data strides for non-contiguous arrays
+        buffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
+        T* ptr = buf.get();
+        std::vector<size_t> stride;
+        std::vector<size_t> k = {dims[0]};
+        for (size_t i=1; i<dims.size(); i++)
+            k.push_back(k[i-1] * dims[i]);      // Cumulative product of dimensions
+        for (size_t i=0; i<dims.size(); i++) {
+            if (strides[i] > -1)
+                stride.push_back(static_cast<size_t>(strides[i]));
+            else
+                throw std::runtime_error("Invalid stride in numpy array");
         }
-        offset += vi * stride[0];
-        ptr[i] = *((T*)(raw + offset));
-    }
-    return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
-}
-
-// Fast method block memory copy for contigous C- or Fortran-style arrays
-template <typename T> Array pymat_converter::raw_to_matlab_contiguous(T* begin, size_t sz, std::vector<size_t> dims,
-                                                                      bool f_contigous, matlab::data::ArrayFactory &factory, void* obj) {
-    // Default to try to wrap existing data without copying. We can do this with createArrayFromBuffer
-    // but (see: https://www.mathworks.com/matlabcentral/answers/514456) this causes an issue
-    // when Matlab tries to delete the buffer. So we have to use a hack (see release_buffer() below)
-    buffer_ptr_t<T> buf = buffer_ptr_t<T>(begin, [](void* ptr){});
-    matlab::data::Array rv;
-    if (m_numpy_conv_flag == NumpyConversion::COPY) {
-        // But if user specify to copy, then use the prescribed API with createBuffer()
-        buf = factory.createBuffer<T>(sz);
-        memcpy(buf.get(), begin, sz * sizeof(T));
-    }
-    if (f_contigous || dims.size() == 1) {
-        rv = factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
+        for (size_t i=0; i<sz; i++) {
+            size_t offset = 0, idx = i, vi;
+            // This computes the N-Dim indices (i0,i1,i2,...) and multiplies it by the strides
+            // The algorithm is taken from the ind2sub.m function in Matlab
+            for (size_t d=dims.size(); d>0; d--) {
+                vi = idx % k[d-1];
+                offset += ((idx - vi) / k[d-1]) * stride[d];
+                idx = vi;
+            }
+            offset += vi * stride[0];
+            ptr[i] = *((T*)(raw + offset));
+        }
+        return factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
     } else {
-        rv = factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::ROW_MAJOR);
-    }
-    if (m_numpy_conv_flag == NumpyConversion::WRAP) {
-        // For wrapped arrays, we store a shared-data copy in a cache in this object to prevent Matlab
-        // from deleting it before we are ready to release the buffer.
-        if (m_mex_flag) {
-            Py_INCREF(obj);
+        // Fast method: wrap or block memory copy for contigous C- or Fortran-style arrays
+        matlab::data::Array rv;
+        T* begin = reinterpret_cast<T*>(raw);
+        // Default to try to wrap existing data without copying. We can do this with createArrayFromBuffer
+        // but (see: https://www.mathworks.com/matlabcentral/answers/514456) this causes an issue
+        // when Matlab tries to delete the buffer. So we have to use a hack (see release_buffer() below)
+        buffer_ptr_t<T> buf = buffer_ptr_t<T>(begin, [](void* ptr){});
+        if (m_numpy_conv_flag == NumpyConversion::COPY) {
+            // But if user specify to copy, then use the prescribed API with createBuffer()
+            buf = factory.createBuffer<T>(sz);
+            memcpy(buf.get(), begin, sz * sizeof(T));
         }
-        m_py_cache.push_back(std::make_pair(rv, obj));
+        if (f_or_c_continuous == -1 || dims.size() == 1) {
+            rv = factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::COLUMN_MAJOR);
+        } else {
+            rv = factory.createArrayFromBuffer(dims, std::move(buf), MemoryLayout::ROW_MAJOR);
+        }
+        if (m_numpy_conv_flag == NumpyConversion::WRAP) {
+            // For wrapped arrays, we store a shared-data copy in a cache in this object to prevent Matlab
+            // from deleting it before we are ready to release the buffer.
+            if (m_mex_flag) {
+                Py_INCREF(obj);
+            }
+            m_py_cache.push_back(std::make_pair(rv, obj));
+        }
+        return rv;
     }
-    return rv;
 }
 
 bool pymat_converter::release_buffer(matlab::data::Array arr) {
@@ -322,49 +340,48 @@ matlab::data::Array pymat_converter::python_array_to_matlab(void *result, matlab
             else if (dtype->elsize == sizeof(std::complex<float>)) return factory.createScalar(*((std::complex<float>*)(arr->data)));
         }
     }
+    if (dtype->elsize == 0) {
+        throw std::runtime_error("Cannot convert heterogeneous numpy arrays to Matlab");
+    }
     std::vector<size_t> dims;
     size_t numel = 1;
     for (size_t id = 0; id < arr->nd; id++) {
         dims.push_back(arr->dimensions[id]);
         numel = numel * dims[id];
     }
-    int f_or_c_contiguous = 0;
+    int fc_cont = 0;
     if (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_F_CONTIGUOUS_))
-        f_or_c_contiguous = -1;
+        fc_cont = -1;
     else if (py::detail::check_flags(result, py::detail::npy_api::NPY_ARRAY_C_CONTIGUOUS_))
-        f_or_c_contiguous = 1;
+        fc_cont = 1;
 
-    char *begin = arr->data;
-    if (dtype->kind == 'f') {       // Floating point array
-        if (dtype->elsize == sizeof(double)) {
-            if (f_or_c_contiguous)
-                return raw_to_matlab_contiguous((double*)begin, numel, dims, f_or_c_contiguous==-1, factory, result);
-            else
-                return raw_to_matlab<double>(begin, numel, dims, arr->strides, factory);
-        }
-        else if(dtype->elsize == sizeof(float)) {
-            if (f_or_c_contiguous)
-                return raw_to_matlab_contiguous((float*)begin, numel, dims, f_or_c_contiguous==-1, factory, result);
-            else
-                return raw_to_matlab<float>(begin, numel, dims, arr->strides, factory);
-        }
+    char *d = arr->data;
+    ssize_t *strd = arr->strides;
+    switch(dtype->type_num) {
+        case py::detail::npy_api::NPY_DOUBLE_:    return raw_to_matlab<double>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_FLOAT_:     return raw_to_matlab<float>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_CDOUBLE_:   return raw_to_matlab<std::complex<double>>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_CFLOAT_:    return raw_to_matlab<std::complex<float>>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_BOOL_:      return raw_to_matlab<bool>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_INT8_:      return raw_to_matlab<int8_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_INT16_:     return raw_to_matlab<int16_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_INT32_:     return raw_to_matlab<int32_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_INT64_:     return raw_to_matlab<int64_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_UINT8_:     return raw_to_matlab<uint8_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_UINT16_:    return raw_to_matlab<uint16_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_UINT32_:    return raw_to_matlab<uint32_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_UINT64_:    return raw_to_matlab<uint64_t>(d, numel, dims, strd, fc_cont, factory, result);
+        case py::detail::npy_api::NPY_LONGDOUBLE_:
+        case py::detail::npy_api::NPY_CLONGDOUBLE_:
+            throw std::runtime_error("Long double type not supported by Matlab. Cannot convert numpy array");
+        case py::detail::npy_api::NPY_STRING_:
+        case py::detail::npy_api::NPY_UNICODE_:
+            throw std::runtime_error("Cannot convert numpy string array to Matlab");
+        case py::detail::npy_api::NPY_OBJECT_:
+            throw std::runtime_error("Cannot convert numpy object array to Matlab");
+        default:
+            throw std::runtime_error("Cannot convert unsupported numpy array dtype");
     }
-    else if (dtype->kind == 'c') {  // Complex array
-        if (dtype->elsize == sizeof(std::complex<double>)) {
-            if (f_or_c_contiguous)
-                return raw_to_matlab_contiguous((std::complex<double>*)begin, numel, dims, f_or_c_contiguous==-1, factory, result);
-            else
-                return raw_to_matlab<std::complex<double>>(begin, numel, dims, arr->strides, factory);
-        }
-        else if(dtype->elsize == sizeof(std::complex<float>)) {
-            if (f_or_c_contiguous)
-                return raw_to_matlab_contiguous((std::complex<float>*)begin, numel, dims, f_or_c_contiguous==-1, factory, result);
-            else
-                return raw_to_matlab<std::complex<float>>(begin, numel, dims, arr->strides, factory);
-        }
-    }
-    else
-        throw std::runtime_error("Python function returned a non-floating point array.");
 }
 
 template <typename T> T convert_py_obj (PyObject *obj) {
@@ -408,7 +425,6 @@ StructArray pymat_converter::python_dict_to_matlab(PyObject *result, matlab::dat
         vals.push_back(val);
     }
     StructArray retval = factory.createStructArray({1,1}, keys);
-    auto npy_api = py::detail::npy_api::get();
     for (size_t ii=0; ii<keys.size(); ii++) {
         retval[0][keys[ii]] = python_to_matlab_single(vals[ii], factory);
     }
@@ -418,15 +434,15 @@ StructArray pymat_converter::python_dict_to_matlab(PyObject *result, matlab::dat
 Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
     size_t obj_size = PyTuple_Check(result) ? (size_t)PyTuple_Size(result) : (size_t)PyList_Size(result);
     CellArray cell_out = factory.createCellArray({1, obj_size});
-    auto npy_api = py::detail::npy_api::get();
     std::vector<PyObject*> objs;
     int typeflags = 0;
     for(size_t ii=0; ii<obj_size; ii++) {
         PyObject *item = PyTuple_Check(result) ? PyTuple_GetItem(result, ii) : PyList_GetItem(result, ii);
         cell_out[0][ii] = python_to_matlab_single(item, factory);
         if (PyLong_Check(item)) {
-            typeflags |= MYINTEGER;
-            objs.push_back(item);
+            // Force conversion to double because Matlab defaults to this and many routines will error with int64
+            typeflags |= MYFLOAT;
+            objs.push_back(PyFloat_FromDouble(PyLong_AsDouble(item)));
         } else if (PyFloat_Check(item)) {
             typeflags |= MYFLOAT;
             objs.push_back(item);
@@ -469,7 +485,8 @@ matlab::data::Array pymat_converter::python_to_matlab_single(PyObject *input, ma
     } else if (PyBool_Check(input)) {  // Must be before long (True and False also evaluate to integers)
         output = factory.createScalar<double>(static_cast<double>(PyObject_IsTrue(input)));
     } else if (PyLong_Check(input)) {
-        output = factory.createScalar<int64_t>(PyLong_AsLong(input));
+        // Force conversion to double because Matlab defaults to this and many routines error with int64
+        output = factory.createScalar<double>(PyLong_AsDouble(input));
     } else if (PyFloat_Check(input)) {
         output = factory.createScalar<double>(PyFloat_AsDouble(input));
     } else if (PyComplex_Check(input)) {
@@ -506,7 +523,8 @@ matlab::data::Array pymat_converter::to_matlab(PyObject *input, bool mex_flag) {
 }
 
 PyObject* pymat_converter::to_python(matlab::data::Array input) {
-    return matlab_to_python(input, m_parent);
+    PyObject* rv = matlab_to_python(input, m_parent);
+    return rv;
 }
 
 pymat_converter::pymat_converter(NumpyConversion np_behaviour) : m_numpy_conv_flag(np_behaviour) {

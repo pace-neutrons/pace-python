@@ -121,13 +121,13 @@ namespace libpymcr {
         template <> PyObject* matlab_to_python_t<std::basic_string<char16_t>>(matlab::data::Array input, py::handle owner);
         template <> PyObject* matlab_to_python_t<py::dict>(matlab::data::Array input, py::handle owner);
         template <> PyObject* matlab_to_python_t<py::list>(matlab::data::Array input, py::handle owner);
+        template <> PyObject* matlab_to_python_t<bool>(matlab::data::Array input, py::handle owner);
         PyObject* matlab_to_python(matlab::data::Array input, py::handle owner);
         PyObject* wrap_matlab_object(matlab::data::Array input);
         // Methods to convert from Python to Matlab
         template <typename T> Array raw_to_matlab(char *raw, size_t sz, std::vector<size_t> dims,
-                                                  ssize_t *strides, matlab::data::ArrayFactory &factory);
-        template <typename T> Array raw_to_matlab_contiguous(T* begin, size_t sz, std::vector<size_t> dims,
-                                                             bool fstyle, matlab::data::ArrayFactory &factory, void* o);
+                                                  ssize_t *strides, int f_or_c_continuous,
+                                                  matlab::data::ArrayFactory &factory, void* owner);
         bool release_buffer(matlab::data::Array arr);
         matlab::data::Array python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory);
         template <typename T> Array fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::ArrayFactory &factory);
