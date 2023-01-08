@@ -89,7 +89,7 @@ class MatlabProxyObject(object):
         Gets attributes from a MATLAB object
         :return: list of attribute names
         """
-        return self.interface.call('fieldnames', self.handle)
+        return self.interface.call('fieldnames', self.handle) + self.interface.call('properties', self.handle, nargout=1)
 
     def _getMethodNames(self):
         """
@@ -109,9 +109,9 @@ class MatlabProxyObject(object):
         """
         m = self.interface
         # if it's a property, just retrieve it
-        if name in self.interface.call('properties', self.handle, nargout=1):
+        if name in self._getAttributeNames():
             try:
-                return self.interface.call('subsref', self.handle, self.interface.call('substruct', '.', name))
+                return wrap(self.interface.call('subsref', self.handle, self.interface.call('substruct', '.', name)), self.interface)
             except TypeError:
                 return None
         # if it's a method, wrap it in a functor

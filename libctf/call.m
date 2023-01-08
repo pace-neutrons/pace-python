@@ -21,7 +21,7 @@ function [varargout] = call(name, varargin)
         args = varargin;
     end
     for ir = 1:numel(args)
-        args{ir} = check_wrapped_function(args{ir});
+        args{ir} = unwrap(args{ir});
     end
     if resultsize > 0
         % call the function with the given number of
@@ -39,15 +39,55 @@ function [varargout] = call(name, varargin)
     else
         varargout = eval_ans(name, args);
     end
+    for ir = 1:numel(varargout)
+        varargout{ir} = wrap(varargout{ir});
+    end
 end
 
-function out = check_wrapped_function(in_obj)
+function out = unwrap(in_obj)
     out = in_obj;
     if isstruct(in_obj) && isfield(in_obj, 'func_ptr') && isfield(in_obj, 'converter')
         out = @(varargin) call('_call_python', [in_obj.func_ptr, in_obj.converter], varargin{:});
+    elseif isa(in_obj, 'containers.Map') && in_obj.isKey('wrapped_oldstyle_class')
+        out = in_obj('wrapped_oldstyle_class');
     elseif iscell(in_obj)
         for ii = 1:numel(in_obj)
-            out{ii} = check_wrapped_function(in_obj{ii});
+            out{ii} = unwrap(in_obj{ii});
+        end
+    end
+end
+
+function out = wrap(obj)
+    out = obj;
+    if isobject(obj) && (isempty(metaclass(obj)) && ~isjava(obj)) || has_thin_members(obj)
+        out = containers.Map({'wrapped_oldstyle_class'}, {obj});
+    elseif iscell(obj)
+        for ii = 1:numel(obj)
+            out{ii} = wrap(obj{ii});
+        end
+    end
+end
+
+function out = has_thin_members(obj)
+% Checks whether any member of a class or struct is an old-style class
+% or is already a wrapped instance of such a class
+    out = false;
+    if isobject(obj) || isstruct(obj)
+        try
+            fn = fieldnames(obj);
+        catch
+            return;
+        end
+        for ifn = 1:numel(fn)
+            try
+                mem = subsref(obj, struct('type', '.', 'subs', fn{ifn}));
+            catch
+                continue;
+            end
+            if (isempty(metaclass(mem)) && ~isjava(mem))
+                out = true;
+                break;
+            end
         end
     end
 end

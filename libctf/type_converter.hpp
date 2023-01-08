@@ -46,19 +46,22 @@ namespace libpymcr {
     };
 
     struct impl_header_col_major {
-        void *ad1;               // Class address?
+        void *ad1;               // Virtual pointer table?
         std::int64_t *unity;     // Seems to be always 1
         void *data_ptr;          // Pointer to another struct that points to a mxArray
         std::int64_t *flags;     // Some kind of flags?
         std::int64_t *dims;      // Pointer to dimensions array
+#if defined _WIN32
+        // For some reason windows (or VS?) has a 32-byte spacer between these fields
         void *unknown1;
         void *unknown2;
         void *unknown3;
         void *unknown4;
+#endif
         void *mxArray;           // Pointer to mxArray in the *data_ptr struct
     };
  
-    /* Header for a (new-style) row-major array for reference (not used here)
+    // Header for a (new-style) row-major array
     struct impl_header_row_major {
         void *unk_addr1;
         std::int64_t unk_i1;     // seems to be some kind of flags?
@@ -66,13 +69,20 @@ namespace libpymcr {
         void *unk_addr2;
         void *unk_addr3;
         std::int64_t n_elem;     // Number of elements in array
+#if defined _WIN32
         void *unk_addr4;
         void *deleter;           // Pointer to deleter function
         std::int64_t junk[5];    // 40 bytes of junk (doesn't look like pointers)
         void *unk_addr5;
+#else
+        void *deleter;           // Pointer to deleter function
+        void *unk1;              // Pointer to a struct of metadata?
+        void *unk2;              // Pointer to some kind of function?
+        void *unk3;              // Pointer to some kind of function?
+#endif
         void *buffer;            // Pointer to buffer (data)
         std::int64_t flags;      // More flags?
-    }; */
+    };
 
     // Headers for a CPython class to wrap Matlab objects which we construct dynamically without Pybind11
     typedef struct {
@@ -101,6 +111,8 @@ namespace libpymcr {
         matlab_wrapper_slots
     };
 
+    template<typename T> struct dt { typedef T type; };
+
     // Now define the converter classes, first from Matlab to Python, then vice versa
     class pymat_converter {
     public:
@@ -116,12 +128,12 @@ namespace libpymcr {
         // Methods to convert from Matlab to Python
         char* get_next_cached_id();
         PyObject* is_wrapped_np_data(void* addr);
-        template <typename T> PyObject* matlab_to_python_t (matlab::data::Array arr, py::handle owner);
-        template <> PyObject* matlab_to_python_t<char16_t>(matlab::data::Array input, py::handle owner);
-        template <> PyObject* matlab_to_python_t<std::basic_string<char16_t>>(matlab::data::Array input, py::handle owner);
-        template <> PyObject* matlab_to_python_t<py::dict>(matlab::data::Array input, py::handle owner);
-        template <> PyObject* matlab_to_python_t<py::list>(matlab::data::Array input, py::handle owner);
-        template <> PyObject* matlab_to_python_t<bool>(matlab::data::Array input, py::handle owner);
+        template <typename T> PyObject* matlab_to_python_t (matlab::data::Array arr, py::handle owner, dt<T>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<char16_t>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<std::basic_string<char16_t>>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::dict>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::list>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<bool>);
         PyObject* matlab_to_python(matlab::data::Array input, py::handle owner);
         PyObject* wrap_matlab_object(matlab::data::Array input);
         // Methods to convert from Python to Matlab

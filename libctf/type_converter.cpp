@@ -14,8 +14,19 @@ PyObject *matlab_wrapper_str(PyObject *self) {
     return PyUnicode_FromString("An opaque container for a Matlab object");
 }
 
+void matlab_wrapper_del(PyObject* pyself) {
+    PyObject *error_type, *error_value, *error_traceback;
+    PyErr_Fetch(&error_type, &error_value, &error_traceback); // Save the current exception, if any.
+    matlab_wrapper* self = (matlab_wrapper*)pyself;
+    if(std::strncmp(self->name, "mw", 2) == 0) {
+        self->cache->erase(std::string(self->name));
+        delete[] self->name;
+    }
+    PyErr_Restore(error_type, error_value, error_traceback);  // Restore the saved exception.
+}
+
 // Functions to handle Matlab mxArrays
-struct mxArray_header_2020a* _get_mxArray(Array arr) {
+struct mxArray_header_2020a* _get_mxArray(Array arr, bool pm=false) {
     matlab::data::impl::ArrayImpl* imp = matlab::data::detail::Access::getImpl<matlab::data::impl::ArrayImpl>(arr);
     struct impl_header_col_major* m0 = static_cast<struct impl_header_col_major*>(static_cast<void*>(imp));
     struct impl_header_col_major* m1 = static_cast<struct impl_header_col_major*>(m0->data_ptr);
@@ -46,11 +57,21 @@ PyObject* pymat_converter::is_wrapped_np_data(void *addr) {
     return nullptr;
 }
 
+void* _get_data_pointer(matlab::data::Array arr) {
+    if (arr.getMemoryLayout() == matlab::data::MemoryLayout::COLUMN_MAJOR) {
+        struct mxArray_header_2020a* mx = _get_mxArray(arr, arr.getNumberOfElements() > 1);
+        return mx->pr;
+    } else {
+        matlab::data::impl::ArrayImpl* imp = matlab::data::detail::Access::getImpl<matlab::data::impl::ArrayImpl>(arr);
+        struct impl_header_row_major* m = static_cast<struct impl_header_row_major*>(static_cast<void*>(imp));
+        return m->buffer;
+    }
+}
+
 // Wraps a Matlab array in a numpy array without copying (should work with all numeric types)
-template <typename T> PyObject* pymat_converter::matlab_to_python_t (matlab::data::Array arr, py::handle ignore) {
+template <typename T> PyObject* pymat_converter::matlab_to_python_t (matlab::data::Array arr, py::handle ignore, dt<T>) {
     // First checks if the array is not constructed from numpy data in the first place
-    struct mxArray_header_2020a* mx = _get_mxArray(arr);
-    PyObject* wrapper = is_wrapped_np_data(mx->pr);
+    PyObject* wrapper = is_wrapped_np_data(_get_data_pointer(arr));
     if (wrapper != nullptr) {
         // If so, just return the original numpy array, but need to INCREF it as returning new reference
         if (!m_mex_flag) {
@@ -88,11 +109,11 @@ template <typename T> PyObject* pymat_converter::matlab_to_python_t (matlab::dat
     return retval.release().ptr();
 }
 // Specialisations for other types to generate the appropriate Python type
-template <> PyObject* pymat_converter::matlab_to_python_t<char16_t>(matlab::data::Array input, py::handle owner) {
+PyObject* pymat_converter::matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<char16_t>) {
     const matlab::data::TypedArray<char16_t> str(input);
     return PyUnicode_FromKindAndData(2, (void*)(&(*str.begin())), str.getNumberOfElements());
 }
-template <> PyObject* pymat_converter::matlab_to_python_t<std::basic_string<char16_t>>(matlab::data::Array input, py::handle owner) {
+PyObject* pymat_converter::matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<std::basic_string<char16_t>>) {
     const matlab::data::TypedArray<matlab::data::MATLABString> str(input);
     if (input.getNumberOfElements() == 1) {
         const std::basic_string<char16_t> cstr(str[0]);
@@ -108,7 +129,7 @@ template <> PyObject* pymat_converter::matlab_to_python_t<std::basic_string<char
         return retval;
     }
 }
-template <> PyObject* pymat_converter::matlab_to_python_t<py::dict>(matlab::data::Array input, py::handle owner) {
+PyObject* pymat_converter::matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::dict>) {
     const matlab::data::StructArray in_struct(input);
     if (input.getNumberOfElements() == 1) {
         PyObject* retval = PyDict_New();
@@ -138,7 +159,7 @@ template <> PyObject* pymat_converter::matlab_to_python_t<py::dict>(matlab::data
         return retval;
     }
 }
-template <> PyObject* pymat_converter::matlab_to_python_t<py::list>(matlab::data::Array input, py::handle owner) {
+PyObject* pymat_converter::matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::list>) {
     const matlab::data::CellArray in_cell(input);
     PyObject* retval = PyList_New(0);
     for (auto elem : in_cell) {
@@ -152,7 +173,7 @@ template <> PyObject* pymat_converter::matlab_to_python_t<py::list>(matlab::data
     return retval;
 }
 
-template <> PyObject* pymat_converter::matlab_to_python_t<bool>(matlab::data::Array input, py::handle owner) {
+PyObject* pymat_converter::matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<bool>) {
     const matlab::data::TypedArray<bool> in_arr(input);
     size_t n_elem = in_arr.getNumberOfElements();
     if (n_elem == 1) {
@@ -167,17 +188,6 @@ template <> PyObject* pymat_converter::matlab_to_python_t<bool>(matlab::data::Ar
         }
         return retval;
     }
-}
-
-void matlab_wrapper_del(PyObject* pyself) {
-    PyObject *error_type, *error_value, *error_traceback;
-    PyErr_Fetch(&error_type, &error_value, &error_traceback); // Save the current exception, if any.
-    matlab_wrapper* self = (matlab_wrapper*)pyself;
-    if(std::strncmp(self->name, "mw", 2) == 0) {
-        self->cache->erase(std::string(self->name));
-        delete[] self->name;
-    }
-    PyErr_Restore(error_type, error_value, error_traceback);  // Restore the saved exception.
 }
 
 PyObject* pymat_converter::wrap_matlab_object(matlab::data::Array input) {
@@ -197,23 +207,23 @@ PyObject* pymat_converter::wrap_matlab_object(matlab::data::Array input) {
 PyObject* pymat_converter::matlab_to_python(matlab::data::Array input, py::handle owner) {
     matlab::data::ArrayType type = input.getType();
     switch(type) {
-        case matlab::data::ArrayType::DOUBLE:         return matlab_to_python_t<double>(input, owner);
-        case matlab::data::ArrayType::SINGLE:         return matlab_to_python_t<float>(input, owner);
-        case matlab::data::ArrayType::COMPLEX_SINGLE: return matlab_to_python_t<std::complex<float>>(input, owner);
-        case matlab::data::ArrayType::COMPLEX_DOUBLE: return matlab_to_python_t<std::complex<double>>(input, owner);
-        case matlab::data::ArrayType::LOGICAL:        return matlab_to_python_t<bool>(input, owner);
-        case matlab::data::ArrayType::INT8:           return matlab_to_python_t<int8_t>(input, owner);
-        case matlab::data::ArrayType::INT16:          return matlab_to_python_t<int16_t>(input, owner);
-        case matlab::data::ArrayType::INT32:          return matlab_to_python_t<int32_t>(input, owner);
-        case matlab::data::ArrayType::INT64:          return matlab_to_python_t<int64_t>(input, owner);
-        case matlab::data::ArrayType::UINT8:          return matlab_to_python_t<uint8_t>(input, owner);
-        case matlab::data::ArrayType::UINT16:         return matlab_to_python_t<uint16_t>(input, owner);
-        case matlab::data::ArrayType::UINT32:         return matlab_to_python_t<uint32_t>(input, owner);
-        case matlab::data::ArrayType::UINT64:         return matlab_to_python_t<uint64_t>(input, owner);
-        case matlab::data::ArrayType::CHAR:           return matlab_to_python_t<char16_t>(input, owner);
-        case matlab::data::ArrayType::MATLAB_STRING:  return matlab_to_python_t<std::basic_string<char16_t>>(input, owner);
-        case matlab::data::ArrayType::STRUCT:         return matlab_to_python_t<py::dict>(input, owner);
-        case matlab::data::ArrayType::CELL:           return matlab_to_python_t<py::list>(input, owner);
+        case matlab::data::ArrayType::DOUBLE:         return matlab_to_python_t(input, owner, dt<double>());
+        case matlab::data::ArrayType::SINGLE:         return matlab_to_python_t(input, owner, dt<float>());
+        case matlab::data::ArrayType::COMPLEX_SINGLE: return matlab_to_python_t(input, owner, dt<std::complex<float>>());
+        case matlab::data::ArrayType::COMPLEX_DOUBLE: return matlab_to_python_t(input, owner, dt<std::complex<double>>());
+        case matlab::data::ArrayType::LOGICAL:        return matlab_to_python_t(input, owner, dt<bool>());
+        case matlab::data::ArrayType::INT8:           return matlab_to_python_t(input, owner, dt<int8_t>());
+        case matlab::data::ArrayType::INT16:          return matlab_to_python_t(input, owner, dt<int16_t>());
+        case matlab::data::ArrayType::INT32:          return matlab_to_python_t(input, owner, dt<int32_t>());
+        case matlab::data::ArrayType::INT64:          return matlab_to_python_t(input, owner, dt<int64_t>());
+        case matlab::data::ArrayType::UINT8:          return matlab_to_python_t(input, owner, dt<uint8_t>());
+        case matlab::data::ArrayType::UINT16:         return matlab_to_python_t(input, owner, dt<uint16_t>());
+        case matlab::data::ArrayType::UINT32:         return matlab_to_python_t(input, owner, dt<uint32_t>());
+        case matlab::data::ArrayType::UINT64:         return matlab_to_python_t(input, owner, dt<uint64_t>());
+        case matlab::data::ArrayType::CHAR:           return matlab_to_python_t(input, owner, dt<char16_t>());
+        case matlab::data::ArrayType::MATLAB_STRING:  return matlab_to_python_t(input, owner, dt<std::basic_string<char16_t>>());
+        case matlab::data::ArrayType::STRUCT:         return matlab_to_python_t(input, owner, dt<py::dict>());
+        case matlab::data::ArrayType::CELL:           return matlab_to_python_t(input, owner, dt<py::list>());
         case matlab::data::ArrayType::ENUM:
             throw std::runtime_error("Matlab enums not supported in Python");
         case matlab::data::ArrayType::SPARSE_LOGICAL:
@@ -293,6 +303,8 @@ template <typename T> Array pymat_converter::raw_to_matlab(char *raw, size_t sz,
             // For wrapped arrays, we store a shared-data copy in a cache in this object to prevent Matlab
             // from deleting it before we are ready to release the buffer.
             if (m_mex_flag) {
+                // This flag indicates the conversion was called from the call_python mex file.
+                // In this case the Python obj will be DECREF when exiting the mex so we must INCREF here
                 Py_INCREF(obj);
             }
             m_py_cache.push_back(std::make_pair(rv, obj));
@@ -397,7 +409,7 @@ template <typename T> Array pymat_converter::fill_vec_from_pyobj(std::vector<PyO
     std::vector<T> vec;
     vec.resize(objs.size());
     std::transform (objs.begin(), objs.end(), vec.begin(), convert_py_obj<T>);
-    return factory.createArray<std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end());
+    return factory.createArray<typename std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end());
 }
 
 CharArray pymat_converter::python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
@@ -533,6 +545,7 @@ pymat_converter::pymat_converter(NumpyConversion np_behaviour) : m_numpy_conv_fl
 
 pymat_converter::~pymat_converter() {
     for (size_t ii=0; ii<m_mat_cache_indices.size(); ii++) {
+        m_mat_cache.erase(std::string(m_mat_cache_indices[ii]));
         strcpy(m_mat_cache_indices[ii], std::string("x" + std::to_string(ii)).c_str());
     }
     clear_py_cache();
