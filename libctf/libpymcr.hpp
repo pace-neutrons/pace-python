@@ -28,6 +28,9 @@ namespace libpymcr {
         py::object feval(const std::u16string &funcname, py::args args, py::kwargs& kwargs);
         py::object call(py::args args, py::kwargs& kwargs);
         matlab_env(const std::u16string ctfname, std::string matlabroot);
+        ~matlab_env() {
+            _lib->waitForFiguresToClose();
+        }
     };
 
 

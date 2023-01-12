@@ -111,7 +111,7 @@ class MatlabProxyObject(object):
         # if it's a property, just retrieve it
         if name in self._getAttributeNames():
             try:
-                return wrap(self.interface.call('subsref', self.handle, self.interface.call('substruct', '.', name)), self.interface)
+                return wrap(self.interface.call('subsref', self.handle, {'type':'.', 'subs':name}), self.interface)
             except TypeError:
                 return None
         # if it's a method, wrap it in a functor
@@ -119,8 +119,7 @@ class MatlabProxyObject(object):
             return matlab_method(self, name)
 
     def __setattr__(self, name, value):
-        access = self.interface.call('substruct', ['.', name])
-        self.interface.call('subsasgn', [self.handle, access, value])
+        self.interface.call('subsasgn', self.handle, {'type':'.', 'subs':name}, value)
 
     def __repr__(self):
         return "<proxy for Matlab {} object>".format(self.interface.call('class', self.handle))
@@ -138,7 +137,7 @@ class MatlabProxyObject(object):
         if not (isinstance(key, int) or (hasattr(key, 'is_integer') and key.is_integer())) or key < 0:
             raise RuntimeError('Matlab container indices must be positive integers')
         key = [float(key + 1)]   # Matlab uses 1-based indexing
-        return self.interface.call('subsref', self.handle, self.interface.call('substruct', '()', key))
+        return self.interface.call('subsref', self.handle, {'type':'()', 'subs':key})
 
     def __setitem__(self, key, value):
         if not (isinstance(key, int) or (hasattr(key, 'is_integer') and key.is_integer())) or key < 0:

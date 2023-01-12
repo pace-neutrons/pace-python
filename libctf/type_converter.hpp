@@ -21,11 +21,30 @@
 using namespace matlab::data;
 namespace py = pybind11;
 
+namespace matlab {
+    namespace data {
+        class mArray : public Array {
+        // Subclass the Array to be able to access and expose its protected member
+        public:
+            mArray(std::shared_ptr<impl::ArrayImpl> rhs_pImpl) MW_NOEXCEPT {
+                this->pImpl = rhs_pImpl;
+            }
+            const std::shared_ptr<impl::ArrayImpl> get_pImpl() {
+                return this->pImpl;
+            }
+            impl::ArrayImpl* get_ptr() {
+                return this->pImpl.get();
+            }
+        protected:
+        };
+    }
+}
+
 namespace libpymcr {
 
     // Headers for hacking a mxArray
     struct mxArray_header_2020a { // 96 bytes long
-        std::int64_t *refcount;  // Pointer to the number of shared copies
+        std::int32_t *refcount;  // Pointer to the number of shared copies
         void *unknown1;          // Seems to be zero
         std::int64_t ClassID;    // https://mathworks.com/help/matlab/apiref/mxclassid.html
         std::int64_t flags;      // ???
@@ -87,17 +106,13 @@ namespace libpymcr {
     // Headers for a CPython class to wrap Matlab objects which we construct dynamically without Pybind11
     typedef struct {
         PyObject_HEAD
-        matlab::data::Array* matlab_array_ptr;
-        std::map<std::string, matlab::data::Array>* cache;
-        char* name;
+        std::shared_ptr<impl::ArrayImpl> arr_impl_sptr;
     } matlab_wrapper;
 
-    PyObject *matlab_wrapper_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds);
     PyObject *matlab_wrapper_str(PyObject *self);
     void matlab_wrapper_del(PyObject *self);
 
     static PyType_Slot matlab_wrapper_slots[] = {
-        {Py_tp_new, (void*)matlab_wrapper_new},
         {Py_tp_str, (void*)matlab_wrapper_str},
         {Py_tp_finalize, (void*)matlab_wrapper_del},
         {0, 0}
@@ -118,30 +133,25 @@ namespace libpymcr {
     public:
         enum class NumpyConversion { COPY, WRAP };
     protected:
-        PyObject* m_parent = PyCapsule_New(this, "MatlabConverter", nullptr);
-        std::vector<char*> m_mat_cache_indices;
-        std::map<std::string, matlab::data::Array> m_mat_cache;
         NumpyConversion m_numpy_conv_flag;
-        std::vector< std::pair<matlab::data::Array, void*> > m_py_cache;
+        std::vector< std::pair<matlab::data::Array, PyObject*> > m_py_cache;
         PyTypeObject* m_py_matlab_wrapper_t;
         bool m_mex_flag;
         // Methods to convert from Matlab to Python
-        char* get_next_cached_id();
         PyObject* is_wrapped_np_data(void* addr);
-        template <typename T> PyObject* matlab_to_python_t (matlab::data::Array arr, py::handle owner, dt<T>);
-        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<char16_t>);
-        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<std::basic_string<char16_t>>);
-        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::dict>);
-        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<py::list>);
-        PyObject* matlab_to_python_t(matlab::data::Array input, py::handle owner, dt<bool>);
-        PyObject* matlab_to_python(matlab::data::Array input, py::handle owner);
+        template <typename T> PyObject* matlab_to_python_t (matlab::data::Array arr, dt<T>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, dt<char16_t>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, dt<std::basic_string<char16_t>>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, dt<py::dict>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, dt<py::list>);
+        PyObject* matlab_to_python_t(matlab::data::Array input, dt<bool>);
         PyObject* wrap_matlab_object(matlab::data::Array input);
         // Methods to convert from Python to Matlab
         template <typename T> Array raw_to_matlab(char *raw, size_t sz, std::vector<size_t> dims,
                                                   ssize_t *strides, int f_or_c_continuous,
-                                                  matlab::data::ArrayFactory &factory, void* owner);
+                                                  matlab::data::ArrayFactory &factory, PyObject* obj);
         bool release_buffer(matlab::data::Array arr);
-        matlab::data::Array python_array_to_matlab(void *result, matlab::data::ArrayFactory &factory);
+        matlab::data::Array python_array_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory);
         template <typename T> Array fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::ArrayFactory &factory);
         CharArray python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory);
         Array listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory);
