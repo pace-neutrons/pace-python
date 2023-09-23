@@ -63,9 +63,8 @@ endif()
 
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
-find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
-get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)
-get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
+find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
+include(src/matlab.cmake)
 
 # Get the Matlab release from the VersionInfo.xml file
 file(READ "${Matlab_ROOT_DIR}/VersionInfo.xml" _release_info)
@@ -86,4 +85,4 @@ endif()
 include(PACE)
 
 add_subdirectory(src)
-add_subdirectory(pace_neutrons)
+#add_subdirectory(pace_neutrons)
