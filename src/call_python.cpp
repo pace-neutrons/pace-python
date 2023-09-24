@@ -26,11 +26,10 @@ class MexFunction : public matlab::mex::Function {
     public:
         void operator()(ArgumentList outputs, ArgumentList inputs) {
             matlab::data::ArrayFactory factory;
-            if (inputs.size() < 1 || inputs[0].getNumberOfElements() != 1 ||
-                inputs[0].getType() != matlab::data::ArrayType::UINT64) { // Matlab only supports 64-bit
-                    throw std::runtime_error("Input must be pointer to a Python function.");
+            if (inputs.size() < 1 || inputs[0].getType() != matlab::data::ArrayType::CHAR) {
+                throw std::runtime_error("Input must be reference to a Python function.");
             }
-            uintptr_t key = inputs[0][0];
+            matlab::data::CharArray key = inputs[0];
 
             PyGILState_STATE gstate = PyGILState_Ensure();  // GIL{
 
@@ -38,7 +37,9 @@ class MexFunction : public matlab::mex::Function {
                 _converter = new libpymcr::pymat_converter();
             }
 
-            PyObject* fn_ptr = reinterpret_cast<PyObject*>(key);
+            py::module pyHoraceFn = py::module::import("libpymcr");
+            py::dict fnDict = pyHoraceFn.attr("_globalFunctionDict");
+            PyObject *fn_ptr = PyDict_GetItemString(fnDict.ptr(), key.toAscii().c_str());
 
             if (PyCallable_Check(fn_ptr)) {
                 PyObject *result;

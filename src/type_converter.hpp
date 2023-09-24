@@ -16,6 +16,7 @@ using ssize_t = std::ptrdiff_t;
 #include <vector>
 #include <stdexcept>
 #include <cstring>
+#include <string>
 #include <map>
 
 #define MYINTEGER 1

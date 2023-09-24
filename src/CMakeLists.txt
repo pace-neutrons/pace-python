@@ -45,13 +45,3 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
 add_dependencies(compile_ctf call_python)
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    pybind11_add_module(_stub _stub.cpp)
-    add_dependencies(_stub compile_ctf)
-    add_custom_command(
-        TARGET _stub POST_BUILD
-        COMMAND ${BASH_COMMAND} cp -f "$<TARGET_FILE_DIR:_stub>/_stub.*" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons/pace/"
-    )
-endif()
-

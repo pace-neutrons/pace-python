@@ -524,7 +524,11 @@ matlab::data::Array pymat_converter::wrap_python_function(PyObject *input, matla
     matlab::data::Array rv;
     std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(input);
     rv = factory.createStructArray({1, 1}, std::vector<std::string>({"libpymcr_func_ptr"}));
-    rv[0][std::string("libpymcr_func_ptr")] = factory.createScalar<uint64_t>(addr);
+    const char* addrstr = std::to_string(addr).c_str();
+    py::module pyHoraceFn = py::module::import("libpymcr");
+    py::dict fnDict = pyHoraceFn.attr("_globalFunctionDict");
+    PyDict_SetItemString(fnDict.ptr(), addrstr, input);
+    rv[0][std::string("libpymcr_func_ptr")] = factory.createCharArray(addrstr);
     return rv;
 }
 
