@@ -41,6 +41,7 @@ add_custom_command(
         -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
+        "${CMAKE_CURRENT_SOURCE_DIR}/pyclasswrapper.m"
         "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )

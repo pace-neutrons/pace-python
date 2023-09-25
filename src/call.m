@@ -131,13 +131,33 @@ function out = call_python_m(varargin)
         end
     end
     fun_name = varargin{1};
-    [kw_args, remaining_args] = get_kw_args(varargin(2:end));
+
+    if strncmp(varargin{2}, 'pyobj', 5)
+        [kw_args, remaining_args] = get_kw_args(varargin(3:end));
+        remaining_args = [varargin(2) remaining_args];
+    else
+        [kw_args, remaining_args] = get_kw_args(varargin(2:end));
+    end
+    kw_args = unwrap_pyclass(kw_args);
+    remaining_args = unwrap_pyclass(remaining_args);
     if ~isempty(kw_args)
         remaining_args = [remaining_args {struct('pyHorace_pyKwArgs', 1, kw_args{:})}];
     end
     out = call_python(fun_name, remaining_args{:});
     if ~iscell(out)
         out = {out};
+    end
+end
+
+function input = unwrap_pyclass(input)
+    if iscell(input)
+        for ii = 1:numel(input)
+            input{ii} = unwrap_pyclass(input{ii});
+        end
+    else
+        if isa(input, 'pyclasswrapper')
+            input = input.pyObjectString;
+        end
     end
 end
 

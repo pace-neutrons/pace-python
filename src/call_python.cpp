@@ -34,7 +34,7 @@ class MexFunction : public matlab::mex::Function {
             PyGILState_STATE gstate = PyGILState_Ensure();  // GIL{
 
             if (_converter == nullptr) {
-                _converter = new libpymcr::pymat_converter();
+                _converter = new libpymcr::pymat_converter(libpymcr::pymat_converter::NumpyConversion::WRAP);
             }
 
             py::module pyHoraceFn = py::module::import("libpymcr");
