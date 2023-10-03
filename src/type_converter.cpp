@@ -522,13 +522,12 @@ Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::ArrayFa
 matlab::data::Array pymat_converter::wrap_python_function(PyObject *input, matlab::data::ArrayFactory &factory) {
     // Wraps a Python function so it can be called using a mex function
     matlab::data::Array rv;
-    std::uintptr_t addr = reinterpret_cast<std::uintptr_t>(input);
+    std::string addrstr = std::to_string(reinterpret_cast<uintptr_t>(input));
     rv = factory.createStructArray({1, 1}, std::vector<std::string>({"libpymcr_func_ptr"}));
-    const char* addrstr = std::to_string(addr).c_str();
     py::module pyHoraceFn = py::module::import("libpymcr");
     py::dict fnDict = pyHoraceFn.attr("_globalFunctionDict");
-    PyDict_SetItemString(fnDict.ptr(), addrstr, input);
-    rv[0][std::string("libpymcr_func_ptr")] = factory.createCharArray(addrstr);
+    PyDict_SetItemString(fnDict.ptr(), addrstr.c_str(), input);
+    rv[0][std::string("libpymcr_func_ptr")] = factory.createCharArray(addrstr.c_str());
     return rv;
 }
 
@@ -554,7 +553,7 @@ matlab::data::Array pymat_converter::python_to_matlab_single(PyObject *input, ma
     } else if (PyComplex_Check(input)) {
         output = factory.createScalar(std::complex<double>(PyComplex_RealAsDouble(input), PyComplex_ImagAsDouble(input)));
     } else if (input == Py_None) {
-        output = factory.createArray<double>({});
+        output = factory.createArray<double>({0,0});
     } else if (PyCallable_Check(input)) {
         output = wrap_python_function(input, factory);
     } else if (PyObject_TypeCheck(input, m_py_matlab_wrapper_t)) {
