@@ -15,6 +15,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(MINIMUM_PYBIND11_VERSION 2.5.0)
 set(FETCH_PYBIND11_REPO https://github.com/pybind/pybind11)
 
+option(WITH_HORACE "Include existing version of Horus" ON)
+option(WITH_SPINW "Include existing version of SpinW" ON)
+
+set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
+set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
+
+set(HORACE_PATH "" CACHE PATH "Sets the path of external Horace. If unset downloads the version set with HORACE_VERSION")
+set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset downloads the version set with SPINW_VERSION")
+
+set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
+
 # The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
 # the anaconda redistributable module (yet) - so disable it.
 # https://developercommunity.visualstudio.com/content/problem/852548/vcruntime140-1dll-is-missing.html
