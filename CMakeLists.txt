@@ -26,6 +26,26 @@ set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downlo
 
 set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
 
+
+#TEMPORARY CODE
+if(HORACE_PATH AND WITH_HORACE)
+    find_file(HORACE_FOUND 
+        NAMES "horace_version.m"
+        PATHS "${HORACE_PATH}/horace_core/admin"
+        NO_CACHE
+        )
+
+    message(STATUS "HORACE_FOUND variable contains ${HORACE_FOUND}")
+
+    if("${HORACE_FOUND}" MATCHES "-NOTFOUND$")
+        message(FATAL_ERROR "Horace does not exist at ${HORACE_PATH}") #TODO: write a better message
+    # else()
+    #     message(FATAL_ERROR "Horace was found.")
+    endif()
+endif()
+
+
+
 # The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
 # the anaconda redistributable module (yet) - so disable it.
 # https://developercommunity.visualstudio.com/content/problem/852548/vcruntime140-1dll-is-missing.html
