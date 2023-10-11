@@ -2,13 +2,11 @@
 
 def get_agent(String jobname) {
   if (jobname.contains('linux')) {
-    withCredentials([string(credentialsId: 'manylinux_agent', variable: 'agent')]) {
-      return "${agent}"
-    }
+    return "rocky8"
   } else if (jobname.contains('windows')) {
-    withCredentials([string(credentialsId: 'win10_agent', variable: 'agent')]) {
-      return "${agent}"
-    }
+     
+    return "icdpacewin"
+    
   } else {
     return ''
   }
