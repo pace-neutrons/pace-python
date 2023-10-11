@@ -27,7 +27,8 @@ set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downlo
 set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
 
 
-#TEMPORARY CODE
+#Searches for the horace_version.m file to check whether horace can be found in the provided dir
+#ISSUE: different horace versions may have different dir structure  
 if(HORACE_PATH AND WITH_HORACE)
     find_file(HORACE_FOUND 
         NAMES "horace_version.m"
@@ -37,14 +38,28 @@ if(HORACE_PATH AND WITH_HORACE)
 
     message(STATUS "HORACE_FOUND variable contains ${HORACE_FOUND}")
 
-    if("${HORACE_FOUND}" MATCHES "-NOTFOUND$")
-        message(FATAL_ERROR "Horace does not exist at ${HORACE_PATH}") #TODO: write a better message
+    if(NOT HORACE_FOUND)
+        message(FATAL_ERROR "Horace may not exist at ${HORACE_PATH}") #TODO: write a better message
     # else()
     #     message(FATAL_ERROR "Horace was found.")
     endif()
 endif()
 
+if(SPINW_PATH AND WITH_SPINW)
+    find_file(SPINW_FOUND
+        NAMES "install_spinw.m"
+        PATHS "${SPINW_PATH}"
+        NO_CACHE
+    )
 
+    message(STATUS "SPINW_FOUND variable contains ${SPINW_FOUND}")
+
+    if(NOT SPINW_FOUND)
+        message(FATAL_ERROR "SpinW may not exist at ${SPINW_PATH}") #TODO: write a better message
+    # else()
+    #     message(FATAL_ERROR "SpinW was found.")
+    endif()
+endif()
 
 # The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
 # the anaconda redistributable module (yet) - so disable it.
