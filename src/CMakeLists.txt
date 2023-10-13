@@ -40,7 +40,6 @@ if(NOT HORACE_PATH AND WITH_HORACE)
     endif()
 
     #file(RENAME "${CMAKE_BINARY_DIR}/CTF/worker_v2.m.template" "${CMAKE_BINARY_DIR}/CTF/worker_v2.m")
-    file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
 
     set(HORACE_INCLUDE
         -a "${CMAKE_BINARY_DIR}/CTF/Horace"
@@ -56,6 +55,8 @@ else()
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core"
         )
 endif()
+
+file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
