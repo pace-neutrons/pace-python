@@ -46,17 +46,40 @@ if(NOT HORACE_PATH AND WITH_HORACE)
         -a "${CMAKE_BINARY_DIR}/CTF/Herbert"
         )
 
-else()
+elseif(WITH_HORACE AND HORACE_PATH) #TODO: check logic here
     #TODO: test this a bit more
-    message(STATUS "Removing @testssigvar")
+    message(STATUS "Removing @testsigvar")
     file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core/utilities/classes/@testsigvar")
     set(HORACE_INCLUDE 
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/horace_core"
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core"
         )
+else() 
+    set(HORACE_INCLUDE
+        "" 
+    )
+
 endif()
 
 file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
+
+#TODO: add necessary remove etc. stuff for spinw inline with the aboves previous implementation
+#TODO: needs adjusting to have empty if WITH_SPINW=OFF
+if(WITH_SPINW AND SPINW_PATH)
+    set(SPINW_INCLUDE
+        -a "${SPINW_PATH}" 
+        #-a "${CMAKE_BINARY_DIR}/CTF/SpinW"
+    )
+elseif(WITH_SPINW AND NOT SPINW_PATH)
+    #TODO: need to add correct alternative to where spinw is downloaded similar to horace
+    set(SPINW_INCLUDE
+        -a "${CMAKE_BINARY_DIR}/CTF/SpinW"
+    )
+else()
+    set(SPINW_INCLUDE
+        "" 
+    )
+endif()
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
@@ -65,6 +88,7 @@ add_custom_command(
     COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
         #-a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         ${HORACE_INCLUDE}
+        ${SPINW_INCLUDE}
         #-a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
