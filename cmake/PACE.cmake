@@ -3,6 +3,42 @@ include(ExternalProject)
 
 message(STATUS "Obtaining desired PACE components") 
 
+
+#Searches for the horace_version.m file to check whether horace can be found in the provided dir
+#ISSUE: different horace versions may have different dir structure  
+if(HORACE_PATH AND WITH_HORACE)
+    find_file(HORACE_FOUND 
+        NAMES "horace_version.m"
+        PATHS "${HORACE_PATH}/horace_core/admin"
+        NO_CACHE
+        )
+
+    message(STATUS "HORACE_FOUND variable contains ${HORACE_FOUND}")
+
+    if(NOT HORACE_FOUND)
+        message(FATAL_ERROR "Horace may not exist at ${HORACE_PATH}") #TODO: write a better message
+    # else()
+    #     message(FATAL_ERROR "Horace was found.")
+    endif()
+endif()
+
+if(SPINW_PATH AND WITH_SPINW)
+    find_file(SPINW_FOUND
+        NAMES "install_spinw.m"
+        PATHS "${SPINW_PATH}"
+        NO_CACHE
+    )
+
+    message(STATUS "SPINW_FOUND variable contains ${SPINW_FOUND}")
+
+    if(NOT SPINW_FOUND)
+        message(FATAL_ERROR "SpinW may not exist at ${SPINW_PATH}") #TODO: write a better message
+    # else()
+    #     message(FATAL_ERROR "SpinW was found.")
+    endif()
+endif()
+
+
 if(WITH_SPINW)
     if(SPINW_PATH)
         #TODO: Set ExternalProject_Add up correctly for SpinW
