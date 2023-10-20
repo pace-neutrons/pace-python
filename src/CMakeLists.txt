@@ -48,8 +48,10 @@ if(NOT HORACE_PATH AND WITH_HORACE)
 
 elseif(WITH_HORACE AND HORACE_PATH) #TODO: check logic here
     #TODO: test this a bit more
-    message(STATUS "Removing @testsigvar")
-    file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core/utilities/classes/@testsigvar")
+    #message(STATUS "Removing @testsigvar")
+    #message(FATAL_ERROR "cmake binary dir is: ${CMAKE_BINARY_DIR}")
+    #ISSUE: @testsigvar isn't created until after we try and remove it
+    #file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core/utilities/classes/@testsigvar")
     set(HORACE_INCLUDE 
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/horace_core"
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core"
@@ -64,7 +66,6 @@ endif()
 file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
 
 #TODO: add necessary remove etc. stuff for spinw inline with the aboves previous implementation
-#TODO: needs adjusting to have empty if WITH_SPINW=OFF
 if(WITH_SPINW AND SPINW_PATH)
     set(SPINW_INCLUDE
         -a "${SPINW_PATH}" 
@@ -80,6 +81,7 @@ else()
         "" 
     )
 endif()
+
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
