@@ -1,7 +1,7 @@
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "d:/MATLAB/Matlab Runtime/v910")
 #set(MATLAB_FIND_DEBUG 1)
-find_package(Matlab)
+find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
 
 if (NOT Matlab_INCLUDE_DIRS)
   # Could not find (or completely find) MATLAB or MCR

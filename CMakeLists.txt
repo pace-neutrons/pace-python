@@ -81,7 +81,7 @@ endif()
 
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
-find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
+#find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
 include(src/matlab.cmake)
 
 # Get the Matlab release from the VersionInfo.xml file
