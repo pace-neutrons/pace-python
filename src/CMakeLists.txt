@@ -66,9 +66,29 @@ if(WITH_SPINW AND SPINW_PATH)
     )
 elseif(WITH_SPINW AND NOT SPINW_PATH)
     #TODO: need to add correct alternative to where spinw is downloaded similar to horace
+    
+    if(WIN32)
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            #COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/swfiles"
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/dat_files"
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/external"
+        )
+    else()
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+        )
+    endif()
+    
+    
     set(SPINW_INCLUDE
         -a "${CMAKE_BINARY_DIR}/CTF/SpinW"
     )
+
 else()
     set(SPINW_INCLUDE
         "" 
