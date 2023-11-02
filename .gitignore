@@ -37,6 +37,7 @@ extern-pybind11
 src/CTF
 
 build
+buildctf
 dist
 wheelhouse
 

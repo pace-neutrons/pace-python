@@ -1,2 +1,0 @@
-class MatlabStruct(dict):
-    pass

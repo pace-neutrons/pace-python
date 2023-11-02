@@ -169,12 +169,11 @@ class PacePythonTest(unittest.TestCase):
 
     def test3_EuphonicResolution(self):
         # Calculate spectra with full instrument resolution convolution
-        is_crystal = True;
         xgeom = [0,0,1];
         ygeom = [0,1,0];
         shape = 'cuboid';
         shape_pars = [0.01,0.05,0.01];
-        sample = self.m.IX_sample(is_crystal, xgeom, ygeom, shape, shape_pars)
+        sample = self.m.IX_sample(xgeom, ygeom, shape, shape_pars, '-single_crystal', True)
         wsc = self.m.set_sample(self.wsc, sample);
         ei = 40; freq = 400; chopper = 'g';
         wsc = self.m.set_instrument(wsc, self.m.merlin_instrument(ei, freq, chopper));

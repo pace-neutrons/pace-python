@@ -55,7 +55,9 @@ if(WITH_SPINW)
             GIT_SHALLOW 1
             BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF/SpinW"
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/swfiles <SOURCE_DIR>/external <SOURCE_DIR>/dat_files <BINARY_DIR> 
+            BUILD_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/swfiles <BINARY_DIR>/swfiles
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/external <BINARY_DIR>/external
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/dat_files <BINARY_DIR>/dat_files
             INSTALL_COMMAND ""
             TEST_COMMAND ""
         )

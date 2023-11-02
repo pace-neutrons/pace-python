@@ -3,7 +3,7 @@ classdef create_bz < pyclasswrapper
     methods
         % Constructor
         function obj = create_bz(varargin)
-            obj.pyObjectString = call_python_m('create_bz', varargin{:}); 
+            obj.pyObjectString = call('_call_python', 'create_bz', varargin{:}); 
         end
     end
 end

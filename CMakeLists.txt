@@ -12,10 +12,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(MINIMUM_PYBIND11_VERSION 2.5.0)
+set(MINIMUM_PYBIND11_VERSION 2.10.1)
 set(FETCH_PYBIND11_REPO https://github.com/pybind/pybind11)
 
-option(WITH_HORACE "Include Horus" ON)
+option(WITH_HORACE "Include Horace" ON)
 option(WITH_SPINW "Include SpinW" ON)
 
 set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
@@ -72,12 +72,17 @@ else()
   endif()
   set(pybind11_FOUND ON)
 endif()
+if (NOT PYTHON_INCLUDE_DIRS)
+  set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+endif()
+if (NOT PYTHON_LIBRARIES)
+  set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+endif()
 
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
-find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
-get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)
-get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
+find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
+include(src/matlab.cmake)
 
 # Get the Matlab release from the VersionInfo.xml file
 file(READ "${Matlab_ROOT_DIR}/VersionInfo.xml" _release_info)
@@ -98,4 +103,4 @@ endif()
 include(PACE)
 
 add_subdirectory(src)
-add_subdirectory(pace_neutrons)
+#add_subdirectory(pace_neutrons)

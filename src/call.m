@@ -1,109 +1,184 @@
-function [out, varargout] = call(name, args)
-
-resultsize = nargout;
-try
-    maxresultsize = nargout(name);
-    if maxresultsize == -1
+function [varargout] = call(name, varargin)
+    if strcmp(name, '_call_python')
+        varargout = call_python_m(varargin{:});
+        return
+    end
+    resultsize = nargout;
+    try
+        maxresultsize = nargout(name);
+        if maxresultsize == -1
+            maxresultsize = resultsize;
+        end
+    catch
         maxresultsize = resultsize;
     end
-catch
-    maxresultsize = resultsize;
-end
-if resultsize > maxresultsize
-    resultsize = maxresultsize;
-end
-if nargin == 1
-    args = {};
-end
-
-% Checks if any arguments are thinwrappers - if they are, we have to
-% to push all input variables into the global namespace and evaluate the function 
-% there rather than in this local namespace, because the real object behind the
-% thinwrapper is only in the global namespace.
-is_thin = false;
-try
-    evalstr = sprintf('%s(', name);
-catch
-    evalstr = [];
-end
-if numel(evalstr) > 0
-    assargs = {};
-    for ir = 1:numel(args) 
-        if ir > 1; comma = ','; else comma = ''; end;
-        if strcmp(class(args{ir}), 'thinwrapper')
-            evalstr = sprintf('%s%s %s', evalstr, comma, args{ir}.ObjectString);
-            assargs{ir} = [];
-            is_thin = true;
-        else
-            args{ir} = check_wrapped_function(args{ir});
-            evalstr = sprintf('%s%s arg%d', evalstr, comma, ir);
-            assargs{ir} = sprintf('arg%d', ir);
-        end
+    if resultsize > maxresultsize
+        resultsize = maxresultsize;
     end
-end
-if is_thin && (strcmp(name, 'class'))
-    is_thin = false;
-end
-if is_thin
+    if nargin == 1
+        args = {};
+    else
+        args = varargin;
+    end
     for ir = 1:numel(args)
-        if ~isempty(assargs{ir})
-            assignin('base', assargs{ir}, args{ir});
-        end
+        args{ir} = unwrap(args{ir});
     end
-    evalstr = [evalstr ')'];
-end
-
-if resultsize > 0
-    % call the function with the given number of
-    % output arguments:
-    results = cell(resultsize, 1);
-    try
-        if is_thin
-            try
-                [results{:}] = evalin('base', evalstr);
-            catch err
-                %disp(err);
-                [results{:}] = feval(name,  args{:});
-            end
-        else
-            [results{:}] = feval(name,  args{:});
-        end
-    catch err
-        if (strcmp(err.identifier,'MATLAB:unassignedOutputs'))
-            results = {[]};
-        else
-            rethrow(err);
-        end
-    end
-    % Checks if any output is an old-style class, if so wrap it a new
-    % style class so it doesn't get converted to Python dict on return.
-    for ir = 1:numel(results)
-        if (isempty(metaclass(results{ir})) && ~isjava(results{ir})) || has_thin_members(results{ir})
-            results{ir} = wrap_obj(results{ir});
-        end
-    end
-    out = results{1};
-    if length(results) > 1
-        varargout = results(2:end);
-    end
-else
-    % try to get output from ans:
-    clear('ans');
-    if is_thin
-        evalin('base', evalstr);
+    if resultsize > 0
+        % call the function with the given number of
+        % output arguments:
+        varargout = cell(resultsize, 1);
         try
-            results = evalin('base', 'ans');
+            [varargout{:}] = feval(name, args{:});
         catch err
-            results = {[]};
+            if (strcmp(err.identifier,'MATLAB:unassignedOutputs'))
+                varargout = eval_ans(name, args);
+            else
+                rethrow(err);
+            end
         end
     else
-        feval(name, args{:});
-        try
-            results = {ans};
-        catch err
-            results = {[]};
+        varargout = eval_ans(name, args);
+    end
+    for ir = 1:numel(varargout)
+        varargout{ir} = wrap(varargout{ir});
+    end
+end
+
+function out = unwrap(in_obj)
+    out = in_obj;
+    if isstruct(in_obj) && isfield(in_obj, 'libpymcr_func_ptr')
+        out = @(varargin) call('_call_python', in_obj.libpymcr_func_ptr, varargin{:});
+    elseif isa(in_obj, 'containers.Map') && in_obj.isKey('wrapped_oldstyle_class')
+        out = in_obj('wrapped_oldstyle_class');
+    elseif iscell(in_obj)
+        for ii = 1:numel(in_obj)
+            out{ii} = unwrap(in_obj{ii});
         end
     end
-    out = results{1};
 end
+
+function out = wrap(obj)
+    out = obj;
+    if isobject(obj) && (isempty(metaclass(obj)) && ~isjava(obj)) || has_thin_members(obj)
+        out = containers.Map({'wrapped_oldstyle_class'}, {obj});
+    elseif iscell(obj)
+        for ii = 1:numel(obj)
+            out{ii} = wrap(obj{ii});
+        end
+    end
+end
+
+function out = has_thin_members(obj)
+% Checks whether any member of a class or struct is an old-style class
+% or is already a wrapped instance of such a class
+    out = false;
+    if isobject(obj) || isstruct(obj)
+        try
+            fn = fieldnames(obj);
+        catch
+            return;
+        end
+        for ifn = 1:numel(fn)
+            try
+                mem = subsref(obj, struct('type', '.', 'subs', fn{ifn}));
+            catch
+                continue;
+            end
+            if (isempty(metaclass(mem)) && ~isjava(mem))
+                out = true;
+                break;
+            end
+        end
+    end
+end
+
+function results = eval_ans(name, args)
+    % try to get output from ans:
+    clear('ans');
+    feval(name, args{:});
+    try
+        results = {ans};
+    catch err
+        results = {[]};
+    end
+end
+
+function [n, undetermined] = getArgOut(name, parent)
+    undertermined = false;
+    if isstring(name)
+        fun = str2func(name);
+        try
+            n = nargout(fun);
+        catch % nargout fails if fun is a method:
+            try
+                n = nargout(name);
+            catch
+                n = 0;
+                undetermined = true;
+            end
+        end
+    else
+        n = 0;
+        undetermined = true;
+    end
+end
+
+function out = call_python_m(varargin)
+    % Convert row vectors to column vectors for better conversion to numpy
+    for ii = 1:numel(varargin)
+        if size(varargin{ii}, 1) == 1
+            varargin{ii} = varargin{ii}';
+        end
+    end
+    fun_name = varargin{1};
+
+    if strncmp(varargin{2}, 'pyobj', 5)
+        [kw_args, remaining_args] = get_kw_args(varargin(3:end));
+        remaining_args = [varargin(2) remaining_args];
+    else
+        [kw_args, remaining_args] = get_kw_args(varargin(2:end));
+    end
+    kw_args = unwrap_pyclass(kw_args);
+    remaining_args = unwrap_pyclass(remaining_args);
+    if ~isempty(kw_args)
+        remaining_args = [remaining_args {struct('pyHorace_pyKwArgs', 1, kw_args{:})}];
+    end
+    out = call_python(fun_name, remaining_args{:});
+    if ~iscell(out)
+        out = {out};
+    end
+end
+
+function input = unwrap_pyclass(input)
+    if iscell(input)
+        for ii = 1:numel(input)
+            input{ii} = unwrap_pyclass(input{ii});
+        end
+    else
+        if isa(input, 'pyclasswrapper')
+            input = input.pyObjectString;
+        end
+    end
+end
+
+function [kw_args, remaining_args] = get_kw_args(args)
+    % Finds the keyword arguments (string, val) pairs, assuming that they always at the end (last 2n items)
+    first_kwarg_id = numel(args) + 1;
+    for ii = (numel(args)-1):-2:1
+        if ischar(args{ii}); args{ii} = string(args{ii}(:)'); end
+        if isstring(args{ii}) && ...
+            strcmp(regexp(args{ii}, '^[A-Za-z_][A-Za-z0-9_]*', 'match'), args{ii})
+            % Python identifiers must start with a letter or _ and can contain charaters, numbers or _
+            first_kwarg_id = ii;
+        else
+            break;
+        end
+    end
+    if first_kwarg_id < numel(args)
+        kw_args = args(first_kwarg_id:end);
+        remaining_args = args(1:(first_kwarg_id-1));
+    else
+        kw_args = {};
+        remaining_args = args;
+    end
 end
