@@ -70,6 +70,13 @@ class CMakeExtension(Extension):
 
 CTFFILES = []
 
+#Removes additional args for cmake options to avoid issue with setuptools
+print(sys.argv)
+if len(sys.argv)>2:
+    sys.argv, extra_args = sys.argv[:2], sys.argv[2:]
+else:
+    extra_args = []
+
 class CMakeBuild(build_ext):
     def run(self):
         try:
@@ -127,8 +134,14 @@ class CMakeBuild(build_ext):
         cxxflags = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''), self.distribution.get_version())
         env['CXXFLAGS'] = cxxflags
+
+        cmake_args += extra_args
+        print(cmake_args)
+        # exit()
+
         if 'MATLAB_DIR' in env:
             cmake_args += ['-DMatlab_ROOT_DIR=' + env['MATLAB_DIR']]
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         check_call(
