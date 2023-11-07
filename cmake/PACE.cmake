@@ -3,41 +3,18 @@ include(ExternalProject)
 
 message(STATUS "Obtaining desired PACE components") 
 
-
-#Searches for the horace_version.m file to check whether horace can be found in the provided dir
-#ISSUE: different horace versions may have different dir structure  
-if(HORACE_PATH AND WITH_HORACE)
-    find_file(HORACE_FOUND 
-        NAMES "horace_version.m"
-        PATHS "${HORACE_PATH}/horace_core/admin"
-        NO_CACHE
-        )
-
-    message(STATUS "HORACE_FOUND variable contains ${HORACE_FOUND}")
-
-    if(NOT HORACE_FOUND)
-        message(FATAL_ERROR "Horace may not exist at ${HORACE_PATH}") #TODO: write a better message
-    endif()
-endif()
-
-if(SPINW_PATH AND WITH_SPINW)
-    find_file(SPINW_FOUND
-        NAMES "install_spinw.m"
-        PATHS "${SPINW_PATH}"
-        NO_CACHE
-    )
-
-    message(STATUS "SPINW_FOUND variable contains ${SPINW_FOUND}")
-
-    if(NOT SPINW_FOUND)
-        message(FATAL_ERROR "SpinW may not exist at ${SPINW_PATH}") #TODO: write a better message
-    endif()
-endif()
-
-
 if(WITH_SPINW)
     if(SPINW_PATH)
-        message(STATUS "Including existing SpinW")
+        find_file(SPINW_FOUND
+            NAMES "install_spinw.m"
+            PATHS "${SPINW_PATH}"
+            NO_CACHE
+        )
+
+        if(NOT SPINW_FOUND)
+            message(FATAL_ERROR "SpinW may not exist at ${SPINW_PATH}") #TODO: write a better message
+        endif()
+        message(STATUS "SpinW found at: ${SPINW_PATH}")
         ExternalProject_Add(SpinW 
             SOURCE_DIR "${SPINW_PATH}"
             #INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
@@ -48,7 +25,7 @@ if(WITH_SPINW)
             #CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/CTF/SpinW"
             )
     else()
-        message(STATUS "Downloading SpinW")
+        message(STATUS "Downloading SpinW from https://github.com/${SPINW_REPO}.git @ ${SPINW_VERSION}")
         ExternalProject_Add(SpinW
             GIT_REPOSITORY https://github.com/${SPINW_REPO}.git
             GIT_TAG ${SPINW_VERSION}
@@ -70,11 +47,26 @@ if(WITH_SPINW)
         #     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF" 
         #)
     endif()
+
+else()
+    message(STATUS "SPINW not included")
+
 endif()
 
 if(WITH_HORACE)
     if(HORACE_PATH)
-        message(STATUS "Including existing Horace")
+        #Searches for the horace_version.m file to check whether horace can be found in the provided dir
+        #ISSUE: different horace versions may have different dir structure  
+        find_file(HORACE_FOUND 
+            NAMES "horace_version.m"
+            PATHS "${HORACE_PATH}/horace_core/admin"
+            NO_CACHE
+            )
+
+        if(NOT HORACE_FOUND)
+            message(FATAL_ERROR "Horace may not exist at ${HORACE_PATH}") #TODO: write a better message
+        endif()
+        message(STATUS "Horace found: ${HORACE_PATH}")
         ExternalProject_Add(HORACE 
             SOURCE_DIR ${HORACE_PATH}
             #INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
@@ -85,7 +77,7 @@ if(WITH_HORACE)
             )
 
     else()
-        message(STATUS "Downloading Horace")
+        message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-win64-R2019b.zip")
         if(WIN32)
             download(
                 PROJ HORACE
@@ -100,6 +92,9 @@ if(WITH_HORACE)
             )
         endif()
     endif()
+
+else()
+    message(STATUS "Horace not included")
 endif()
 
 if(WITH_HORACE AND HORACE_PATH)
