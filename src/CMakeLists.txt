@@ -10,6 +10,16 @@ if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 
 add_custom_target(compile_ctf ALL)
+#add dependencies on external projects to compile_ctf
+if(WITH_HORACE)
+    add_dependencies(compile_ctf HORACE)
+endif()
+
+if(WITH_SPINW)
+    add_dependencies(compile_ctf SpinW)
+endif()
+
+
 #TODO: make the following two sections so that they are used if both horace and spinw are downloaded. might not be necessary otherwise
 if(NOT HORACE_PATH AND WITH_HORACE)
     if(WIN32)
