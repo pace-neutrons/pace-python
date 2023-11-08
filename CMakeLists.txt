@@ -18,7 +18,6 @@ set(FETCH_PYBIND11_REPO https://github.com/pybind/pybind11)
 option(WITH_HORACE "Include Horace" ON)
 option(WITH_SPINW "Include SpinW" ON)
 
-set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
 set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
 
 set(HORACE_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downloads the version set with HORACE_VERSION")
@@ -26,6 +25,17 @@ set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downlo
 
 set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
 
+#Gets Horace version number
+if(WITH_HORACE AND HORACE_PATH)
+    FILE(READ "${HORACE_PATH}/VERSION" HORACE_SRC_VERSION)
+    message(STATUS "Horace version in use is: ${HORACE_SRC_VERSION}")
+    if(DEFINED HORACE_VERSION AND NOT HORACE_SRC_VERSION VERSION_EQUAL HORACE_VERSION)
+        message(FATAL_ERROR "Horace system version (${HORACE_SRC_VERSION}) does not match requested (${HORACE_VERSION})")
+    endif()
+    set(HORACE_VERSION ${HORACE_SRC_VERSION} CACHE STRING "Horace version number")
+elseif(WITH HORACE AND NOT HORACE_PATH AND NOT DEFINED HORACE_VERSION)
+    set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
+endif()
 
 # The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
 # the anaconda redistributable module (yet) - so disable it.
