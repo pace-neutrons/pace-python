@@ -33,7 +33,7 @@ if(WITH_HORACE AND HORACE_PATH)
         message(FATAL_ERROR "Horace system version (${HORACE_SRC_VERSION}) does not match requested (${HORACE_VERSION})")
     endif()
     set(HORACE_VERSION ${HORACE_SRC_VERSION} CACHE STRING "Horace version number")
-elseif(WITH HORACE AND NOT HORACE_PATH AND NOT DEFINED HORACE_VERSION)
+elseif(WITH_HORACE AND NOT HORACE_PATH AND NOT DEFINED HORACE_VERSION)
     set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
 endif()
 
