@@ -1,4 +1,3 @@
-include(Download)
 include(ExternalProject)
 
 message(STATUS "Obtaining desired PACE components") 
@@ -39,13 +38,6 @@ if(WITH_SPINW)
             TEST_COMMAND ""
         )
         
-        # download(
-        #     PROJ SPINW
-        #     GIT_REPOSITORY https://github.com/${SPINW_REPO}.git
-        #     GIT_TAG ${SPINW_VERSION}
-        #     GIT_SHALLOW 1
-        #     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF" 
-        #)
     endif()
 
 else()
@@ -77,20 +69,24 @@ if(WITH_HORACE)
             )
 
     else()
-        message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-win64-R2019b.zip")
         if(WIN32)
-            download(
-                PROJ HORACE
-                URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-win64-R2019b.zip
-                BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-            )
+            set(HORACE_TYPE "win64")
         else()
-            download(
-                PROJ HORACE
-                URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-linux-R2019b.tar.gz
-                BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-            )
+            set(HORACE_TYPE "linux")
         endif()
+
+        message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.zip")
+        ExternalProject_Add(HORACE
+            URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.zip
+            BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+            SOURCE_DIR #"${CMAKE_CURRENT_BINARY_DIR}/CTF"
+            #CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/CTF"
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/Horace <BINARY_DIR>/Horace
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/Herbert <BINARY_DIR>/Herbert
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+        )
     endif()
 
 else()
