@@ -98,7 +98,7 @@ endif()
 #removes unecessary files to avoid associated errors during build
 if(WITH_HORACE AND HORACE_PATH)
     add_custom_command(
-        TARGET HORACE POST_BUILD
+        TARGET horace POST_BUILD
         COMMENT "@testsigvar"
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core/utilities/classes/@testsigvar"
     )
