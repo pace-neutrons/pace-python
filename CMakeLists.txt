@@ -37,8 +37,8 @@ endif()
 
 #Gets SpinW version number
 if(WITH_SPINW AND SPINW_PATH)
-    FILE(STRINGS "${SPINW_PATH}/Contents.m" SPINW_SRC_VERSION REGEX "[0-9]+(\.[0-9]+){0,2}")
-    STRING(REGEX MATCH "[0-9]+(\.[0-9]+){0,2}" SPINW_SRC_VERSION ${SPINW_SRC_VERSION})
+    FILE(STRINGS "${SPINW_PATH}/Contents.m" SPINW_SRC_VERSION REGEX "[0-9]+(\.[0-9]+)+")
+    STRING(REGEX MATCH "[0-9]+(\.[0-9]+)+" SPINW_SRC_VERSION ${SPINW_SRC_VERSION})
     message(STATUS "SpinW version in use is: ${SPINW_SRC_VERSION}")
     if(DEFINED SPINW_VERSION AND NOT SPINW_SRC_VERSION VERSION_EQUAL SPINW_VERSION)
         message(FATAL_ERROR "SpinW system version (${SPINW_SRC_VERSION}) does not match requested (${SPINW_VERSION})")
