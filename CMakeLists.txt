@@ -37,8 +37,8 @@ endif()
 
 #Gets SpinW version number
 if(WITH_SPINW AND SPINW_PATH)
-    FILE(STRINGS "${SPINW_PATH}/Contents.m" SPINW_SRC_VERSION REGEX "[0-9]\.[0-9]")
-    STRING(REGEX MATCH "[0-9]\.[0-9]" SPINW_SRC_VERSION ${SPINW_SRC_VERSION})
+    FILE(STRINGS "${SPINW_PATH}/Contents.m" SPINW_SRC_VERSION REGEX "[0-9]+(\.[0-9]+){0,2}")
+    STRING(REGEX MATCH "[0-9]+(\.[0-9]+){0,2}" SPINW_SRC_VERSION ${SPINW_SRC_VERSION})
     message(STATUS "SpinW version in use is: ${SPINW_SRC_VERSION}")
     if(DEFINED SPINW_VERSION AND NOT SPINW_SRC_VERSION VERSION_EQUAL SPINW_VERSION)
         message(FATAL_ERROR "SpinW system version (${SPINW_SRC_VERSION}) does not match requested (${SPINW_VERSION})")
@@ -48,15 +48,6 @@ elseif(WITH_SPINW AND NOT SPINW_PATH AND NOT DEFINED SPINW_VERSION)
     set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
 endif()
 
-# The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
-# the anaconda redistributable module (yet) - so disable it.
-# https://developercommunity.visualstudio.com/content/problem/852548/vcruntime140-1dll-is-missing.html
-# if(WIN32)
-#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -d2FH4-")
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -d2FH4-")
-#     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -d2:-FH4-")
-#     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -d2:-FH4-")
-# endif(WIN32)
 
 if(WIN32)
     find_package(POWERSHELL REQUIRED)
@@ -102,7 +93,6 @@ endif()
 
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
-#find_package(Matlab REQUIRED COMPONENTS MCC_COMPILER)
 include(src/matlab.cmake)
 
 # Get the Matlab release from the VersionInfo.xml file

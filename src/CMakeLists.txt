@@ -12,51 +12,42 @@ endif()
 add_custom_target(compile_ctf ALL)
 
 #add dependencies on external projects to compile_ctf
-
 if(WITH_HORACE)
-    add_dependencies(compile_ctf HORACE)
+    add_dependencies(compile_ctf horace)
 endif()
 
 if(WITH_SPINW)
-    add_dependencies(compile_ctf SpinW)
+    add_dependencies(compile_ctf spinw)
 endif()
 
 
-#TODO: make the following two sections so that they are used if both horace and spinw are downloaded. might not be necessary otherwise
+#Runs appropriate scripts to tidy up files in Horace and Herbert
 if(NOT HORACE_PATH AND WITH_HORACE)
     if(WIN32)
         add_custom_command(
             TARGET compile_ctf PRE_BUILD
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Horace" 
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Herbert"
-            # COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/swfiles"
-            # COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/dat_files"
-            # COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/external"
         )
     else()
         add_custom_command(
             TARGET compile_ctf PRE_BUILD
             COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Horace" 
             COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Herbert"
-            # COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-            # COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-            # COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
         )
     endif()
 
+    #ISSUE: what is this?
     #file(RENAME "${CMAKE_BINARY_DIR}/CTF/worker_v2.m.template" "${CMAKE_BINARY_DIR}/CTF/worker_v2.m")
 
+    #Sets what files related to Horace should be included in the compiled ctf. 
     set(HORACE_INCLUDE
         -a "${CMAKE_BINARY_DIR}/CTF/Horace"
         -a "${CMAKE_BINARY_DIR}/CTF/Herbert"
         )
 
-elseif(WITH_HORACE AND HORACE_PATH) #TODO: check logic here
-    #TODO: test this a bit more
-    #message(STATUS "Removing @testsigvar")
-    #message(FATAL_ERROR "cmake binary dir is: ${CMAKE_BINARY_DIR}")
-    #ISSUE: @testsigvar isn't created until after we try and remove it
-    #file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core/utilities/classes/@testsigvar")
+elseif(WITH_HORACE AND HORACE_PATH) 
+    #sets files to include in compiled ctf for a provided Horace
     set(HORACE_INCLUDE 
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/horace_core"
         -a "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core"
@@ -70,19 +61,16 @@ endif()
 
 file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
 
-#TODO: add necessary remove etc. stuff for spinw inline with the aboves previous implementation
+#Sets the required SpinW directories for use in compiled ctf 
 if(WITH_SPINW AND SPINW_PATH)
     set(SPINW_INCLUDE
         -a "${SPINW_PATH}" 
-        #-a "${CMAKE_BINARY_DIR}/CTF/SpinW"
     )
 elseif(WITH_SPINW AND NOT SPINW_PATH)
-    #TODO: need to add correct alternative to where spinw is downloaded similar to horace
     
     if(WIN32)
         add_custom_command(
             TARGET compile_ctf PRE_BUILD
-            #COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW"
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/swfiles"
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/dat_files"
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/external"
