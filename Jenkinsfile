@@ -73,7 +73,7 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/manylinux/jenkins_build_script.sh
+                pip wheel . --no-deps
             '''
             archiveArtifacts artifacts: 'wheelhouse/*whl'
           }
@@ -125,51 +125,51 @@ pipeline {
       }
     }
 
-    stage("Push release") {
-      environment {
-        GITHUB_TOKEN = get_github_token()
-      }
-      steps {
-        script {
-          if (env.ref_type == 'tag') {
-            if (isUnix()) {
-              sh '''
-                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
-                eval "$(/opt/conda/bin/conda shell.bash hook)"
-                conda activate py37
-                pip install requests pyyaml
-                python release.py --github --notest
-              '''
-            } else {
-              powershell './cmake/run_release.ps1'
-            }
-          }
-        }
-      }
-    }
+    // stage("Push release") {
+    //   environment {
+    //     GITHUB_TOKEN = get_github_token()
+    //   }
+    //   steps {
+    //     script {
+    //       if (env.ref_type == 'tag') {
+    //         if (isUnix()) {
+    //           sh '''
+    //             podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
+    //             eval "$(/opt/conda/bin/conda shell.bash hook)"
+    //             conda activate py37
+    //             pip install requests pyyaml
+    //             python release.py --github --notest
+    //           '''
+    //         } else {
+    //           powershell './cmake/run_release.ps1'
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
   }
 
   post {
 
-    success {
-        script {
-          setGitHubBuildStatus("success", "Successful")
-        }
-    }
+    // success {
+    //     script {
+    //       setGitHubBuildStatus("success", "Successful")
+    //     }
+    // }
 
-    unsuccessful {
-      withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
-        script {
-            //mail (
-            //  to: "${pace_python_email}",
-            //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
-            //  body: "See ${env.BUILD_URL}"
-            //)
-            setGitHubBuildStatus("failure", "Unsuccessful")
-        }
-      }
-    }
+    // unsuccessful {
+    //   withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
+    //     script {
+    //         //mail (
+    //         //  to: "${pace_python_email}",
+    //         //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
+    //         //  body: "See ${env.BUILD_URL}"
+    //         //)
+    //         setGitHubBuildStatus("failure", "Unsuccessful")
+    //     }
+    //   }
+    // }
 
     cleanup {
       deleteDir()
