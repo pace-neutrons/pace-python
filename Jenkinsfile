@@ -73,6 +73,10 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
+                eval "$(/opt/conda/bin/conda shell.bash hook)"
+                conda env remove -n py37
+                conda create -n py37 -c conda-forge python=3.7 -y
+                conda activate py37
                 pip wheel . --no-deps
             '''
             archiveArtifacts artifacts: 'wheelhouse/*whl'
