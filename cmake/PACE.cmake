@@ -74,13 +74,15 @@ if(WITH_HORACE)
         #downloads desired Horace version suitable for the users OS
         if(WIN32)
             set(HORACE_TYPE "win64")
+            set(FILE_EXTENSION "zip")
         else()
             set(HORACE_TYPE "linux")
+            set(FILE_EXTENSION "tar.gz")
         endif()
 
         message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.zip")
         ExternalProject_Add(horace
-            URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.zip
+            URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.${FILE_EXTENSION}
             BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
             SOURCE_DIR 
             CONFIGURE_COMMAND ""
