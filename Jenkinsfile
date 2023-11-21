@@ -12,53 +12,53 @@ def get_agent(String jobname) {
   }
 }
 
-def get_github_token() {
-  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
-    return "${github_token}"
-  }
-}
+// def get_github_token() {
+//   withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+//     return "${github_token}"
+//   }
+// }
 
-def setGitHubBuildStatus(String status, String message) {
-    script {
-        withCredentials([string(credentialsId: 'PacePython_API_Token',
-                variable: 'api_token')]) {
-          if (isUnix()) {
-            sh """
-                curl -H "Authorization: token ${api_token}" \
-                --request POST \
-                --data '{ \
-                    "state": "${status}", \
-                    "description": "${message} on ${env.JOB_BASE_NAME}", \
-                    "target_url": "$BUILD_URL", \
-                    "context": "${env.JOB_BASE_NAME}" \
-                }' \
-                https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
-            """
-          }
-          else {
-            return powershell(
-            script: """
-                \$body = @"
-                  {
-                    "state": "${status}",
-                    "description": "${message} on ${env.JOB_BASE_NAME}",
-                    "target_url": "$BUILD_URL",
-                    "context": "${env.JOB_BASE_NAME}"
-                  }
-"@
-                [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
-                Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
-                    -Headers @{Authorization = "token ${api_token}"} \
-                    -Method 'POST' \
-                    -ContentType "application/json" \
-                    -Body \$body
-            """,
-            returnStdout: true
-            )
-          }
-        }
-    }
-}
+// def setGitHubBuildStatus(String status, String message) {
+//     script {
+//         withCredentials([string(credentialsId: 'PacePython_API_Token',
+//                 variable: 'api_token')]) {
+//           if (isUnix()) {
+//             sh """
+//                 curl -H "Authorization: token ${api_token}" \
+//                 --request POST \
+//                 --data '{ \
+//                     "state": "${status}", \
+//                     "description": "${message} on ${env.JOB_BASE_NAME}", \
+//                     "target_url": "$BUILD_URL", \
+//                     "context": "${env.JOB_BASE_NAME}" \
+//                 }' \
+//                 https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
+//             """
+//           }
+//           else {
+//             return powershell(
+//             script: """
+//                 \$body = @"
+//                   {
+//                     "state": "${status}",
+//                     "description": "${message} on ${env.JOB_BASE_NAME}",
+//                     "target_url": "$BUILD_URL",
+//                     "context": "${env.JOB_BASE_NAME}"
+//                   }
+// "@
+//                 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+//                 Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
+//                     -Headers @{Authorization = "token ${api_token}"} \
+//                     -Method 'POST' \
+//                     -ContentType "application/json" \
+//                     -Body \$body
+//             """,
+//             returnStdout: true
+//             )
+//           }
+//         }
+//     }
+// }
 
 pipeline {
 
@@ -73,13 +73,15 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-                eval "$(/opt/conda/bin/conda shell.bash hook)"
-                conda env remove -n py37
+                module load matlab
+                module load cmake
+                module load conda
                 conda create -n py37 -c conda-forge python=3.7 -y
                 conda activate py37
-                pip wheel . --no-deps
+                conda install -c conda-forge setuptools
+                python setup.py bdist_wheel
             '''
-            archiveArtifacts artifacts: 'wheelhouse/*whl'
+            archiveArtifacts artifacts: 'dist/*whl'
           }
           else {
             powershell './cmake/build_pace_python.ps1'
