@@ -73,7 +73,7 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
-                module load matlab
+                module load matlab/2020b
                 module load cmake
                 module load conda
                 conda create -n py37 -c conda-forge python=3.7 -y
