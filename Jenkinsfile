@@ -86,7 +86,12 @@ pipeline {
             archiveArtifacts artifacts: 'dist/*whl'
           }
           else {
-            powershell './cmake/build_pace_python.ps1'
+            powershell ''' 
+                conda create -n py37 -c conda-forge python=3.7 -y
+                conda activate py37
+                conda install -c conda-forge setuptools
+                python setup.py bdist_wheel
+            '''
             archiveArtifacts artifacts: 'dist/*whl'
           }
         }
@@ -130,7 +135,15 @@ pipeline {
             '''
           }
           else {
-            powershell './cmake/run_pace_python_tests.ps1'
+            powershell '''
+                conda env remove -n py37
+                conda create -n py37 -c conda-forge python=3.7 -y
+                conda activate py37
+                conda install -c conda-forge scipy euphonic -y
+                python -m pip install brille
+                python -m pip install ./dist/*.whl
+                python test/run_test.py
+            '''
           }
         }
       }

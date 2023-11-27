@@ -19,7 +19,7 @@ $Env:_CONDA_ROOT = "$conda_root_dir"
 $Env:_CONDA_EXE = "$conda_root_dir\Scripts\conda.exe"
 Import-Module "$Env:_CONDA_ROOT\shell\condabin\Conda.psm1"
 
-Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
+Write-and-Invoke "conda activate pace_neutrons"
 
 $wheels = Get-ChildItem dist -Filter *cp37*.whl
 Write-and-Invoke "python -m pip install .\dist\$($wheels[-1].Name)"

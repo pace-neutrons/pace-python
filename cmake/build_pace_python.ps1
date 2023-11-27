@@ -50,7 +50,7 @@ Try {
 }
 
 Write-and-Invoke "conda create -n pace_neutrons -c conda-forge python=3.7 -y"
-Write-and-Invoke "Enter-CondaEnvironment pace_neutrons"
+Write-and-Invoke "conda activate pace_neutrons"
 Write-and-Invoke "python -m pip install numpy scipy matplotlib"
 Invoke-CmdScript "$Env:VS2019_VCVARSALL" x86_amd64
 Write-and-Invoke "python -m pip install --force-reinstall euphonic[phonopy_reader] brille"
@@ -73,5 +73,5 @@ Try {
     Write-Output "Could not remove '$conda_root_dir\envs\pace_neutrons'`n$($_.Exception)"
 }
 Write-and-Invoke "conda create -n pace_neutrons38 -c conda-forge python=3.8 -y"
-Write-and-Invoke "Enter-CondaEnvironment pace_neutrons38"
+Write-and-Invoke "conda activate pace_neutrons38"
 Write-and-Invoke "python setup.py bdist_wheel"
