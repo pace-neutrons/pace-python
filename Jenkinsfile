@@ -73,9 +73,11 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
+                module purge
                 module load matlab/2020b
                 module load cmake
                 module load conda
+                module load gcc
                 conda create -n py37 -c conda-forge python=3.7 -y
                 conda activate py37
                 conda install -c conda-forge setuptools
@@ -113,6 +115,7 @@ pipeline {
         script {
           if (isUnix()) {
             sh '''
+                module purge
                 module load conda
                 module load matlab
                 eval "$(/opt/conda/bin/conda shell.bash hook)"
