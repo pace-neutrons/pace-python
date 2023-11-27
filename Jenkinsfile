@@ -12,53 +12,53 @@ def get_agent(String jobname) {
   }
 }
 
-// def get_github_token() {
-//   withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
-//     return "${github_token}"
-//   }
-// }
+def get_github_token() {
+  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+    return "${github_token}"
+  }
+}
 
-// def setGitHubBuildStatus(String status, String message) {
-//     script {
-//         withCredentials([string(credentialsId: 'PacePython_API_Token',
-//                 variable: 'api_token')]) {
-//           if (isUnix()) {
-//             sh """
-//                 curl -H "Authorization: token ${api_token}" \
-//                 --request POST \
-//                 --data '{ \
-//                     "state": "${status}", \
-//                     "description": "${message} on ${env.JOB_BASE_NAME}", \
-//                     "target_url": "$BUILD_URL", \
-//                     "context": "${env.JOB_BASE_NAME}" \
-//                 }' \
-//                 https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
-//             """
-//           }
-//           else {
-//             return powershell(
-//             script: """
-//                 \$body = @"
-//                   {
-//                     "state": "${status}",
-//                     "description": "${message} on ${env.JOB_BASE_NAME}",
-//                     "target_url": "$BUILD_URL",
-//                     "context": "${env.JOB_BASE_NAME}"
-//                   }
-// "@
-//                 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
-//                 Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
-//                     -Headers @{Authorization = "token ${api_token}"} \
-//                     -Method 'POST' \
-//                     -ContentType "application/json" \
-//                     -Body \$body
-//             """,
-//             returnStdout: true
-//             )
-//           }
-//         }
-//     }
-// }
+def setGitHubBuildStatus(String status, String message) {
+    script {
+        withCredentials([string(credentialsId: 'PacePython_API_Token',
+                variable: 'api_token')]) {
+          if (isUnix()) {
+            sh """
+                curl -H "Authorization: token ${api_token}" \
+                --request POST \
+                --data '{ \
+                    "state": "${status}", \
+                    "description": "${message} on ${env.JOB_BASE_NAME}", \
+                    "target_url": "$BUILD_URL", \
+                    "context": "${env.JOB_BASE_NAME}" \
+                }' \
+                https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
+            """
+          }
+          else {
+            return powershell(
+            script: """
+                \$body = @"
+                  {
+                    "state": "${status}",
+                    "description": "${message} on ${env.JOB_BASE_NAME}",
+                    "target_url": "$BUILD_URL",
+                    "context": "${env.JOB_BASE_NAME}"
+                  }
+"@
+                [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+                Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
+                    -Headers @{Authorization = "token ${api_token}"} \
+                    -Method 'POST' \
+                    -ContentType "application/json" \
+                    -Body \$body
+            """,
+            returnStdout: true
+            )
+          }
+        }
+    }
+}
 
 pipeline {
 
@@ -105,10 +105,10 @@ pipeline {
     }
 
     stage("Run-Pace-Python-Tests") {
-      // environment {
-      //   LD_LIBRARY_PATH = "/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64"
-      //   LD_PRELOAD = "/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so"
-      // }
+      environment {
+        LD_LIBRARY_PATH = "/opt/modules-common/software/MATLAB/R2020b/runtime/glnxa64:/opt/modules-common/software/MATLAB/R2020b/bin/glnxa64"
+        LD_PRELOAD = "/opt/modules-common/software/MATLAB/R2020b/sys/os/glnxa64/libiomp5.so"
+      }
       steps {
         script {
           if (isUnix()) {
@@ -160,24 +160,24 @@ pipeline {
 
   post {
 
-    // success {
-    //     script {
-    //       setGitHubBuildStatus("success", "Successful")
-    //     }
-    // }
+    success {
+        script {
+          setGitHubBuildStatus("success", "Successful")
+        }
+    }
 
-    // unsuccessful {
-    //   withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
-    //     script {
-    //         //mail (
-    //         //  to: "${pace_python_email}",
-    //         //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
-    //         //  body: "See ${env.BUILD_URL}"
-    //         //)
-    //         setGitHubBuildStatus("failure", "Unsuccessful")
-    //     }
-    //   }
-    // }
+    unsuccessful {
+      withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
+        script {
+            //mail (
+            //  to: "${pace_python_email}",
+            //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
+            //  body: "See ${env.BUILD_URL}"
+            //)
+            setGitHubBuildStatus("failure", "Unsuccessful")
+        }
+      }
+    }
 
     cleanup {
       deleteDir()
