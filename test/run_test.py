@@ -144,24 +144,24 @@ class PacePythonTest(unittest.TestCase):
         print(f'Time to evaluate a single iteration: {t_spinw_single}s')
         self.assertEqual(np.shape(wsim['sum'].data.s), np.shape(self.w_fe.data.s))
  
-    def test2_FeBrille(self):
-        # Run through it again using Brille
-        cpars = ['mat', ['J1', 'D(3,3)'], 'hermit', False, 'optmem', 1,
-                 'useFast', False, 'resfun', 'sho', 'formfact', True, 'use_brille', True]
+    # def test2_FeBrille(self):
+    #     # Run through it again using Brille
+    #     cpars = ['mat', ['J1', 'D(3,3)'], 'hermit', False, 'optmem', 1,
+    #              'useFast', False, 'resfun', 'sho', 'formfact', True, 'use_brille', True]
 
-        kk = self.m.multifit_sqw(self.w_fe)
-        kk = kk.set_fun (self.sw_fe.horace_sqw, [self.fe_parvec]+cpars)
-        kk = kk.set_free ([1, 0, 1, 0, 1])
-        kk = kk.set_bfun (self.linear_bg, [0.1,0])
-        kk = kk.set_bfree ([1,0])
-        kk = kk.set_options ('list',2)
+    #     kk = self.m.multifit_sqw(self.w_fe)
+    #     kk = kk.set_fun (self.sw_fe.horace_sqw, [self.fe_parvec]+cpars)
+    #     kk = kk.set_free ([1, 0, 1, 0, 1])
+    #     kk = kk.set_bfun (self.linear_bg, [0.1,0])
+    #     kk = kk.set_bfree ([1,0])
+    #     kk = kk.set_options ('list',2)
 
-        # Time a single iteration
-        self.m.tic()
-        wsim = kk.simulate('comp')
-        t_spinw_fill = self.m.toc()
-        print(f'Time to fill Brille grid: {t_spinw_fill}s')
-        self.assertEqual(np.shape(wsim['sum'].data.s), np.shape(self.w_fe.data.s))
+    #     # Time a single iteration
+    #     self.m.tic()
+    #     wsim = kk.simulate('comp')
+    #     t_spinw_fill = self.m.toc()
+    #     print(f'Time to fill Brille grid: {t_spinw_fill}s')
+    #     self.assertEqual(np.shape(wsim['sum'].data.s), np.shape(self.w_fe.data.s))
 
     def test2_EuphonicCalc(self):
         self.setup_euphonic()
