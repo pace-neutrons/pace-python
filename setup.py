@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import glob
 import subprocess
 import pkgutil
 import shutil
@@ -67,6 +68,14 @@ class CMakeExtension(Extension):
         if not os.path.isfile(os.path.join('euphonic_sqw_models', '__init__.py')):
             copy_euphonic_sqw_models()
 
+CTFFILES = []
+
+#Removes additional args for cmake options to avoid issue with setuptools
+print(sys.argv)
+if len(sys.argv)>2:
+    sys.argv, extra_args = sys.argv[:2], sys.argv[2:]
+else:
+    extra_args = []
 
 class CMakeBuild(build_ext):
     def run(self):
@@ -81,6 +90,9 @@ class CMakeBuild(build_ext):
         cmake_version = LooseVersion(re.search(rex, out.decode()).group(1))
         if cmake_version < '3.13.0':
             raise RuntimeError("CMake >= 3.13.0 is required")
+
+        if not os.path.isfile(os.path.join('euphonic_sqw_models', '__init__.py')):
+            copy_euphonic_sqw_models()
 
         for ext in self.extensions:
             self.build_extension(ext)
@@ -122,8 +134,14 @@ class CMakeBuild(build_ext):
         cxxflags = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''), self.distribution.get_version())
         env['CXXFLAGS'] = cxxflags
+
+        cmake_args += extra_args
+        print(cmake_args)
+        # exit()
+
         if 'MATLAB_DIR' in env:
             cmake_args += ['-DMatlab_ROOT_DIR=' + env['MATLAB_DIR']]
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         check_call(
@@ -132,26 +150,13 @@ class CMakeBuild(build_ext):
         check_call(
             [get_cmake(), '--build', '.'] + build_args,
             cwd=self.build_temp)
-        # shutil.copytree expects destination to not exist
-        outpath = os.path.join(self.build_lib, 'pace_neutrons', 'pace')
-        if os.path.isdir(outpath): 
-            shutil.rmtree(outpath)
-        shutil.copytree(os.path.join(self.build_temp, 'bin', 'pace_neutrons', 'pace'), outpath)
-        for ff in ['requiredMCRProducts.txt', 'setup.py', 'readme.txt']:
-            shutil.copyfile(os.path.join(self.build_temp, 'bin', 'pace_neutrons', ff),
-                            os.path.join(self.build_lib, 'pace_neutrons', ff))
-        # Write the Matlab version
-        matlab_version = None
-        with open(os.path.join(self.build_temp, 'bin', 'pace_neutrons',
-                               'pace', '__init__.py'), 'r') as pace_init:
-            for line in pace_init:
-                if 'RUNTIME_VERSION_W_DOTS' in line:
-                    matlab_version = line.split('=')[1].strip()
-                    break
-        if matlab_version:
-            with open(os.path.join(self.build_lib, 'pace_neutrons_cli',
-                                   '_matlab_version.py'), 'w') as m_ver:
-                m_ver.write(f'RUNTIME_VERSION_W_DOTS = {matlab_version}\n')
+        outpath = os.path.join(self.build_lib, 'pace_neutrons', 'ctfs')
+        if not os.path.isdir(outpath):
+            os.mkdir(outpath)
+        inpath = os.path.join(self.build_temp, 'bin', 'pace_neutrons')
+        for ctffile in glob.glob(f'{inpath}/*ctf'):
+            shutil.copy(ctffile, outpath)
+            CTFFILES.append(os.path.join('ctfs', os.path.basename(ctffile)))
 
 
 with open("README.md", "r") as fh:
@@ -172,10 +177,9 @@ KEYWORDARGS = dict(
     long_description_content_type="text/markdown",
     ext_modules=[CMakeExtension('pace_neutrons')],
     packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
-    package_data={'pace_neutrons':['MCR_license.txt', 'requiredMCRProducts.txt', 'setup.py',
-                                   'readme.txt', 'pace/__init__.py', 'pace/pace.ctf']},
-    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests',
-                        'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=0.6.2', 'brille>=0.5.4'],
+    package_data={'pace_neutrons':CTFFILES},
+    install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests', 'psutil>=0.6.0',
+                        'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=0.6.2', 'brille>=0.5.4', 'libpymcr>=0.1.5'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=cmdclass,
     entry_points={'console_scripts': [
@@ -189,7 +193,6 @@ KEYWORDARGS = dict(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: Microsoft :: Windows :: Windows 10",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: C++",
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: Physics",
     ]

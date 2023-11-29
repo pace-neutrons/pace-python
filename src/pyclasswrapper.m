@@ -9,7 +9,7 @@ classdef pyclasswrapper < handle
         function delete(obj)
             if ~isempty(obj.pyObjectString)
                 try %#ok<TRYNC>
-                    call_python('remove_object', obj.pyObjectString);
+                    call('_call_python', 'remove_object', obj.pyObjectString);
                 end
             end
         end
@@ -23,9 +23,9 @@ classdef pyclasswrapper < handle
                             varargout = obj.(s(1).subs);
                         end
                     elseif numel(s) == 1
-                        varargout = call_python_m('get_obj_prop', obj.pyObjectString, s(1).subs);
+                        varargout = call('_call_python', 'get_obj_prop', obj.pyObjectString, s(1).subs);
                     elseif s(2).type == '()'
-                        varargout = call_python_m('call_obj_method', obj.pyObjectString, s(1).subs, s(2).subs{:});
+                        varargout = call('_call_python', 'call_obj_method', obj.pyObjectString, s(1).subs, s(2).subs{:});
                     else 
                         error('Python class wrapper only supports calling direct methods');
                     end

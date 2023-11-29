@@ -12,18 +12,42 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(MINIMUM_PYBIND11_VERSION 2.5.0)
+set(MINIMUM_PYBIND11_VERSION 2.10.1)
 set(FETCH_PYBIND11_REPO https://github.com/pybind/pybind11)
 
-# The latest VS needs an extra library VCRUNTIME140_1.dll which is not in 
-# the anaconda redistributable module (yet) - so disable it.
-# https://developercommunity.visualstudio.com/content/problem/852548/vcruntime140-1dll-is-missing.html
-if(WIN32)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -d2FH4-")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -d2FH4-")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -d2:-FH4-")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -d2:-FH4-")
-endif(WIN32)
+option(WITH_HORACE "Include Horace" ON)
+option(WITH_SPINW "Include SpinW" ON)
+
+set(HORACE_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downloads the version set with HORACE_VERSION")
+set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downloads the version set with SPINW_VERSION")
+
+set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
+
+#Gets Horace version number
+if(WITH_HORACE AND HORACE_PATH)
+    FILE(READ "${HORACE_PATH}/VERSION" HORACE_SRC_VERSION)
+    message(STATUS "Horace version in use is: ${HORACE_SRC_VERSION}")
+    if(DEFINED HORACE_VERSION AND NOT HORACE_SRC_VERSION VERSION_EQUAL HORACE_VERSION)
+        message(FATAL_ERROR "Horace system version (${HORACE_SRC_VERSION}) does not match requested (${HORACE_VERSION})")
+    endif()
+    set(HORACE_VERSION ${HORACE_SRC_VERSION} CACHE STRING "Horace version number")
+elseif(WITH_HORACE AND NOT HORACE_PATH AND NOT DEFINED HORACE_VERSION)
+    set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
+endif()
+
+#Gets SpinW version number
+if(WITH_SPINW AND SPINW_PATH)
+    FILE(STRINGS "${SPINW_PATH}/Contents.m" SPINW_SRC_VERSION REGEX "[0-9]+(\.[0-9]+)+")
+    STRING(REGEX MATCH "[0-9]+(\.[0-9]+)+" SPINW_SRC_VERSION ${SPINW_SRC_VERSION})
+    message(STATUS "SpinW version in use is: ${SPINW_SRC_VERSION}")
+    if(DEFINED SPINW_VERSION AND NOT SPINW_SRC_VERSION VERSION_EQUAL SPINW_VERSION)
+        message(FATAL_ERROR "SpinW system version (${SPINW_SRC_VERSION}) does not match requested (${SPINW_VERSION})")
+    endif()
+    set(SPINW_VERSION ${SPINW_SRC_VERSION} CACHE STRING "SpinW version number")
+elseif(WITH_SPINW AND NOT SPINW_PATH AND NOT DEFINED SPINW_VERSION)
+    set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
+endif()
+
 
 if(WIN32)
     find_package(POWERSHELL REQUIRED)
@@ -60,12 +84,16 @@ else()
   endif()
   set(pybind11_FOUND ON)
 endif()
+if (NOT PYTHON_INCLUDE_DIRS)
+  set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+endif()
+if (NOT PYTHON_LIBRARIES)
+  set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+endif()
 
 # You can set a specific Matlab version folder here
 #set(Matlab_ROOT_DIR "c:/Program Files/MATLAB/R2020a")
-find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MCC_COMPILER)
-get_filename_component(Matlab_LIBRARY_DIR "${Matlab_MEX_LIBRARY}" DIRECTORY)
-get_filename_component(Matlab_BIN_DIR "${Matlab_MAIN_PROGRAM}" DIRECTORY)
+include(src/matlab.cmake)
 
 # Get the Matlab release from the VersionInfo.xml file
 file(READ "${Matlab_ROOT_DIR}/VersionInfo.xml" _release_info)
@@ -86,4 +114,4 @@ endif()
 include(PACE)
 
 add_subdirectory(src)
-add_subdirectory(pace_neutrons)
+#add_subdirectory(pace_neutrons)

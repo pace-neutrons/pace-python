@@ -1,79 +1,113 @@
-matlab_add_mex(
+mcr_add_mex(
     NAME call_python
-    SRC call_python.cpp
+    SRC call_python.cpp type_converter.cpp load_matlab.cpp
 )
 target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
 target_include_directories(call_python PUBLIC "${pybind11_SOURCE_DIR}/include")
-
-matlab_add_mex(
-    NAME pythonRemoveFuncKey
-    SRC pythonRemoveFuncKey.cpp
-)
-target_include_directories(pythonRemoveFuncKey PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_include_directories(pythonRemoveFuncKey PUBLIC "${pybind11_SOURCE_DIR}/include")
-if(WIN32)
-    target_link_libraries(pythonRemoveFuncKey ${PYTHON_LIBRARIES})
+set_property(TARGET call_python PROPERTY LINK_LIBRARIES "")
+if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     target_link_libraries(call_python ${PYTHON_LIBRARIES})
 endif()
 
 add_custom_target(compile_ctf ALL)
-if(WIN32)
-    add_custom_command(
-        TARGET compile_ctf PRE_BUILD
-        COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${HORACE_BINARY_DIR}/Horace" "${CMAKE_CURRENT_BINARY_DIR}/CTF/Horace"
-        COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${HORACE_BINARY_DIR}/Herbert" "${CMAKE_CURRENT_BINARY_DIR}/CTF/Herbert"
-        COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/swfiles"
-        COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/dat_files"
-        COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW/external"
-        COMMAND ${POWERSHELL_COMMAND} Copy-Item -Force "${HORACE_BINARY_DIR}/worker_v2.m.template" -Destination "${CMAKE_CURRENT_BINARY_DIR}/CTF/worker_v2.m"
-        COMMAND ${POWERSHELL_COMMAND} New-Item -ItemType Directory -Force -Path "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons"
+
+#add dependencies on external projects to compile_ctf
+if(WITH_HORACE)
+    add_dependencies(compile_ctf horace)
+endif()
+
+if(WITH_SPINW)
+    add_dependencies(compile_ctf spinw)
+endif()
+
+
+#Runs appropriate scripts to tidy up files in Horace and Herbert
+if(NOT HORACE_PATH AND WITH_HORACE)
+    if(WIN32)
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Horace" 
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Herbert"
+        )
+    else()
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Horace" 
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Herbert"
+        )
+    endif()
+
+    #ISSUE: what is this?
+    #file(RENAME "${CMAKE_BINARY_DIR}/CTF/worker_v2.m.template" "${CMAKE_BINARY_DIR}/CTF/worker_v2.m")
+
+    #Sets what files related to Horace should be included in the compiled ctf. 
+    set(HORACE_INCLUDE
+        -a "${CMAKE_BINARY_DIR}/CTF/Horace"
+        -a "${CMAKE_BINARY_DIR}/CTF/Herbert"
+        )
+
+elseif(WITH_HORACE AND HORACE_PATH) 
+    #sets files to include in compiled ctf for a provided Horace
+    set(HORACE_INCLUDE 
+        -a "${CMAKE_BINARY_DIR}/CTF/Horace/horace_core"
+        -a "${CMAKE_BINARY_DIR}/CTF/Horace/herbert_core"
+        )
+else() 
+    set(HORACE_INCLUDE
+        "" 
     )
+
+endif()
+
+file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons")
+
+#Sets the required SpinW directories for use in compiled ctf 
+if(WITH_SPINW AND SPINW_PATH)
+    set(SPINW_INCLUDE
+        -a "${SPINW_PATH}" 
+    )
+elseif(WITH_SPINW AND NOT SPINW_PATH)
+    
+    if(WIN32)
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/swfiles"
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/dat_files"
+            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/SpinW/external"
+        )
+    else()
+        add_custom_command(
+            TARGET compile_ctf PRE_BUILD
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/SpinW"
+        )
+    endif()
+    
+    
+    set(SPINW_INCLUDE
+        -a "${CMAKE_BINARY_DIR}/CTF/SpinW"
+    )
+
 else()
-    add_custom_command(
-        TARGET compile_ctf PRE_BUILD
-        COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${HORACE_BINARY_DIR}/Horace" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-        COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${HORACE_BINARY_DIR}/Herbert" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-        COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/swfiles" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-        COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/dat_files" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-        COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${SPINW_BINARY_DIR}/external" "${CMAKE_CURRENT_BINARY_DIR}/CTF/spinW"
-        COMMAND ${BASH_COMMAND} cp -f "${HORACE_BINARY_DIR}/worker_v2.m.template" "${CMAKE_CURRENT_BINARY_DIR}/CTF/worker_v2.m"
-        COMMAND ${BASH_COMMAND} mkdir -p "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons"
+    set(SPINW_INCLUDE
+        "" 
     )
 endif()
+
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
-    COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
-    COMMAND ${Matlab_MCC_COMPILER} -W python:pace -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
-        -a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+    COMMENT "MCC compiling"
+    #COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+    COMMAND ${Matlab_MCC_COMPILER} -U -W ctf:pace_${Matlab_RELEASE} -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
+        #-a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+        ${HORACE_INCLUDE}
+        ${SPINW_INCLUDE}
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
         "${CMAKE_CURRENT_SOURCE_DIR}/call.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/call_method.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/thinwrapper.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/wrap_obj.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/has_thin_members.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/recfind.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/getArgOut.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/get_method_refs.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/get_global.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/set_global.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/waitforgui.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/pythonFunctionWrapper.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/call_python_m.m"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyclasswrapper.m"
-        "${CMAKE_CURRENT_SOURCE_DIR}/check_wrapped_function.m"
         "$<TARGET_FILE_DIR:call_python>/call_python.${Matlab_MEX_EXTENSION}"
-        "$<TARGET_FILE_DIR:pythonRemoveFuncKey>/pythonRemoveFuncKey.${Matlab_MEX_EXTENSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/pyhorace_init.m"
 )
-add_dependencies(compile_ctf call_python pythonRemoveFuncKey)
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    pybind11_add_module(_stub _stub.cpp)
-    add_dependencies(_stub compile_ctf)
-    add_custom_command(
-        TARGET _stub POST_BUILD
-        COMMAND ${BASH_COMMAND} cp -f "$<TARGET_FILE_DIR:_stub>/_stub.*" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons/pace/"
-    )
-endif()
-
+add_dependencies(compile_ctf call_python)
