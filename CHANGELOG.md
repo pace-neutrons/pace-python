@@ -1,3 +1,13 @@
+# [Unreleased](https://github.com/pace-neutrons/pace-python/compare/v0.2.0...HEAD)
+
+* New features
+  - Add ability to use existing Horace/SpinW rather than downloading;
+  - Check included to test provided Horace/SpinW path;
+  - Add option to exclude Horace/SpinW from build;
+  - Add option to set version/release to download;
+  - Version checking for both Horace and SpinW included;
+  - Inclusion of libpymcr enabling use of previously incompatible Matlab and Python versions.
+
 # [v0.2.0](https://github.com/pace-neutrons/pace-python/compare/v0.1.4...v0.2.0)
 
 Updated to Horace 3.6.2
