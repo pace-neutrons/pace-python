@@ -1,5 +1,28 @@
 #!groovy
 
+properties([
+  parameters([
+    string(
+      name: 'Agent',
+      defaultValue: 'rocky8',
+      description: 'Agent to run the build on.',
+      trim: true
+    ),
+    string(
+      name: 'PYTHON_VERSION',
+      defaultValue: '3.8',
+      description: 'Version of python to run the build with.',
+      trim: true
+    ),
+    string(
+      name: 'MATLAB_VERSION',
+      defaultValue: 'R2020b',
+      description: 'Version of Matlab to run the build with.',
+      trim: true
+    )
+  ])
+])
+
 def get_agent(String jobname) {
   if (jobname.contains('linux')) {
     return "rocky8"
@@ -60,6 +83,7 @@ def setGitHubBuildStatus(String status, String message) {
     }
 }
 
+
 pipeline {
 
   agent {
@@ -74,11 +98,11 @@ pipeline {
           if (isUnix()) {
             sh '''
                 module purge
-                module load matlab/2020b
+                module load matlab/\$MATLAB_VERSION
                 module load cmake
                 module load conda
                 module load gcc
-                conda create -n py37 -c conda-forge python=3.7 -y
+                conda create -n py37 -c conda-forge python=\$PYTHON_VERSION -y
                 conda activate py37
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel
@@ -87,7 +111,7 @@ pipeline {
           }
           else {
             powershell ''' 
-                conda create -n py37 -c conda-forge python=3.7 -y
+                conda create -n py37 -c conda-forge python=\$env:PYTHON_VERSION -y
                 conda activate py37
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel
@@ -122,10 +146,10 @@ pipeline {
             sh '''
                 module purge
                 module load conda
-                module load matlab
+                module load matlab/\$MATLAB_VERSION
                 eval "$(/opt/conda/bin/conda shell.bash hook)"
                 conda env remove -n py37
-                conda create -n py37 -c conda-forge python=3.7 -y
+                conda create -n py37 -c conda-forge python=\$PYTHON_VERSION -y
                 conda activate py37
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
@@ -137,7 +161,7 @@ pipeline {
           else {
             powershell '''
                 conda env remove -n py37
-                conda create -n py37 -c conda-forge python=3.7 -y
+                conda create -n py37 -c conda-forge python=\$env:PYTHON_VERSION -y
                 conda activate py37
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
