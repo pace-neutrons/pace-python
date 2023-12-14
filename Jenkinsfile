@@ -154,7 +154,7 @@ pipeline {
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
                 python -m pip install $(find dist -name "*whl"|tail -n1)
-                python test/run_test.py || true
+                python test/run_test.py -v || true
                 test -f success
             '''
           }
@@ -166,7 +166,7 @@ pipeline {
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
                 python -m pip install ./dist/*.whl
-                python test/run_test.py
+                python test/run_test.py -v
             '''
           }
         }
