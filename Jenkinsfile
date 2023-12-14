@@ -16,7 +16,7 @@ properties([
     ),
     string(
       name: 'MATLAB_VERSION',
-      defaultValue: 'R2020b',
+      defaultValue: '2020b',
       description: 'Version of Matlab to run the build with.',
       trim: true
     )
@@ -153,7 +153,7 @@ pipeline {
                 conda activate py37
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
-                python -m pip install $(find dist -name "*cp37*whl"|tail -n1)
+                python -m pip install $(find dist -name "*whl"|tail -n1)
                 python test/run_test.py || true
                 test -f success
             '''
