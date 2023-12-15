@@ -19,6 +19,12 @@ properties([
       defaultValue: '2020b',
       description: 'Version of Matlab to run the build with.',
       trim: true
+    ),
+    string(
+      name: 'GCC_VERSION'.
+      defaultValue: '11'
+      description: 'Version of gcc to load'
+      trim: true
     )
   ])
 ])
@@ -101,7 +107,7 @@ pipeline {
                 module load matlab/\$MATLAB_VERSION
                 module load cmake
                 module load conda
-                module load gcc
+                module load gcc/\$GCC_VERSION
                 conda create -n py37 -c conda-forge python=\$PYTHON_VERSION -y
                 conda activate py37
                 conda install -c conda-forge setuptools
