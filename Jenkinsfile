@@ -21,9 +21,9 @@ properties([
       trim: true
     ),
     string(
-      name: 'GCC_VERSION'.
-      defaultValue: '11'
-      description: 'Version of gcc to load'
+      name: 'GCC_VERSION',
+      defaultValue: '11',
+      description: 'Version of gcc to load',
       trim: true
     )
   ])
