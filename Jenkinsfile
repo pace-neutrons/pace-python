@@ -89,11 +89,20 @@ def setGitHubBuildStatus(String status, String message) {
     }
 }
 
+def name_conda_env(String python_version) {
+  def env_name = "py" + python_version.replace(".","")
+  return env_name
+}
+
 
 pipeline {
 
   agent {
     label get_agent(env.JOB_BASE_NAME)
+  }
+
+  environment {
+    ENV_NAME = name_conda_env(env.PYTHON_VERSION)
   }
 
   stages {
@@ -108,8 +117,8 @@ pipeline {
                 module load cmake
                 module load conda
                 module load gcc/\$GCC_VERSION
-                conda create -n py37 -c conda-forge python=\$PYTHON_VERSION -y
-                conda activate py37
+                conda create -n \$ENV_NAME -c conda-forge python=\$PYTHON_VERSION -y
+                conda activate \$ENV_NAME
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel
             '''
@@ -117,8 +126,8 @@ pipeline {
           }
           else {
             powershell ''' 
-                conda create -n py37 -c conda-forge python=\$env:PYTHON_VERSION -y
-                conda activate py37
+                conda create -n \$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                conda activate \$env:ENV_NAME
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel -DMatlab_ROOT_DIR=/opt/modules-common/software/MATLAB/R\$env:MATLAB_VERSION
             '''
@@ -154,9 +163,9 @@ pipeline {
                 module load conda
                 module load matlab/\$MATLAB_VERSION
                 eval "$(/opt/conda/bin/conda shell.bash hook)"
-                conda env remove -n py37
-                conda create -n py37 -c conda-forge python=\$PYTHON_VERSION -y
-                conda activate py37
+                conda env remove -n \$ENV_NAME
+                conda create -n \$ENV_NAME -c conda-forge python=\$PYTHON_VERSION -y
+                conda activate \$ENV_NAME
                 pip install numpy scipy euphonic --no-input
                 export MKL_NUM_THREADS=1
                 python -m pip install brille
@@ -167,9 +176,9 @@ pipeline {
           }
           else {
             powershell '''
-                conda env remove -n py37
-                conda create -n py37 -c conda-forge python=\$env:PYTHON_VERSION -y
-                conda activate py37
+                conda env remove -n \$env:ENV_NAME
+                conda create -n \$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                conda activate \$env:ENV_NAME
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
                 python -m pip install ./dist/*.whl
