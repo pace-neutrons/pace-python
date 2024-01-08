@@ -49,7 +49,7 @@ def get_github_token() {
 
 def setGitHubBuildStatus(String status, String message) {
     script {
-        withCredentials([string(credentialsId: 'PacePython_API_Token',
+        withCredentials([string(credentialsId: 'GitHub_API_Token',
                 variable: 'api_token')]) {
           if (isUnix()) {
             sh """
@@ -216,24 +216,24 @@ pipeline {
 
   post {
 
-    // success {
-    //     script {
-    //       setGitHubBuildStatus("success", "Successful")
-    //     }
-    // }
+    success {
+        script {
+          setGitHubBuildStatus("success", "Successful")
+        }
+    }
 
-    // unsuccessful {
-    //   withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
-    //     script {
-    //         //mail (
-    //         //  to: "${pace_python_email}",
-    //         //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
-    //         //  body: "See ${env.BUILD_URL}"
-    //         //)
-    //         setGitHubBuildStatus("failure", "Unsuccessful")
-    //     }
-    //   }
-    // }
+    unsuccessful {
+      withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
+        script {
+            //mail (
+            //  to: "${pace_python_email}",
+            //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
+            //  body: "See ${env.BUILD_URL}"
+            //)
+            setGitHubBuildStatus("failure", "Unsuccessful")
+        }
+      }
+    }
 
     cleanup {
       deleteDir()
