@@ -67,6 +67,12 @@ pipeline {
 
   stages {
 
+    stage('Notify') {
+      steps {
+        post_github_status("pending", "The build is running")
+      }
+    }
+
     stage("Build-Pace-Python") {
       steps {
         script {
