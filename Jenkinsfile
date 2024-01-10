@@ -183,7 +183,7 @@ pipeline {
   post {
 
     success {
-      post_github_status("Success", "The build succeeded")
+      post_github_status("success", "The build succeeded")
     }
 
     unsuccessful {
