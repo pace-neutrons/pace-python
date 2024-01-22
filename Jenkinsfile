@@ -27,6 +27,11 @@ properties([
       defaultValue: '11',
       description: 'Version of gcc to load',
       trim: true
+    ),
+    booleanParam(
+      name: 'WITH_RELEASE',
+      defaultValue: false,
+      description: 'Sets whether to run the release stage.'
     )
   ])
 ])
@@ -155,28 +160,37 @@ pipeline {
       }
     }
 
-    // stage("Push release") {
-    //   environment {
-    //     GITHUB_TOKEN = get_github_token()
-    //   }
-    //   steps {
-    //     script {
-    //       if (env.ref_type == 'tag') {
-    //         if (isUnix()) {
-    //           sh '''
-    //             podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
-    //             eval "$(/opt/conda/bin/conda shell.bash hook)"
-    //             conda activate py37
-    //             pip install requests pyyaml
-    //             python release.py --github --notest
-    //           '''
-    //         } else {
-    //           powershell './cmake/run_release.ps1'
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
+    stage("Push release") {
+
+      when {
+        expression { params.WITH_RELEASE == true }
+      }
+
+      // NOTE: add a printed message in place of below
+      steps {
+        echo "Creating release."
+      }
+      // environment {
+      //   GITHUB_TOKEN = get_github_token()
+      // }
+      // steps {
+      //   script {
+      //     if (env.ref_type == 'tag') {
+      //       if (isUnix()) {
+      //         sh '''
+      //           podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
+      //           eval "$(/opt/conda/bin/conda shell.bash hook)"
+      //           conda activate py37
+      //           pip install requests pyyaml
+      //           python release.py --github --notest
+      //         '''
+      //       } else {
+      //         powershell './cmake/run_release.ps1'
+      //       }
+      //     }
+      //   }
+      // }
+    }
 
   }
 
