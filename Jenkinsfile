@@ -96,12 +96,14 @@ pipeline {
             archiveArtifacts artifacts: 'dist/*whl'
           }
           else {
-            powershell ''' 
-                conda create -n \$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
-                conda activate \$env:ENV_NAME
+            powershell(script:''' 
+                conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                Enter-CondaEnvironment ./\$env:ENV_NAME
+                conda env list
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel -DMatlab_ROOT_DIR=/opt/modules-common/software/MATLAB/R\$env:MATLAB_VERSION
-            '''
+            ''', label: "setup and build") 
             archiveArtifacts artifacts: 'dist/*whl'
           }
         }
@@ -146,15 +148,16 @@ pipeline {
             '''
           }
           else {
-            powershell '''
-                conda env remove -n \$env:ENV_NAME
-                conda create -n \$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
-                conda activate \$env:ENV_NAME
+            powershell(script:'''
+                conda env remove ./\$env:ENV_NAME
+                conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                Enter-CondaEnvironment ./\$env:ENV_NAME
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
                 python -m pip install ./dist/*.whl
                 python test/run_test.py -v
-            '''
+            ''', label: "Setup and run tests")
           }
         }
       }
