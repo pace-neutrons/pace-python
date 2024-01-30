@@ -110,6 +110,27 @@ pipeline {
       }
     }
 
+    stage("Debugging:Identify-wheel-location") {
+      steps {
+        script {
+          if (isUnix()) {
+            sh(script:'''
+                pwd
+                ls
+                find -name *.whl
+            ''', label: "Location")
+          }
+          else {
+            powershell(script:'''
+                pwd
+                dir
+                Get-ChildItem -Recurse -Filter '*.whl'
+            ''', label: "Location")
+          }
+        }
+      }
+    }
+
     stage("Get-Pace-Python-Demo") {
       steps {
         dir('demo') {
@@ -149,7 +170,7 @@ pipeline {
           }
           else {
             powershell(script:'''
-                conda env remove ./\$env:ENV_NAME
+                #conda env remove --prefix ./\$env:ENV_NAME
                 conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
                 Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
                 Enter-CondaEnvironment ./\$env:ENV_NAME
