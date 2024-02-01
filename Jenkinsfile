@@ -176,7 +176,7 @@ pipeline {
                 Enter-CondaEnvironment ./\$env:ENV_NAME
                 conda install -c conda-forge scipy euphonic -y
                 python -m pip install brille
-                python -m pip install ./dist/*.whl
+                python -m pip install "dist/$(Get-ChildItem 'dist/*.whl' -name)"
                 python test/run_test.py -v
             ''', label: "Setup and run tests")
           }
