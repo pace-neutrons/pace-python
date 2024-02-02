@@ -5,12 +5,6 @@
 properties([
   parameters([
     string(
-      name: 'Agent',
-      defaultValue: 'rocky8',
-      description: 'Agent to run the build on.',
-      trim: true
-    ),
-    string(
       name: 'PYTHON_VERSION',
       defaultValue: '3.8',
       description: 'Version of python to run the build with.',
@@ -75,6 +69,16 @@ pipeline {
     stage('Notify') {
       steps {
         post_github_status("pending", "The build is running")
+      }
+    }
+
+    stage("Identify-preinstalled-packages") {
+      steps {
+        if (get_agent(env.JOB_BASE_NAME) == "icdpacewin") {
+          powershell(script:'''
+              pip list
+          ''', label: "Python packages")
+        }
       }
     }
 
