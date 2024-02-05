@@ -42,11 +42,11 @@ def get_agent(String jobname) {
   }
 }
 
-// def get_github_token() {
-//   withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
-//     return "${github_token}"
-//   }
-// }
+def get_github_token() {
+  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+    return "${github_token}"
+  }
+}
 
 def name_conda_env(String python_version) {
   def env_name = "py" + python_version.replace(".","")
@@ -177,26 +177,30 @@ pipeline {
       steps {
         echo "Creating release."
       }
-      // environment {
-      //   GITHUB_TOKEN = get_github_token()
-      // }
-      // steps {
-      //   script {
-      //     if (env.ref_type == 'tag') {
-      //       if (isUnix()) {
-      //         sh '''
-      //           podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
-      //           eval "$(/opt/conda/bin/conda shell.bash hook)"
-      //           conda activate py37
-      //           pip install requests pyyaml
-      //           python release.py --github --notest
-      //         '''
-      //       } else {
-      //         powershell './cmake/run_release.ps1'
-      //       }
-      //     }
-      //   }
-      // }
+      environment {
+        GITHUB_TOKEN = get_github_token()
+      }
+      steps {
+        script {
+          if (env.ref_type == 'tag') {
+            if (isUnix()) {
+              sh '''
+                  conda activate \$ENV_NAME
+                  pip install requests pyyaml
+                  python release.py --github --notest
+              '''
+            } 
+            else {
+                powershell(script: '''
+                    Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                    Enter-CondaEnvironment ./\$env:ENV_NAME
+                    python -m pip install requests pyyaml
+                    python release.py --github --notest
+                ''', label: "Create-Github-Release")
+            }
+          }
+        }
+      }
     }
 
   }
