@@ -174,9 +174,9 @@ pipeline {
       }
 
       // NOTE: add a printed message in place of below
-      steps {
-        echo "Creating release."
-      }
+      // steps {
+      //   echo "Creating release."
+      // }
       environment {
         GITHUB_TOKEN = get_github_token()
       }

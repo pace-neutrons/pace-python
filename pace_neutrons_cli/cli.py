@@ -61,11 +61,11 @@ def _set_env(input_path='', force_reload=False):
 def _get_args():
     parser = argparse.ArgumentParser(description='A wrapper script to run the PACE module')
     parser.add_argument('-d', '--matlab-dir', help='Directory where Matlab MCR is installed')
-    parser.add_argument('-s', '--spyder', action='store_true', help='Runs under Spyder IDE')
-    parser.add_argument('-j', '--jupyter', action='store_true', help='Runs in Jupyter notebook server')
+    # parser.add_argument('-s', '--spyder', action='store_true', help='Runs under Spyder IDE')
+    # parser.add_argument('-j', '--jupyter', action='store_true', help='Runs in Jupyter notebook server')
     parser.add_argument('-m', '--mantid', action='store_true', help='Runs under Mantid Workbench')
     parser.add_argument('--mantid-nosad', action='store_true', help='Runs Mantid without error reporter')
-    parser.add_argument('--install-mcr', action='store_true', help='Installs the Matlab MCR')
+    # parser.add_argument('--install-mcr', action='store_true', help='Installs the Matlab MCR')
     return parser
 
 
