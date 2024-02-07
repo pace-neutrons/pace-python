@@ -182,6 +182,7 @@ pipeline {
       }
       steps {
         script {
+
           if (env.ref_type == 'tag') {
             if (isUnix()) {
               sh '''
@@ -197,6 +198,24 @@ pipeline {
                     python -m pip install requests pyyaml
                     python release.py --github --notest
                 ''', label: "Create-Github-Release")
+            }
+          }
+          else {
+            println "Running a test release"
+            if (isUnix()) {
+              sh ''' 
+                  conda activate \$ENV_NAME
+                  pip install requests pyyaml
+                  python release.py --github
+              '''
+            }
+            else {
+              powershell '''
+                  Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                  Enter-CondaEnvironment ./\$env:ENV_NAME
+                  python -m pip install requests pyyaml
+                  python release.py --github
+              '''
             }
           }
         }
