@@ -186,6 +186,7 @@ pipeline {
           if (env.ref_type == 'tag') {
             if (isUnix()) {
               sh '''
+                  module load conda
                   conda activate \$ENV_NAME
                   pip install requests pyyaml
                   python release.py --github --notest
@@ -204,6 +205,7 @@ pipeline {
             println "Running a test release"
             if (isUnix()) {
               sh ''' 
+                  module load conda
                   conda activate \$ENV_NAME
                   pip install requests pyyaml
                   python release.py --github
