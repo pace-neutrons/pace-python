@@ -167,16 +167,37 @@ pipeline {
       }
     }
 
+    stage("Debug: file locating") {
+      steps {
+        script {
+          if (isUnix()) {
+            sh '''
+                echo "Current dir: \$(pwd)"
+                echo "Content of build dir:"
+                echo "\$(ls ./build)"
+                echo "\n Content of pace_neutrons"
+                echo "\$(ls ./build/lib.*/pace_neutrons)"
+            '''
+          }
+          else {
+            powershell ''' 
+                echo "Current dir: \$(pwd)"
+                echo "Content of build dir:"
+                echo "\$(ls ./build)"
+                echo "\n Content of pace_neutrons"
+                echo "\$(ls ./build/lib.*/pace_neutrons)"
+            '''
+          }
+        }
+      }
+    }
+
     stage("Push release") {
 
       when {
         expression { params.WITH_RELEASE == true }
       }
 
-      // NOTE: add a printed message in place of below
-      // steps {
-      //   echo "Creating release."
-      // }
       environment {
         GITHUB_TOKEN = get_github_token()
       }

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from . import _version
-__version__ = _version.get_versions()['version']
-
 import os
 import sys
-import libpymcr
 from pathlib import Path
+from typing import Optional
+import libpymcr
+
+
+from . import _version
+__version__ = _version.get_versions()['version']
 
 from . import FunctionWrapper
 
@@ -30,13 +32,14 @@ _CALLPYTHON = None
 class Matlab(libpymcr.Matlab):
     def __init__(self, matlab_path: Optional[str] = None, matlab_version: Optional[str] = None):
         """
-        Create a MATLAB instance with the correct compiled library for the MATLAB version specified. If no version is
-        specified, the first version found will be used. If no MATLAB versions are found, a RuntimeError will be
-        raised. If a version is specified, but not found, a RuntimeError will be raised.
+        Create a MATLAB instance with the correct compiled library for the MATLAB version specified.
+        If no version is specified, the first version found will be used. If no MATLAB versions are 
+        found, a RuntimeError will be raised. If a version is specified, but not found, a RuntimeError
+        will be raised.
 
         :param matlab_path: Path to the root directory of the MATLAB installation or MCR installation.
-        :param matlab_version: Used to specify the version of MATLAB if the matlab_path is given or if there is more
-        than 1 MATLAB installation.
+        :param matlab_version: Used to specify the version of MATLAB if the matlab_path is given or if
+        there is more than 1 MATLAB installation.
         """
 
         initialized = False
@@ -51,7 +54,8 @@ class Matlab(libpymcr.Matlab):
                 except RuntimeError:
                     continue
         else:
-            ctf = [version['file'] for version in _VERSIONS if version['version'].lower() == matlab_version.lower()]
+            ctf = [version['file'] for version in _VERSIONS
+                    if version['version'].lower() == matlab_version.lower()]
             if len(ctf) == 0:
                 raise RuntimeError(
                     f"Compiled library for MATLAB version {matlab_version} not found. Please use: [{', '.join([version['version'] for version in _VERSIONS])}]\n ")
