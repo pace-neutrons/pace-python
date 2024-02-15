@@ -6,17 +6,24 @@ __version__ = _version.get_versions()['version']
 import os
 import sys
 import libpymcr
+from pathlib import Path
 
 from . import FunctionWrapper
 
 # Generate a list of all the MATLAB versions available
-_VERSION_DIR = os.path.join(os.path.dirname(__file__), 'ctfs')
+_VERSION_DIR = Path(__file__).parent / "ctfs"
+
+#check if the directory exists and adjust as needed
+#accounts for different dir when calling regularly and during release stages of CI
+if not _VERSION_DIR.is_dir():
+    _VERSION_DIR = next(Path("../build").glob("lib.*")) / "pace_neutrons" / "ctfs"
+
 _VERSIONS = []
-for file in os.scandir(_VERSION_DIR):
-    if file.is_file() and file.name.endswith('.ctf'):
-        _VERSIONS.append({'file':    os.path.join(_VERSION_DIR, file.name),
-                          'version': file.name.split('.')[0].split('_')[1]
-                          })
+
+for file in _VERSION_DIR.iterdir():
+    if file.is_file() and file.suffix == ".ctf":
+        _VERSIONS.append({'file': file.resolve(),
+                          'version': file.name.split('.')[0].split('_')[1]})
 
 _CALLPYTHON = None
 
