@@ -18,7 +18,7 @@ _VERSION_DIR = Path(__file__).parent / "ctfs"
 #check if the directory exists and adjust as needed
 #accounts for different dir when calling regularly and during release stages of CI
 if not _VERSION_DIR.is_dir():
-    _VERSION_DIR = next(Path("../build").glob("lib.*")) / "pace_neutrons" / "ctfs"
+    _VERSION_DIR = next(Path("./build").glob("lib.*")) / "pace_neutrons" / "ctfs"
 
 _VERSIONS = []
 
