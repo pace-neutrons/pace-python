@@ -130,7 +130,7 @@ def _upload_assets(upload_url):
 
     _, installer_path, _ = next(os.walk('installer'))
     if installer_path:
-        installer_path = [p for p in installer_path if 'Pace_Python_Installer' in p]
+        installer_path = [p for p in installer_path if 'pace_python_installer' in p]
     if installer_path:
         installer_path = os.path.join('installer', installer_path[0])
         installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]

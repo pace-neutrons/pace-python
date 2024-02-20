@@ -114,6 +114,38 @@ pipeline {
       }
     }
 
+    stage("Build-Installer") {
+      steps {
+        script {
+          if (isUnix()) {
+            sh '''
+                module load matlab/\$MATLAB_VERSION
+                matlab -nodesktop -r "try, cd('installer'), run('make_package.m'), catch ME, fprintf('%s: %s\\n', ME.identifier, ME.message), end, exit"
+                test -f "./installer/pace_python_installer/MyAppInstaller.install"
+            '''
+          }
+          else {
+            powershell ''' 
+                Try {
+                    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Mathworks\\MATLAB\\9.9" -ErrorAction Stop
+                    $MATLAB_EXE = $MATLAB_REG.MATLABROOT + "\\bin\\matlab.exe"
+                } Catch {
+                    Write-Output "Could not find Matlab R2020b folder. Using default Matlab"
+                    $MATLAB_EXE = "matlab.exe"
+                }
+
+                $mstr = "try, cd('installer'), run('make_package.m'), catch ME, fprintf('%s: %s\\n', ME.identifier, ME.message), end, exit"
+                Invoke-Expression "& `'$MATLAB_EXE`' -nosplash -nodesktop -wait -r `"$mstr`""
+
+                if (!(Test-Path -Path "./installer/pace_python_installer/MyAppInstaller.exe")) {
+                    throw "Installer creation error. No installer executable found at ./install/pace_python_installer/"
+                }
+            '''
+          }
+        }
+      }
+    }
+
     stage("Get-Pace-Python-Demo") {
       steps {
         dir('demo') {
@@ -162,31 +194,6 @@ pipeline {
                 python -m pip install "dist/$(Get-ChildItem 'dist/*.whl' -name)"
                 python test/run_test.py -v
             ''', label: "Setup and run tests")
-          }
-        }
-      }
-    }
-
-    stage("Debug: file locating") {
-      steps {
-        script {
-          if (isUnix()) {
-            sh '''
-                echo "Current dir: \$(pwd)"
-                echo "Content of build dir:"
-                echo "\$(ls ./build)"
-                echo "\n Content of pace_neutrons"
-                echo "\$(ls ./build/lib.*/pace_neutrons)"
-            '''
-          }
-          else {
-            powershell ''' 
-                echo "Current dir: \$(pwd)"
-                echo "Content of build dir:"
-                echo "\$(ls ./build)"
-                echo "\n Content of pace_neutrons"
-                echo "\$(ls ./build/lib.*/pace_neutrons)"
-            '''
           }
         }
       }
