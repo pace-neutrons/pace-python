@@ -48,14 +48,6 @@ elseif(WITH_SPINW AND NOT SPINW_PATH AND NOT DEFINED SPINW_VERSION)
     set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
 endif()
 
-    message(STATUS "SPINW_FOUND variable contains ${SPINW_FOUND}")
-
-    if(NOT SPINW_FOUND)
-        message(FATAL_ERROR "SpinW may not exist at ${SPINW_PATH}") #TODO: write a better message
-    # else()
-    #     message(FATAL_ERROR "SpinW was found.")
-    endif()
-endif()
 
 if(WIN32)
     find_package(POWERSHELL REQUIRED)
