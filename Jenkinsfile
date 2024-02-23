@@ -21,11 +21,6 @@ properties([
       defaultValue: '11',
       description: 'Version of gcc to load',
       trim: true
-    ),
-    booleanParam(
-      name: 'WITH_RELEASE',
-      defaultValue: false,
-      description: 'Sets whether to run the release stage.'
     )
   ])
 ])
@@ -190,10 +185,6 @@ pipeline {
     }
 
     stage("Push release") {
-
-      when {
-        expression { params.WITH_RELEASE == true }
-      }
 
       environment {
         GITHUB_TOKEN = get_github_token()
