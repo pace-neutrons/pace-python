@@ -67,6 +67,19 @@ pipeline {
       }
     }
 
+    stage('Display-Environment-Variables') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'env'
+          }
+          else {
+            powershell 'Get-ChildItem Env:'
+          }
+        }
+      }
+    }
+
     stage("Build-Pace-Python") {
       steps {
         script {
