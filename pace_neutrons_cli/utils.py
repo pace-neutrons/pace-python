@@ -278,6 +278,7 @@ def release_exists(tag_name, retval='upload_url', use_auth=True):
     response = requests.get(
         'https://api.github.com/repos/pace-neutrons/pace-python/releases',
         headers=headers)
+    print(response.text)
     if response.status_code != 200:
         raise RuntimeError('Could not query Github if release exists')
     response = json.loads(response.text)
