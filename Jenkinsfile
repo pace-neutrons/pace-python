@@ -72,16 +72,6 @@ pipeline {
       }
     }
 
-    stage("Identify-preinstalled-packages") {
-      steps {
-        if (get_agent(env.JOB_BASE_NAME) == "icdpacewin") {
-          powershell(script:'''
-              pip list
-          ''', label: "Python packages")
-        }
-      }
-    }
-
     stage("Build-Pace-Python") {
       steps {
         script {
