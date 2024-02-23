@@ -1,4 +1,4 @@
-# [Unreleased](https://github.com/pace-neutrons/pace-python/compare/v0.2.0...HEAD)
+# [v0.3.0a0](https://github.com/pace-neutrons/pace-python/compare/v0.2.0...v0.3.0a0)
 
 * New features
   - Add ability to use existing Horace/SpinW rather than downloading
