@@ -38,7 +38,7 @@ def get_agent(String jobname) {
 }
 
 def get_github_token() {
-  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+  withCredentials([string(credentialsId: 'GitHub_API_Token', variable: 'github_token')]) {
     return "${github_token}"
   }
 }
