@@ -4,6 +4,7 @@ import glob
 import platform
 import six
 from pathlib import Path
+from http import HTTPStatus
 
 
 def get_runtime_version():
@@ -279,7 +280,7 @@ def release_exists(tag_name, retval='upload_url', use_auth=True):
         'https://api.github.com/repos/pace-neutrons/pace-python/releases',
         headers=headers)
     print(response.text)
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         raise RuntimeError('Could not query Github if release exists')
     response = json.loads(response.text)
     desired_release = [v for v in response if v['tag_name'] == tag_name]
@@ -327,7 +328,7 @@ def install_MCR(interactive=False):
     if not assets_url:
         raise RuntimeError(f'No Github release exists for pace_neutrons version {__version__}')
     response = requests.get(assets_url)
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         raise RuntimeError('Could not query Github for list of assets')
     response = json.loads(response.text)
     INSTALLERS = {'Windows':'pace_neutrons_installer_win32.exe', 'Linux':'pace_neutrons_installer_linux.install'}
