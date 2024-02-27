@@ -223,25 +223,6 @@ pipeline {
                 ''', label: "Create-Github-Release")
             }
           }
-          else {
-            println "Running a test release"
-            if (isUnix()) {
-              sh ''' 
-                  module load conda
-                  conda activate \$ENV_NAME
-                  pip install requests pyyaml
-                  python release.py --github
-              '''
-            }
-            else {
-              powershell '''
-                  Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
-                  Enter-CondaEnvironment ./\$env:ENV_NAME
-                  python -m pip install requests pyyaml
-                  python release.py --github
-              '''
-            }
-          }
         }
       }
     }
