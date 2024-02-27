@@ -140,13 +140,39 @@ function out = call_python_m(varargin)
     end
     kw_args = unwrap_pyclass(kw_args);
     remaining_args = unwrap_pyclass(remaining_args);
+%{
     if ~isempty(kw_args)
         remaining_args = [remaining_args {struct('pyHorace_pyKwArgs', 1, kw_args{:})}];
     end
     out = call_python(fun_name, remaining_args{:});
+    if ~iscell(out), out = {out}; end
+%}
+    thisid = ['c' replace(char(java.util.UUID.randomUUID), '-', '')];
+    assignin('base', [thisid '_inp'], remaining_args);
+    t = tcpclient('localhost', 19999);
+    evalc('disp(sprintf("%s,%s,", fun_name, thisid))');
+    if ~isempty(kw_args)
+        assignin('base', [thisid '_kw'], kw_args);
+        t.write(uint8(sprintf('%s,%s,has_kwargs', fun_name, thisid)));
+    else
+        t.write(uint8(sprintf('%s,%s,', fun_name, thisid)));
+    end
+    while t.BytesAvailable == 0
+        pause(0.2);
+    end
+    outstr = char(t.read());
+    if ~strcmp(outstr, 'Call completed')
+        error(outstr);
+    end
+    out = evalin('base', [thisid '_out']);
     if ~iscell(out)
         out = {out};
     end
+    evalin('base', ['clear ' thisid '_inp ' thisid '_out']);
+    if ~isempty(kw_args)
+        evalin('base', ['clear ' thisid '_kw']);
+    end
+    evalin('base', 'whos');
 end
 
 function input = unwrap_pyclass(input)

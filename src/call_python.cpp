@@ -24,6 +24,13 @@ class MexFunction : public matlab::mex::Function {
         }
 
     public:
+        ~MexFunction() {
+            if (_converter != nullptr) {
+                delete _converter;
+                _converter = nullptr;
+            }
+        }
+
         void operator()(ArgumentList outputs, ArgumentList inputs) {
             matlab::data::ArrayFactory factory;
             if (inputs.size() < 1 || inputs[0].getType() != matlab::data::ArrayType::CHAR) {
