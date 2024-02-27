@@ -68,7 +68,7 @@ class Matlab(libpymcr.Matlab):
                 pass
         if not initialized:
             raise RuntimeError(
-                f"No MATLAB versions found. Please use: [{', '.join([version['version'] for version in _VERSIONS])}]\n "
+                f"No MATLAB versions found. Please use: [{', '.join([version['version'] for version in _VERSIONS])}] (https://uk.mathworks.com/products/compiler/matlab-runtime.html)\n "
                 f"If installed, please specify the root directory (`matlab_path` and `matlab_version`) of the MATLAB "
                 f"installation.")
         else:
