@@ -12,7 +12,7 @@ properties([
     ),
     string(
       name: 'MATLAB_VERSION',
-      defaultValue: '2020b',
+      defaultValue: '2021b',
       description: 'Version of Matlab to run the build with.',
       trim: true
     ),
