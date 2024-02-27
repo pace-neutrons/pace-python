@@ -5,6 +5,12 @@
 properties([
   parameters([
     string(
+      name: 'BRANCH',
+      defaultValue: '',
+      description: 'Branch to build',
+      trim: true
+    ),
+    string(
       name: 'PYTHON_VERSION',
       defaultValue: '3.8',
       description: 'Version of python to run the build with.',
@@ -29,9 +35,9 @@ def get_agent(String jobname) {
   if (jobname.contains('linux')) {
     return "rocky8"
   } else if (jobname.contains('windows')) {
-     
+
     return "icdpacewin"
-    
+
   } else {
     return ''
   }
@@ -98,14 +104,14 @@ pipeline {
             archiveArtifacts artifacts: 'dist/*whl'
           }
           else {
-            powershell(script:''' 
+            powershell(script:'''
                 conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
                 Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
                 Enter-CondaEnvironment ./\$env:ENV_NAME
                 conda env list
                 conda install -c conda-forge setuptools
                 python setup.py bdist_wheel -DMatlab_ROOT_DIR=/opt/modules-common/software/MATLAB/R\$env:MATLAB_VERSION
-            ''', label: "setup and build") 
+            ''', label: "setup and build")
             archiveArtifacts artifacts: 'dist/*whl'
           }
         }
@@ -123,7 +129,7 @@ pipeline {
             '''
           }
           else {
-            powershell ''' 
+            powershell '''
                 Try {
                     $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Mathworks\\MATLAB\\9.9" -ErrorAction Stop
                     $MATLAB_EXE = $MATLAB_REG.MATLABROOT + "\\bin\\matlab.exe"
@@ -205,7 +211,7 @@ pipeline {
       steps {
         script {
 
-          if (env.ref_type == 'tag') {
+          if (env.GIT_BRANCH.startsWith("refs/tags")) {
             if (isUnix()) {
               sh '''
                   module load conda
@@ -213,7 +219,7 @@ pipeline {
                   pip install requests pyyaml
                   python release.py --github --notest
               '''
-            } 
+            }
             else {
                 powershell(script: '''
                     Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
