@@ -27,8 +27,6 @@ for file in _VERSION_DIR.iterdir():
         _VERSIONS.append({'file': file.resolve(),
                           'version': file.name.split('.')[0].split('_')[1]})
 
-_CALLPYTHON = None
-
 class Matlab(libpymcr.Matlab):
     def __init__(self, matlab_path: Optional[str] = None, matlab_version: Optional[str] = None):
         """

@@ -2,7 +2,6 @@ import os
 import sys
 import glob
 import platform
-import six
 from pathlib import Path
 from http import HTTPStatus
 
@@ -107,7 +106,7 @@ class PaceConfiguration(object):
 
     @CachedMatlabDirs.setter
     def CachedMatlabDirs(self, val):
-        if not isinstance(val, six.string_types):
+        if not isinstance(val, str):
             raise RuntimeError('Cached Matlab folder must be a string')
         cached = self.CachedMatlabDirs
         if not any([d for d in cached if val in d]):
@@ -125,6 +124,25 @@ class PaceConfiguration(object):
     @IsFirstRun.setter
     def IsFirstRun(self, val):
         self.config['pace']['IsFirstRun'] = str(val)
+
+    @property
+    def CachedCTFs(self):
+        try:
+            retval = self.config['pace']['CachedCTFs'].split(';')
+        except KeyError:
+            retval = []
+        return [r for r in retval if r != '']
+
+    @CachedCTFs.setter
+    def CachedCTFs(self, val):
+        try:
+            val = str(val)
+        except:
+            raise RuntimeError('Cached CTF must be convertible to a string')
+        cached = self.CachedCTFs
+        if not any([d for d in cached if val in d]):
+            cached += [val]
+            self.config['pace']['CachedCTFs'] = ';'.join(cached)
 
     def save(self):
         with open(self.config_file, 'w') as f:
@@ -355,13 +373,15 @@ def install_MCR(interactive=False):
     with tempfile.TemporaryDirectory() as dd:
         installer_file = os.path.join(dd, installer_name)
         download_github(installer_url, local_filename=installer_file, use_auth=False)
+        prefix = []
         if system != 'Windows':
             os.chmod(installer_file, 0o755)
+            prefix = ['sudo']
         print('------------------------------------')
         print('Running the Matlab installer now.')
         print('This could take some time (15-30min)')
         print('------------------------------------')
-        proc = subprocess.run([installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
+        proc = subprocess.run(prefix + [installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
                               capture_output=True)
         if proc.returncode != 0:
             print(proc.stderr.decode())
