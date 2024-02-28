@@ -165,8 +165,8 @@ pipeline {
 
     stage("Run-Pace-Python-Tests") {
       environment {
-        LD_LIBRARY_PATH = "/opt/modules-common/software/MATLAB/R2020b/runtime/glnxa64:/opt/modules-common/software/MATLAB/R2020b/bin/glnxa64"
-        LD_PRELOAD = "/opt/modules-common/software/MATLAB/R2020b/sys/os/glnxa64/libiomp5.so"
+        LD_LIBRARY_PATH = "/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/runtime/glnxa64:/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/bin/glnxa64"
+        LD_PRELOAD = "/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/sys/os/glnxa64/libiomp5.so"
       }
       steps {
         script {
