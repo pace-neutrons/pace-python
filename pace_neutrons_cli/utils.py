@@ -131,7 +131,7 @@ class PaceConfiguration(object):
             retval = self.config['pace']['CachedCTFs'].split(';')
         except KeyError:
             retval = []
-        return [r for r in retval if r != '']
+        return [val for val in retval if val]
 
     @CachedCTFs.setter
     def CachedCTFs(self, val):
@@ -382,8 +382,8 @@ def install_MCR(interactive=False):
         print('This could take some time (15-30min)')
         print('------------------------------------')
         proc = subprocess.run(prefix + [installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
-                              capture_output=True)
+                              capture_output=True, text=True)
         if proc.returncode != 0:
-            print(proc.stderr.decode())
+            print(proc.stderr)
             raise RuntimeError('Could not install the Matlab MCR')
         print(proc.stdout.decode())
