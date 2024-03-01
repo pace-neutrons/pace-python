@@ -20,12 +20,9 @@ _VERSION_DIR = Path(__file__).parent / "ctfs"
 if not _VERSION_DIR.is_dir():
     _VERSION_DIR = next(Path("./build").glob("lib.*")) / "pace_neutrons" / "ctfs"
 
-_VERSIONS = []
-
-for file in _VERSION_DIR.iterdir():
-    if file.is_file() and file.suffix == ".ctf":
-        _VERSIONS.append({'file': file.resolve(),
-                          'version': file.name.split('.')[0].split('_')[1]})
+_VERSIONS = [{'file': file.resolve(), 'version': file.stem.split('_')[1]}
+             for file in _VERSION_DIR.iterdir()
+             if file.is_file() and file.suffix == ".ctf"]
 
 class Matlab(libpymcr.Matlab):
     def __init__(self, matlab_path: Optional[str] = None, matlab_version: Optional[str] = None):
@@ -66,7 +63,7 @@ class Matlab(libpymcr.Matlab):
                 pass
         if not initialized:
             raise RuntimeError(
-                f"No MATLAB versions found. Please use: [{', '.join([version['version'] for version in _VERSIONS])}] (https://uk.mathworks.com/products/compiler/matlab-runtime.html)\n "
+                f"No MATLAB versions found. Please use: [{', '.join(version['version'] for version in _VERSIONS)}] (https://uk.mathworks.com/products/compiler/matlab-runtime.html)\n "
                 f"If installed, please specify the root directory (`matlab_path` and `matlab_version`) of the MATLAB "
                 f"installation.")
         else:

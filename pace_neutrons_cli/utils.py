@@ -109,7 +109,7 @@ class PaceConfiguration(object):
         if not isinstance(val, str):
             raise RuntimeError('Cached Matlab folder must be a string')
         cached = self.CachedMatlabDirs
-        if not any([d for d in cached if val in d]):
+        if not any(dir for dir in cached if val in dir):
             cached += [val]
             self.config['pace']['CachedMatlabDirs'] = ';'.join(cached)
 
@@ -131,7 +131,7 @@ class PaceConfiguration(object):
             retval = self.config['pace']['CachedCTFs'].split(';')
         except KeyError:
             retval = []
-        return [r for r in retval if r != '']
+        return [val for val in retval if val]
 
     @CachedCTFs.setter
     def CachedCTFs(self, val):
@@ -140,7 +140,7 @@ class PaceConfiguration(object):
         except:
             raise RuntimeError('Cached CTF must be convertible to a string')
         cached = self.CachedCTFs
-        if not any([d for d in cached if val in d]):
+        if not any(d for d in cached if val in d):
             cached += [val]
             self.config['pace']['CachedCTFs'] = ';'.join(cached)
 
@@ -297,9 +297,8 @@ def release_exists(tag_name, retval='upload_url', use_auth=True):
     response = requests.get(
         'https://api.github.com/repos/pace-neutrons/pace-python/releases',
         headers=headers)
-    print(response.text)
     if response.status_code != HTTPStatus.OK:
-        raise RuntimeError('Could not query Github if release exists')
+        raise RuntimeError(f'Could not query Github if release exists: \n {response.text}')
     response = json.loads(response.text)
     desired_release = [v for v in response if v['tag_name'] == tag_name]
     if desired_release:
@@ -382,8 +381,8 @@ def install_MCR(interactive=False):
         print('This could take some time (15-30min)')
         print('------------------------------------')
         proc = subprocess.run(prefix + [installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
-                              capture_output=True)
+                              capture_output=True, text=True)
         if proc.returncode != 0:
-            print(proc.stderr.decode())
+            print(proc.stderr)
             raise RuntimeError('Could not install the Matlab MCR')
         print(proc.stdout.decode())
