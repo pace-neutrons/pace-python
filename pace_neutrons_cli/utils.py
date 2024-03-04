@@ -125,25 +125,6 @@ class PaceConfiguration(object):
     def IsFirstRun(self, val):
         self.config['pace']['IsFirstRun'] = str(val)
 
-    @property
-    def CachedCTFs(self):
-        try:
-            retval = self.config['pace']['CachedCTFs'].split(';')
-        except KeyError:
-            retval = []
-        return [val for val in retval if val]
-
-    @CachedCTFs.setter
-    def CachedCTFs(self, val):
-        try:
-            val = str(val)
-        except:
-            raise RuntimeError('Cached CTF must be convertible to a string')
-        cached = self.CachedCTFs
-        if not any(d for d in cached if val in d):
-            cached += [val]
-            self.config['pace']['CachedCTFs'] = ';'.join(cached)
-
     def save(self):
         with open(self.config_file, 'w') as f:
             self.config.write(f)
