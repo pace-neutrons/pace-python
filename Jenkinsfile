@@ -211,7 +211,7 @@ pipeline {
       steps {
         script {
 
-          if (env.GIT_BRANCH.startsWith("refs/tags")) {
+          if (env.BRANCH.startsWith("refs/tags")) {
             if (isUnix()) {
               sh '''
                   module load conda
