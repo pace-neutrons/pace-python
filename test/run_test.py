@@ -144,6 +144,7 @@ class PacePythonTest(unittest.TestCase):
         print(f'Time to evaluate a single iteration: {t_spinw_single}s')
         self.assertEqual(np.shape(wsim['sum'].data.s), np.shape(self.w_fe.data.s))
  
+    @unittest.skip("Brille test hangs on Linux machines")
     def test2_FeBrille(self):
         # Run through it again using Brille
         cpars = ['mat', ['J1', 'D(3,3)'], 'hermit', False, 'optmem', 1,

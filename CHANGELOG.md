@@ -1,3 +1,26 @@
+# [v0.3.0a1](https://github.com/pace-neutrons/pace-python/compare/v0.2.0...v0.3.0a0)
+
+* New features
+  - Add ability to use existing Horace/SpinW rather than downloading
+  - Check included to test provided Horace/SpinW path
+  - Add option to exclude Horace/SpinW from build
+  - Add option to set version/release to download
+  - Version checking for both Horace and SpinW included
+  - Inclusion of libpymcr enabling use of previously incompatible Matlab and Python versions
+  - IPythonMagics module moved to [libpymcr](https://pypi.org/project/libpymcr/).
+
+* For developers (CI changes)
+  - Update to use PACE-shared-lib
+  - Add parametrised pipeline
+  - Update for use with rocky8 and icdpacewin
+  - Use conda environments throughout
+  - Remove podman usage
+  - Introduce seperate build installer stage
+  - Remove reliance on external powershell and bash scripts
+
+* Notes
+  - Brille test currently disabled (see #28)
+
 # [v0.2.0](https://github.com/pace-neutrons/pace-python/compare/v0.1.4...v0.2.0)
 
 Updated to Horace 3.6.2

@@ -5,7 +5,6 @@ import re
 import sys
 import requests
 import subprocess
-from importlib_resources import open_text
 import yaml
 from pace_neutrons_cli.utils import release_exists, download_github
 
@@ -36,8 +35,9 @@ def release_github(test=True):
         if pace_ver != ver:
             raise Exception(f'version mismatch! __version__: {pace_ver}; {ver_name}: {ver}')
 
-    desc = re.search('# \[v[0-9\.]*\]\(http.*?\)\n(.*?)# \[v[0-9\.]*\]', changelog,
-                     re.DOTALL | re.MULTILINE).groups()[0].strip()
+    VERSION_PATTERN = r'v[0-9]+(?:\.[0-9]+){2}(?:(?:a|b|rc)[0-9]+)?'
+    desc = re.search(rf'# \[{VERSION_PATTERN}\]\(http.*?\)\n(.*?)# \[{VERSION_PATTERN}\]',
+                    changelog, re.DOTALL | re.MULTILINE).group(1).strip()
     payload = {
         "tag_name": pace_ver,
         "target_commitish": "main",
@@ -130,7 +130,7 @@ def _upload_assets(upload_url):
 
     _, installer_path, _ = next(os.walk('installer'))
     if installer_path:
-        installer_path = [p for p in installer_path if 'Pace_Python_Installer' in p]
+        installer_path = [p for p in installer_path if 'pace_python_installer' in p]
     if installer_path:
         installer_path = os.path.join('installer', installer_path[0])
         installer_file0 = [ff for ff in os.listdir(installer_path) if 'MyAppInstaller' in ff][0]

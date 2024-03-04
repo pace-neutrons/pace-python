@@ -1,66 +1,59 @@
 #!groovy
 
+@Library('PACE-shared-lib') _
+
+properties([
+  parameters([
+    string(
+      name: 'BRANCH',
+      defaultValue: '',
+      description: 'Branch to build',
+      trim: true
+    ),
+    string(
+      name: 'PYTHON_VERSION',
+      defaultValue: '3.8',
+      description: 'Version of python to run the build with.',
+      trim: true
+    ),
+    string(
+      name: 'MATLAB_VERSION',
+      defaultValue: '2021b',
+      description: 'Version of Matlab to run the build with.',
+      trim: true
+    ),
+    string(
+      name: 'GCC_VERSION',
+      defaultValue: '11',
+      description: 'Version of gcc to load',
+      trim: true
+    )
+  ])
+])
+
 def get_agent(String jobname) {
   if (jobname.contains('linux')) {
-    withCredentials([string(credentialsId: 'manylinux_agent', variable: 'agent')]) {
-      return "${agent}"
-    }
+    return "rocky8"
   } else if (jobname.contains('windows')) {
-    withCredentials([string(credentialsId: 'win10_agent', variable: 'agent')]) {
-      return "${agent}"
-    }
+
+    return "icdpacewin"
+
   } else {
     return ''
   }
 }
 
 def get_github_token() {
-  withCredentials([string(credentialsId: 'pace_python_release', variable: 'github_token')]) {
+  withCredentials([string(credentialsId: 'GitHub_API_Token', variable: 'github_token')]) {
     return "${github_token}"
   }
 }
 
-def setGitHubBuildStatus(String status, String message) {
-    script {
-        withCredentials([string(credentialsId: 'PacePython_API_Token',
-                variable: 'api_token')]) {
-          if (isUnix()) {
-            sh """
-                curl -H "Authorization: token ${api_token}" \
-                --request POST \
-                --data '{ \
-                    "state": "${status}", \
-                    "description": "${message} on ${env.JOB_BASE_NAME}", \
-                    "target_url": "$BUILD_URL", \
-                    "context": "${env.JOB_BASE_NAME}" \
-                }' \
-                https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}
-            """
-          }
-          else {
-            return powershell(
-            script: """
-                \$body = @"
-                  {
-                    "state": "${status}",
-                    "description": "${message} on ${env.JOB_BASE_NAME}",
-                    "target_url": "$BUILD_URL",
-                    "context": "${env.JOB_BASE_NAME}"
-                  }
-"@
-                [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
-                Invoke-RestMethod -URI "https://api.github.com/repos/pace-neutrons/pace-python/statuses/${env.GIT_COMMIT}" \
-                    -Headers @{Authorization = "token ${api_token}"} \
-                    -Method 'POST' \
-                    -ContentType "application/json" \
-                    -Body \$body
-            """,
-            returnStdout: true
-            )
-          }
-        }
-    }
+def name_conda_env(String python_version) {
+  def env_name = "py" + python_version.replace(".","")
+  return env_name
 }
+
 
 pipeline {
 
@@ -68,20 +61,90 @@ pipeline {
     label get_agent(env.JOB_BASE_NAME)
   }
 
+  environment {
+    ENV_NAME = name_conda_env(env.PYTHON_VERSION)
+  }
+
   stages {
+
+    stage('Notify') {
+      steps {
+        post_github_status("pending", "The build is running")
+      }
+    }
+
+    stage('Display-Environment-Variables') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'env'
+          }
+          else {
+            powershell 'Get-ChildItem Env:'
+          }
+        }
+      }
+    }
 
     stage("Build-Pace-Python") {
       steps {
         script {
           if (isUnix()) {
             sh '''
-                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/manylinux/jenkins_build_script.sh
+                module purge
+                module load matlab/\$MATLAB_VERSION
+                module load cmake
+                module load conda
+                module load gcc/\$GCC_VERSION
+                conda create -n \$ENV_NAME -c conda-forge python=\$PYTHON_VERSION -y
+                conda activate \$ENV_NAME
+                conda install -c conda-forge setuptools
+                python setup.py bdist_wheel
             '''
-            archiveArtifacts artifacts: 'wheelhouse/*whl'
+            archiveArtifacts artifacts: 'dist/*whl'
           }
           else {
-            powershell './cmake/build_pace_python.ps1'
+            powershell(script:'''
+                conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                Enter-CondaEnvironment ./\$env:ENV_NAME
+                conda env list
+                conda install -c conda-forge setuptools
+                python setup.py bdist_wheel -DMatlab_ROOT_DIR=/opt/modules-common/software/MATLAB/R\$env:MATLAB_VERSION
+            ''', label: "setup and build")
             archiveArtifacts artifacts: 'dist/*whl'
+          }
+        }
+      }
+    }
+
+    stage("Build-Installer") {
+      steps {
+        script {
+          if (isUnix()) {
+            sh '''
+                module load matlab/\$MATLAB_VERSION
+                matlab -nodesktop -r "try, cd('installer'), run('make_package.m'), catch ME, fprintf('%s: %s\\n', ME.identifier, ME.message), end, exit"
+                test -f "./installer/pace_python_installer/MyAppInstaller.install"
+            '''
+          }
+          else {
+            powershell '''
+                Try {
+                    $MATLAB_REG = Get-ItemProperty "Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Mathworks\\MATLAB\\9.9" -ErrorAction Stop
+                    $MATLAB_EXE = $MATLAB_REG.MATLABROOT + "\\bin\\matlab.exe"
+                } Catch {
+                    Write-Output "Could not find Matlab R2020b folder. Using default Matlab"
+                    $MATLAB_EXE = "matlab.exe"
+                }
+
+                $mstr = "try, cd('installer'), run('make_package.m'), catch ME, fprintf('%s: %s\\n', ME.identifier, ME.message), end, exit"
+                Invoke-Expression "& `'$MATLAB_EXE`' -nosplash -nodesktop -wait -r `"$mstr`""
+
+                if (!(Test-Path -Path "./installer/pace_python_installer/MyAppInstaller.exe")) {
+                    throw "Installer creation error. No installer executable found at ./install/pace_python_installer/"
+                }
+            '''
           }
         }
       }
@@ -102,48 +165,68 @@ pipeline {
 
     stage("Run-Pace-Python-Tests") {
       environment {
-        LD_LIBRARY_PATH = "/usr/local/MATLAB/MATLAB_Runtime/v98/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/v98/extern/bin/glnxa64"
-        LD_PRELOAD = "/usr/local/MATLAB/MATLAB_Runtime/v98/sys/os/glnxa64/libiomp5.so"
+        LD_LIBRARY_PATH = "/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/runtime/glnxa64:/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/bin/glnxa64"
+        LD_PRELOAD = "/opt/modules-common/software/MATLAB/R${MATLAB_VERSION}/sys/os/glnxa64/libiomp5.so"
       }
       steps {
         script {
           if (isUnix()) {
             sh '''
+                module purge
+                module load conda
+                module load matlab/\$MATLAB_VERSION
                 eval "$(/opt/conda/bin/conda shell.bash hook)"
-                conda env remove -n py37
-                conda create -n py37 -c conda-forge python=3.7 -y
-                conda activate py37
-                conda install -c conda-forge scipy euphonic -y
+                conda env remove -n \$ENV_NAME
+                conda create -n \$ENV_NAME -c conda-forge python=\$PYTHON_VERSION -y
+                conda activate \$ENV_NAME
+                pip install numpy scipy euphonic --no-input
+                export MKL_NUM_THREADS=1
                 python -m pip install brille
-                python -m pip install $(find wheelhouse -name "*cp37*whl"|tail -n1)
-                python test/run_test.py || true
+                python -m pip install $(find dist -name "*whl"|tail -n1)
+                timeout --signal 15 6m python test/run_test.py -v
                 test -f success
             '''
           }
           else {
-            powershell './cmake/run_pace_python_tests.ps1'
+            powershell(script:'''
+                conda env remove --prefix ./\$env:ENV_NAME
+                conda create --prefix ./\$env:ENV_NAME -c conda-forge python=\$env:PYTHON_VERSION -y
+                Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                Enter-CondaEnvironment ./\$env:ENV_NAME
+                conda install -c conda-forge scipy euphonic -y
+                python -m pip install brille
+                python -m pip install "dist/$(Get-ChildItem 'dist/*.whl' -name)"
+                python test/run_test.py -v
+            ''', label: "Setup and run tests")
           }
         }
       }
     }
 
     stage("Push release") {
+
       environment {
         GITHUB_TOKEN = get_github_token()
       }
       steps {
         script {
-          if (env.ref_type == 'tag') {
+
+          if (env.BRANCH.startsWith("refs/tags")) {
             if (isUnix()) {
               sh '''
-                podman run -v `pwd`:/mnt localhost/pace_python_builder /mnt/installer/jenkins_compiler_installer.sh
-                eval "$(/opt/conda/bin/conda shell.bash hook)"
-                conda activate py37
-                pip install requests pyyaml
-                python release.py --github --notest
+                  module load conda
+                  conda activate \$ENV_NAME
+                  pip install requests pyyaml
+                  python release.py --github --notest
               '''
-            } else {
-              powershell './cmake/run_release.ps1'
+            }
+            else {
+                powershell(script: '''
+                    Import-Module "C:/ProgramData/miniconda3/shell/condabin/Conda.psm1"
+                    Enter-CondaEnvironment ./\$env:ENV_NAME
+                    python -m pip install requests pyyaml
+                    python release.py --github --notest
+                ''', label: "Create-Github-Release")
             }
           }
         }
@@ -155,22 +238,11 @@ pipeline {
   post {
 
     success {
-        script {
-          setGitHubBuildStatus("success", "Successful")
-        }
+      post_github_status("success", "The build succeeded")
     }
 
     unsuccessful {
-      withCredentials([string(credentialsId: 'pace_python_email', variable: 'pace_python_email')]) {
-        script {
-            //mail (
-            //  to: "${pace_python_email}",
-            //  subject: "PACE-Python pipeline failed: ${env.JOB_BASE_NAME}",
-            //  body: "See ${env.BUILD_URL}"
-            //)
-            setGitHubBuildStatus("failure", "Unsuccessful")
-        }
-      }
+      post_github_status("failure", "The build failed")
     }
 
     cleanup {
