@@ -138,7 +138,7 @@ fwhm = 0.75
 scalefactor = 1
 kk = m.multifit_sqw(ws)
 kk = kk.set_fun(tri.horace_sqw)
-kk = kk.set_pin(([J, fwhm, scalefactor], 'mat', ('J_1'), 'hermit', false, 'formfact', true, 'resfun', 'gauss'))
+kk = kk.set_pin(([J, fwhm, scalefactor], 'mat', ['J_1'], 'hermit', false, 'formfact', true, 'resfun', 'gauss'))
 m.tic()
 ws_sim = kk.simulate()
 m.toc()
