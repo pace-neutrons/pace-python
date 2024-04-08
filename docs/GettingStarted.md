@@ -28,7 +28,7 @@ command in your terminal.
 ### Differences to regular Horace
 
 All of the familiar [Horace commands](https://pace-neutrons.github.io/Horace/v3.6.3/) can be used with pace-neutrons simply by prefixing them 
-with `m.` and dropping the semi-colon at the end of the line. For example,  
+with `m.`, transforming MATLAB arrays and cell-arrays to numpy `array`s/`list`s and `struct`s to `dict`s and dropping the semi-colon at the end of the line. For example,  
 
 ```matlab
 plot(cut_sqw('file.sqw', proj, [-2 0.05 2], [-2 0.05 2], [-0.1 0.1], [9 11], '-nopix'));
