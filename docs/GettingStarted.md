@@ -2,7 +2,7 @@
 version: 0.3.0
 ## Introduction
 
-Pace-Neutrons, previously known as pace-python, is a python package which brings Horace 3.6.3 and SpinW to python removing the need for Matlab whilst keeping the commands you have become familiar with.
+Pace-Neutrons (formerly known as pace-python) is a Python package which brings Horace >3.6.3 and SpinW to Python, removing the need for Matlab whilst keeping the commands you have become familiar with.
 
 ## Requirements
 
