@@ -327,9 +327,9 @@ def install_MCR(interactive=False):
         raise RuntimeError(f'No Github release exists for pace_neutrons version {__version__}')
     response = requests.get(assets_url)
     if response.status_code != HTTPStatus.OK:
-        raise RuntimeError('Could not query Github for list of assets')
+        raise RuntimeError('Could not query Github for list of assets: \n {response.text}')
     response = json.loads(response.text)
-    INSTALLERS = {'Windows':'pace_neutrons_installer_win32.exe', 'Linux':'pace_neutrons_installer_linux.install'}
+    INSTALLERS = {'Windows': 'pace_neutrons_installer_win32.exe', 'Linux': 'pace_neutrons_installer_linux.install'}
     system = platform.system()
     try:
         installer_name = INSTALLERS[system]
