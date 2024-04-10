@@ -2,8 +2,8 @@ import os
 import sys
 import glob
 import platform
-import six
 from pathlib import Path
+from http import HTTPStatus
 
 
 def get_runtime_version():
@@ -106,10 +106,10 @@ class PaceConfiguration(object):
 
     @CachedMatlabDirs.setter
     def CachedMatlabDirs(self, val):
-        if not isinstance(val, six.string_types):
+        if not isinstance(val, str):
             raise RuntimeError('Cached Matlab folder must be a string')
         cached = self.CachedMatlabDirs
-        if not any([d for d in cached if val in d]):
+        if not any(dir for dir in cached if val in dir):
             cached += [val]
             self.config['pace']['CachedMatlabDirs'] = ';'.join(cached)
 
@@ -278,8 +278,8 @@ def release_exists(tag_name, retval='upload_url', use_auth=True):
     response = requests.get(
         'https://api.github.com/repos/pace-neutrons/pace-python/releases',
         headers=headers)
-    if response.status_code != 200:
-        raise RuntimeError('Could not query Github if release exists')
+    if response.status_code != HTTPStatus.OK:
+        raise RuntimeError(f'Could not query Github if release exists: \n {response.text}')
     response = json.loads(response.text)
     desired_release = [v for v in response if v['tag_name'] == tag_name]
     if desired_release:
@@ -326,10 +326,10 @@ def install_MCR(interactive=False):
     if not assets_url:
         raise RuntimeError(f'No Github release exists for pace_neutrons version {__version__}')
     response = requests.get(assets_url)
-    if response.status_code != 200:
-        raise RuntimeError('Could not query Github for list of assets')
+    if response.status_code != HTTPStatus.OK:
+        raise RuntimeError('Could not query Github for list of assets: \n {response.text}')
     response = json.loads(response.text)
-    INSTALLERS = {'Windows':'pace_neutrons_installer_win32.exe', 'Linux':'pace_neutrons_installer_linux.install'}
+    INSTALLERS = {'Windows': 'pace_neutrons_installer_win32.exe', 'Linux': 'pace_neutrons_installer_linux.install'}
     system = platform.system()
     try:
         installer_name = INSTALLERS[system]
@@ -353,15 +353,17 @@ def install_MCR(interactive=False):
     with tempfile.TemporaryDirectory() as dd:
         installer_file = os.path.join(dd, installer_name)
         download_github(installer_url, local_filename=installer_file, use_auth=False)
+        prefix = []
         if system != 'Windows':
             os.chmod(installer_file, 0o755)
+            prefix = ['sudo']
         print('------------------------------------')
         print('Running the Matlab installer now.')
         print('This could take some time (15-30min)')
         print('------------------------------------')
-        proc = subprocess.run([installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
-                              capture_output=True)
+        proc = subprocess.run(prefix + [installer_file, '-mode', 'silent', '-agreeToLicense', 'yes'],
+                              capture_output=True, text=True)
         if proc.returncode != 0:
-            print(proc.stderr.decode())
+            print(proc.stderr)
             raise RuntimeError('Could not install the Matlab MCR')
         print(proc.stdout.decode())

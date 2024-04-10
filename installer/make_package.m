@@ -12,4 +12,4 @@ end
 fid = fopen('requiredMCRProducts.txt', 'w');
 fprintf(fid, '35000	35010	35180	35055\n');
 fclose(fid);
-compiler.package.installer(execname, 'requiredMCRProducts.txt', 'ApplicationName', 'Pace_Python_Installer')
+compiler.package.installer(execname, 'requiredMCRProducts.txt', 'ApplicationName', 'pace_python_')
