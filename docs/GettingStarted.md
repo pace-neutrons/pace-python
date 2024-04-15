@@ -15,7 +15,7 @@ Pace-Neutrons (formerly known as pace-python) is a Python package which brings H
 The easiest way to install `pace-neutrons` and its installer is by downloading the `pace_neutrons_installer` from the [release](https://github.com/pace-neutrons/pace-python/releases) on github.
 When this is run, it will install the pace-neutrons pypi package as well as the Matlab runtime required to use the package.
 
-Alternatively, Pace-Neutrons can be installed by running:
+Alternatively, Pace-Neutrons can be installed from [PyPi](https://pypi.org/project/pace-neutrons/#description) by running:
 
 `pip install pace-neutrons`
 
@@ -200,7 +200,8 @@ running `m.horace()`
 
 By default, when creating the Matlab plots in a Jupyter notebook, a screenshot of the plot is taken 
 and displayed in the document. To bypass this behaviour and obtain the usual pop out plots expected 
-from plots created using Horace, `%matlab_plot_mode windowed` can be run in a code cell.
+from plots created using Horace, `%matlab_plot_mode windowed` can be run in a code cell. More information
+on this, as well as additional commands can be found [here](IPythonMagics_commands.md).
 
 ## Advanced usage (for developers): Creating a custom build
 
@@ -224,7 +225,9 @@ standard Matlab-python version compatability and instead can use any combination
 
 #### Example
 
-`python setup.py bdist_wheel -DWITH_SPINW=OFF -DHORACE_PATH="/path/to/your/systems/Horace"`
+```sh
+python setup.py bdist_wheel -DWITH_SPINW=OFF -DHORACE_PATH="/path/to/your/systems/Horace"
+```
 
 This example builds pace-neutrons without SpinW and uses a local copy of Horace located at
 the provided path.
