@@ -32,7 +32,8 @@ if(WITH_HORACE AND HORACE_PATH)
     endif()
     set(HORACE_VERSION ${HORACE_SRC_VERSION} CACHE STRING "Horace version number")
 elseif(WITH_HORACE AND NOT HORACE_PATH AND NOT DEFINED HORACE_VERSION)
-    set(HORACE_VERSION 3.6.3 CACHE STRING "Sets the Horace release version number to download")
+    set(HORACE_VERSION 4.0.0 CACHE STRING "Sets the Horace release version number to download")
+    set(GH_MATLAB_VERSION R2021a CACHE STRING "Sets the Matlab release version number to download")
 endif()
 
 #Gets SpinW version number

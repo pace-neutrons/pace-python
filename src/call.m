@@ -4,17 +4,6 @@ function [varargout] = call(name, varargin)
         return
     end
     resultsize = nargout;
-    try
-        maxresultsize = nargout(name);
-        if maxresultsize == -1
-            maxresultsize = resultsize;
-        end
-    catch
-        maxresultsize = resultsize;
-    end
-    if resultsize > maxresultsize
-        resultsize = maxresultsize;
-    end
     if nargin == 1
         args = {};
     else
@@ -32,6 +21,13 @@ function [varargout] = call(name, varargin)
         catch err
             if (strcmp(err.identifier,'MATLAB:unassignedOutputs'))
                 varargout = eval_ans(name, args);
+            elseif strcmp(err.identifier,'MATLAB:TooManyOutputs')
+                try
+                    maxresultsize = max([nargout(name), 0]);
+                catch
+                    maxresultsize = 1;  % Default to one output
+                end
+                [varargout{1:maxresultsize}] = feval(name, args{:});
             else
                 rethrow(err);
             end

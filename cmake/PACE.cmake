@@ -80,14 +80,14 @@ if(WITH_HORACE)
             set(FILE_EXTENSION "tar.gz")
         endif()
 
-        message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.zip")
+        message(STATUS "Downloading Horace from https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-${GH_MATLAB_VERSION}.zip")
         ExternalProject_Add(horace
-            URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-R2019b.${FILE_EXTENSION}
+            URL https://github.com/pace-neutrons/Horace/releases/download/v${HORACE_VERSION}/Horace-${HORACE_VERSION}-${HORACE_TYPE}-${GH_MATLAB_VERSION}.${FILE_EXTENSION}
             BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/CTF"
             SOURCE_DIR 
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/Horace <BINARY_DIR>/Horace
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/Herbert <BINARY_DIR>/Herbert
+                  COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/worker_v4.m.template <BINARY_DIR>/worker_v4.m
             INSTALL_COMMAND ""
             TEST_COMMAND ""
         )

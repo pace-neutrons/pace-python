@@ -27,23 +27,17 @@ if(NOT HORACE_PATH AND WITH_HORACE)
         add_custom_command(
             TARGET compile_ctf PRE_BUILD
             COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Horace" 
-            COMMAND ${POWERSHELL_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.ps1" "${CMAKE_BINARY_DIR}/CTF/Herbert"
         )
     else()
         add_custom_command(
             TARGET compile_ctf PRE_BUILD
             COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Horace" 
-            COMMAND ${BASH_COMMAND} "${CMAKE_MODULE_PATH}/copy_and_remove_0.sh" "${CMAKE_BINARY_DIR}/CTF/Herbert"
         )
     endif()
-
-    #ISSUE: what is this?
-    #file(RENAME "${CMAKE_BINARY_DIR}/CTF/worker_v2.m.template" "${CMAKE_BINARY_DIR}/CTF/worker_v2.m")
 
     #Sets what files related to Horace should be included in the compiled ctf. 
     set(HORACE_INCLUDE
         -a "${CMAKE_BINARY_DIR}/CTF/Horace"
-        -a "${CMAKE_BINARY_DIR}/CTF/Herbert"
         )
 
 elseif(WITH_HORACE AND HORACE_PATH) 
@@ -99,9 +93,8 @@ endif()
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
     COMMENT "MCC compiling"
-    #COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_CURRENT_BINARY_DIR}/CTF"
+    #COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_BINARY_DIR}/CTF"
     COMMAND ${Matlab_MCC_COMPILER} -U -W ctf:pace_${Matlab_RELEASE} -d "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pace_neutrons" -v
-        #-a "${CMAKE_CURRENT_BINARY_DIR}/CTF"
         ${HORACE_INCLUDE}
         ${SPINW_INCLUDE}
         -a "${CMAKE_CURRENT_SOURCE_DIR}/matlab_overrides"
