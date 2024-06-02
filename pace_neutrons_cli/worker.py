@@ -1,46 +1,6 @@
 import sys, os, re
-import platform
 import argparse
-from .utils import DetectMatlab, get_runtime_version
-from pace_neutrons.IPythonMagics import Redirection
-
-
-class LogfileRedirection(Redirection):
-    def __init__(self, logfile):
-        self.target = sys.__stdout__.fileno()
-        self.output = open(logfile, 'w')
-        self.ip = None
-        self.flush = lambda: self.output.flush()
-        self.pre()
-
-    def not_redirecting(self):
-        return False
-
-    def showtraceback(self):
-        pass
-
-    def close(self):
-        self.post()
-        self.output.close()
-        self.output = None
-
-    def __del__(self):
-        if self.output is not None:
-            self.close()
-
-
-def _set_env(input_path=''):
-    # If the environment variables are not set, we need to restart with execv
-    DET = DetectMatlab(get_runtime_version())
-    if DET.env_not_set():
-        mlPath = DET.guess_path([input_path])
-        if not mlPath:
-            raise RuntimeError('Could not find Matlab MCR in known locations.\n' \
-                               'Please rerun with the environment variable ' \
-                               'PACE_MCR_DIR set to the MCR location.\n')
-        DET.set_environment(mlPath)
-        if DET.system != 'Windows':
-            os.execv(sys.executable, [sys.executable]+sys.argv)
+from .utils import set_env
 
 def _get_args():
     parser = argparse.ArgumentParser(description='A wrapper script to run a PACE parallel worker')
@@ -66,27 +26,26 @@ def _parse_control_string(cs):
     return cs
 
 def main(args=None):
-    is_windows = platform.system() == 'Windows'
     args = _get_args().parse_args(args if args else sys.argv[1:])
     # Run set env first before any more imports because we might need to restart the process
-    mlPath = os.environ['PACE_MCR_DIR'] if 'PACE_MCR_DIR' in os.environ else ''
-    _set_env(mlPath)
+    set_env()
     cs = _parse_control_string(args.ctrl_str)
     if args.ctrl_str == '':
         if args.batch is not None:
             cs = _parse_control_string(args.batch)
         elif args.r is not None:
             cs = _parse_control_string(args.r)
+    import pace_neutrons
     if args.logfile is not None:
-        logs = LogfileRedirection(args.logfile)
-        sys.stdout = logs.output
+        logs = open(args.logfile, 'w')
     else:
         # Python stdout not compatible with Matlab C descriptor
         # So if we're not logging, then just redirect to /dev/null
-        logs = LogfileRedirection(os.devnull)
-        sys.stdout = logs.output
-    import pace_neutrons.Matlab
-    m = pace_neutrons.Matlab()
-    m.worker_v2(cs)
-    if args.logfile is not None:
-        logs.close()
+        logs = pace_neutrons._DummyFile()
+    sys.stdout = logs
+    if 'PACE_MCR_VERSION' in os.environ:
+        m = pace_neutrons.Matlab(matlab_version=os.environ['PACE_MCR_VERSION'])
+    else:
+        m = pace_neutrons.Matlab()
+    m.worker_v4(cs)
+    logs.close()

@@ -21,7 +21,7 @@ option(WITH_SPINW "Include SpinW" ON)
 set(HORACE_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downloads the version set with HORACE_VERSION")
 set(SPINW_PATH "" CACHE PATH "Sets the path of external Horace. If unset, downloads the version set with SPINW_VERSION")
 
-set(SPINW_REPO "mducle/spinw" CACHE STRING "Sets the git repo used to download SpinW")
+set(SPINW_REPO "spinw/spinw" CACHE STRING "Sets the git repo used to download SpinW")
 
 #Gets Horace version number
 if(WITH_HORACE AND HORACE_PATH)
@@ -46,7 +46,7 @@ if(WITH_SPINW AND SPINW_PATH)
     endif()
     set(SPINW_VERSION ${SPINW_SRC_VERSION} CACHE STRING "SpinW version number")
 elseif(WITH_SPINW AND NOT SPINW_PATH AND NOT DEFINED SPINW_VERSION)
-    set(SPINW_VERSION e3e57aae432f6737aff81d31ccda6e7dce741cef CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
+    set(SPINW_VERSION 89c63fa021f2d56641b7ca82defbe318d6c13034 CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
 endif()
 
 

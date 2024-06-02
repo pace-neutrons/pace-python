@@ -1,20 +1,7 @@
-diff --git a/Horace/change_crystal_horace.m b/Horace/change_crystal_horace.m
-index 550aa25..e2fee4b 100644
---- a/Horace/change_crystal_horace.m
-+++ b/Horace/change_crystal_horace.m
-@@ -51,8 +51,6 @@ function varargout=change_crystal_horace(varargin)
- 
- if nargin<1 ||nargin>5
-     error('Check number of input arguments')
--elseif nargout>0
--    error('No output arguments returned by this function')
- end
- 
- [varargout,mess] = horace_function_call_method (nargout, @change_crystal, '$hor', varargin{:});
-diff --git a/Horace/lattice_functions/bragg_positions_view.m b/Horace/lattice_functions/bragg_positions_view.m
+diff --git a/Horace/horace_core/lattice_functions/bragg_positions_view.m b/Horace/horace_core/lattice_functions/bragg_positions_view.m
 index aa8f5e5..f1b1d86 100644
---- a/Horace/lattice_functions/bragg_positions_view.m
-+++ b/Horace/lattice_functions/bragg_positions_view.m
+--- a/Horace/horace_core/lattice_functions/bragg_positions_view.m
++++ b/Horace/horace_core/lattice_functions/bragg_positions_view.m
 @@ -44,14 +44,16 @@ end
  % Plot peaks
  ipk=1; icmp=1;
@@ -52,15 +39,3 @@ index aa8f5e5..f1b1d86 100644
  end
  
  %-----------------------------------------------------------------------------
-diff --git a/Horace/sqw/@SQWDnDBase/change_crystal.m b/Horace/sqw/@SQWDnDBase/change_crystal.m
-index 110ad7e..442c9ff 100644
---- a/Horace/sqw/@SQWDnDBase/change_crystal.m
-+++ b/Horace/sqw/@SQWDnDBase/change_crystal.m
-@@ -72,6 +72,7 @@ if w.source_is_file
-         ld.delete();
-     end
-     argout = {};
-+    return
- else
-     argout{1} = w.data;
-     for i = 1:numel(w.data)
