@@ -10,7 +10,8 @@ from sysconfig import get_platform
 from subprocess import CalledProcessError, check_output, check_call, run, PIPE
 from distutils.version import LooseVersion
 from setuptools import setup, Extension, find_packages
-from setuptools.command.build_ext import build_ext
+
+CURRDIR = os.path.dirname(__file__)
 
 # We can use cmake provided from pip which (normally) gets installed at /bin
 # Except that in the manylinux builds it's placed at /opt/python/[version]/bin/
@@ -55,18 +56,14 @@ def copy_euphonic_sqw_models():
     #
     # In order for setuptools to pick up euphonic_sqw_models, the Python
     # module folder must be exist in the top level folder when it runs
-    if not os.path.isdir(os.path.join('euphonic_sqw_models_module', 'euphonic_sqw_models')):
+    if not os.path.isdir(os.path.join(CURRDIR, 'euphonic_sqw_models_module', 'euphonic_sqw_models')):
         update_euphonic_sqw_models()
-    shutil.copytree(os.path.join('euphonic_sqw_models_module', 'euphonic_sqw_models'),
-                    'euphonic_sqw_models')
+    shutil.copytree(os.path.join(CURRDIR, 'euphonic_sqw_models_module', 'euphonic_sqw_models'),
+                    os.path.join(CURRDIR, 'euphonic_sqw_models'))
 
 
-class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
-        Extension.__init__(self, name, sources=[])
-        self.sourcedir = os.path.abspath(sourcedir)
-        if not os.path.isfile(os.path.join('euphonic_sqw_models', '__init__.py')):
-            copy_euphonic_sqw_models()
+if not os.path.isfile(os.path.join(CURRDIR, 'euphonic_sqw_models', '__init__.py')):
+    copy_euphonic_sqw_models()
 
 
 #Removes additional args for cmake options to avoid issue with setuptools
@@ -75,93 +72,74 @@ if len(sys.argv)>2:
 else:
     extra_args = []
 
-class CMakeBuild(build_ext):
-    def run(self):
-        try:
-            out = check_output([get_cmake(), '--version'])
-        except OSError:
-            raise RuntimeError("CMake must be installed to build" +
-                               " the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
 
-        rex = r'version\s*([\d.]+)'
-        cmake_version = LooseVersion(re.search(rex, out.decode()).group(1))
-        if cmake_version < '3.13.0':
-            raise RuntimeError("CMake >= 3.13.0 is required")
+if not os.path.isdir(os.path.join(CURRDIR, 'pace_neutrons', 'ctfs')):
+    try:
+        out = check_output([get_cmake(), '--version'])
+    except OSError:
+        raise RuntimeError("CMake must be installed to build this module")
+    rex = r'version\s*([\d.]+)'
+    cmake_version = LooseVersion(re.search(rex, out.decode()).group(1))
+    if cmake_version < '3.15.0':
+        raise RuntimeError("CMake >= 3.15.0 is required")
 
-        if not os.path.isfile(os.path.join('euphonic_sqw_models', '__init__.py')):
-            copy_euphonic_sqw_models()
+    if not os.path.isfile(os.path.join('euphonic_sqw_models', '__init__.py')):
+        copy_euphonic_sqw_models()
 
-        for ext in self.extensions:
-            self.build_extension(ext)
-
-    def build_extension(self, ext):
-        extdir = os.path.dirname(self.get_ext_fullpath(ext.name))
-        extdir = os.path.abspath(extdir)
-        cmake_args = []
-        if is_vsc():
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            else:
-                cmake_args += ['-A', 'Win32']
-				
-        if is_mingw():
-            cmake_args += ['-G','Unix Makefiles'] # Must be two entries to work
-
-        cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                       '-DPYTHON_EXECUTABLE=' + sys.executable]
-
-        cfg = 'Debug' if self.debug else 'Release'
-        #cfg = 'Debug' if self.debug else 'RelWithDebInfo'
-        build_args = ['--config', cfg]
-
-        # make sure all library files end up in one place
-        cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]
-        cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
-
-        if is_vsc():
-            cmake_lib_out_dir = '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'
-            cmake_args += [cmake_lib_out_dir.format(cfg.upper(), extdir)]
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '/m:4']
+    extdir = os.path.join(CURRDIR, 'extdir')
+    cmake_args = []
+    if is_vsc():
+        if sys.maxsize > 2**32:
+            cmake_args += ['-A', 'x64']
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j']
+            cmake_args += ['-A', 'Win32']
 
-        env = os.environ.copy()
-        cxxflags = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get('CXXFLAGS', ''), self.distribution.get_version())
-        env['CXXFLAGS'] = cxxflags
+    if is_mingw():
+        cmake_args += ['-G','Unix Makefiles'] # Must be two entries to work
 
-        cmake_args += extra_args
-        print(cmake_args)
-        # exit()
+    cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                   '-DPYTHON_EXECUTABLE=' + sys.executable]
 
-        if 'MATLAB_DIR' in env:
-            cmake_args += ['-DMatlab_ROOT_DIR=' + env['MATLAB_DIR']]
+    cfg = 'Release'
+    #cfg = 'Debug' if self.debug else 'RelWithDebInfo'
+    build_args = ['--config', cfg]
 
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        check_call(
-            [get_cmake(), ext.sourcedir] + cmake_args,
-            cwd=self.build_temp, env=env)
-        check_call(
-            [get_cmake(), '--build', '.'] + build_args,
-            cwd=self.build_temp)
-        outpath = os.path.join(self.build_lib, 'pace_neutrons', 'ctfs')
-        if not os.path.isdir(outpath):
-            os.mkdir(outpath)
-        inpath = os.path.join(self.build_temp, 'bin', 'pace_neutrons')
-        for ctffile in glob.glob(f'{inpath}/*ctf'):
-            shutil.copy(ctffile, outpath)
+    # make sure all library files end up in one place
+    cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE"]
+    cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
+
+    if is_vsc():
+        cmake_lib_out_dir = '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'
+        cmake_args += [cmake_lib_out_dir.format(cfg.upper(), extdir)]
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+        build_args += ['--', '/m:4']
+    else:
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+        build_args += ['--', '-j']
+
+    env = os.environ.copy()
+    cxxflags = f'{env.get("CXXFLAGS", "")} -DVERSION_INFO=\\"{versioneer.get_version()}\\"'
+    env['CXXFLAGS'] = cxxflags
+
+    cmake_args += extra_args
+    print(cmake_args)
+    # exit()
+
+    if 'MATLAB_DIR' in env:
+        cmake_args += ['-DMatlab_ROOT_DIR=' + env['MATLAB_DIR']]
+
+    build_temp = os.path.join(CURRDIR, 'buildtmp')
+    if not os.path.exists(build_temp):
+        os.makedirs(build_temp)
+    check_call([get_cmake(), CURRDIR] + cmake_args, cwd=build_temp, env=env)
+    # Only build call_python - use mcc_all.py to build CTFs
+    check_call([get_cmake(), '--build', '.', '--target', 'call_python', 'spinw', 'patch_ctf'] + build_args, cwd=build_temp)
+    # Call mcc_all.py to build all CTFs
+    #check_call([sys.executable, 'mcc_all.py'], cwd=CURRDIR)
 
 
 with open("README.md", "r") as fh:
     LONG_DESCRIPTION = fh.read()
-
-
-cmdclass = versioneer.get_cmdclass()
-cmdclass['build_ext'] = CMakeBuild
 
 
 KEYWORDARGS = dict(
@@ -172,13 +150,12 @@ KEYWORDARGS = dict(
     description='A Python wrapper around Matlab programs for inelastic neutron scattering data analysis',
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    #ext_modules=[CMakeExtension('pace_neutrons')],
     packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
-    package_data={'pace_neutrons': ['ctfs/*ctf'], 'pace_neutrons': ['MCR_license.txt']},
+    package_data={'pace_neutrons': ['ctfs/*ctf', 'MCR_license.txt']},
     install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests', 'psutil>=0.6.0',
                         'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=1.3.1', 'brille>=0.5.4', 'libpymcr>=0.1.7'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
-    cmdclass=cmdclass,
+    cmdclass=versioneer.get_cmdclass(),
     entry_points={'console_scripts': [
         'pace_neutrons = pace_neutrons_cli:main',
         'worker_v4 = pace_neutrons_cli.worker:main']},

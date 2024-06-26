@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.15)
 
 project("pace-python" VERSION "0.1.0")
 
@@ -46,7 +46,7 @@ if(WITH_SPINW AND SPINW_PATH)
     endif()
     set(SPINW_VERSION ${SPINW_SRC_VERSION} CACHE STRING "SpinW version number")
 elseif(WITH_SPINW AND NOT SPINW_PATH AND NOT DEFINED SPINW_VERSION)
-    set(SPINW_VERSION 89c63fa021f2d56641b7ca82defbe318d6c13034 CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
+    set(SPINW_VERSION 4.0.0 CACHE STRING "Sets the SpinW version (git tag/branch/hash) to download")
 endif()
 
 
