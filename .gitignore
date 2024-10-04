@@ -8,6 +8,7 @@ pace_neutrons/\.DS_Store
 __pycache__
 pace_python/mccExcludedFiles.log
 pace_neutrons/mccExcludedFiles.log
+pace_neutrons/ctfs
 
 *~
 *swp
@@ -36,10 +37,12 @@ CMakeCache.txt
 extern-pybind11
 src/CTF
 
+bld
 build
 buildctf
 dist
 wheelhouse
+*.whl
 
 installer/Pace_Python_Installer/
 installer/mccExcludedFiles.log
@@ -49,7 +52,9 @@ installer/pace_python_installer
 installer/pace_neutrons_installer
 installer/readme.txt
 installer/requiredMCRProducts.txt
-
+installer/unresolvedSymbols.txt
+pace_neutrons_installer*install
+pace_neutrons_installer*exe
 requiredMCRProducts.txt
 
 euphonic_sqw_models
@@ -60,6 +65,7 @@ cmake/print_git/CMakeCache.txt
 cmake/print_git/*.cmake
 cmake/print_git/*.vcxproj
 cmake/print_git/*.sln
+*.vcxproj.filters
 
 success
 
@@ -73,3 +79,5 @@ test/demo
 
 tmp
 temp
+
+.ipynb_checkpoints/

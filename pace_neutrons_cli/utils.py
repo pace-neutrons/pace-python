@@ -8,11 +8,17 @@ from http import HTTPStatus
 OS = platform.system()
 OSTYPE = {'Windows': 'win64', 'Linux': 'glnxa64', 'Darwin': 'maci64'}
 PATHVAR = {'Windows': 'PATH', 'Linux': 'LD_LIBRARY_PATH', 'Darwin': 'DYLD_LIBRARY_PATH'}
-
+RVERS = {f'9.{vr}':f'R{rv[0]}{rv[1]}' for rv, vr in zip([[yr, ab] for yr in range(2017,2023) for ab in ['a', 'b']], range(2, 14))}
+RVERS.update({'9.14':'R2023a', '23.2':'R2023b', '24.1':'R2024a', '24.2':'R2024b'})
 
 def get_mlpath():
     if 'PACE_MCR_DIR' in os.environ:
-        return os.environ['PACE_MCR_DIR']
+        libpath = os.path.join(os.environ['PACE_MCR_DIR'], 'runtime', OSTYPE[OS])
+        mcllib = glob.glob(os.path.join(libpath, '*mclmcrrt*'))
+        if not mcllib:
+            raise RuntimeError(f'Matlab MCR library not found in installation at {os.environ["PACE_MCR_DIR"]}')
+        ver = mcllib[0].split('mclmcrrt')[1].split('.')[0].replace('_','.')
+        return os.environ['PACE_MCR_DIR'], RVERS[ver]
     import pace_neutrons, libpymcr
     if pace_neutrons.INITIALIZED:
         with pace_neutrons.nostdout():
