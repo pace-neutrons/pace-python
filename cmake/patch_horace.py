@@ -1,4 +1,5 @@
 import sys, os, re
+import warnings
 
 FUZZ = 10
 
@@ -55,4 +56,8 @@ if __name__ == '__main__':
     # Recursively applies all diffs in a given folder w.r.t. an input base dir
     for root, _, files in os.walk(sys.argv[1]):
         for fl in [f for f in files if f.endswith('.diff')]:
-            patch_files(os.path.join(root, fl), sys.argv[2])
+            try:
+                patch_files(os.path.join(root, fl), sys.argv[2])
+            except ValueError as e:
+                if 'Unmatched hunk' in str(e):  # Probably patched already
+                    warnings.warn(str(e))

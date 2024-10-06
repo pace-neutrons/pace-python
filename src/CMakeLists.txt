@@ -11,6 +11,7 @@ endif()
 
 add_custom_target(compile_ctf ALL)
 add_custom_target(patch_ctf ALL)
+add_custom_target(copy_mex ALL)
 
 #add dependencies on external projects to compile_ctf
 if(WITH_HORACE)
@@ -77,9 +78,14 @@ if(NOT HORACE_PATH AND WITH_HORACE)
         COMMENT "Patching CTF"
         COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_BINARY_DIR}/CTF"
     )
+    add_custom_command(
+        TARGET copy_mex
+        COMMENT "Copying mex to CTF"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/bin/call_python.${Matlab_MEX_EXTENSION}" "${CMAKE_BINARY_DIR}/CTF"
+    )
 endif()
 add_dependencies(patch_ctf horace)
-
+add_dependencies(copy_mex call_python)
 
 add_custom_command(
     TARGET compile_ctf PRE_BUILD
