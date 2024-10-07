@@ -140,7 +140,7 @@ if not os.path.isdir(os.path.join(CURRDIR, 'pace_neutrons', 'ctfs')):
     destination = os.path.join('pace_neutrons', 'ctfs')
     if not os.path.exists(destination):
         os.makedirs(destination)
-    for file in glob.glob(os.path.join('ctfs', '*zip')):
+    for file in glob.glob(os.path.join('ctfs', '*xz')):
         shutil.copy(file, destination)
 
 
@@ -157,7 +157,7 @@ KEYWORDARGS = dict(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
-    package_data={'pace_neutrons': ['ctfs/*ctf', 'ctfs/*zip', 'MCR_license.txt']},
+    package_data={'pace_neutrons': ['ctfs/*ctf', 'ctfs/*xz', 'MCR_license.txt']},
     install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests', 'psutil>=0.6.0',
                         'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=1.3.1', 'brille>=0.5.4', 'libpymcr>=0.1.7'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
