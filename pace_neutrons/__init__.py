@@ -21,10 +21,14 @@ _VERSION_DIR = Path(__file__).parent / "ctfs"
 if not _VERSION_DIR.is_dir():
     _VERSION_DIR = next(Path("./build").glob("lib.*")) / "pace_neutrons" / "ctfs"
 
-_VERSIONS = [{'file': file.resolve(), 'version': file.stem.split('_')[1]}
-             for file in _VERSION_DIR.iterdir()
-             if file.is_file() and file.suffix == ".ctf"]
-
+def _getFiles(folder, test):
+    return [{'file': file.resolve(), 'version': file.stem.split('_')[1]}
+            for file in folder.iterdir() if test(file)]
+_VERSIONS = _getFiles(_VERSION_DIR, lambda f: f.is_file() and f.suffix == ".ctf")
+_NOMEXS = _getFiles(_VERSION_DIR, lambda f: f.is_file() and f.stem.startswith("nomex"))
+_MATLABNOTFOUND_STR = f"No supported MATLAB versions [{', '.join(version['version'] for version in _NOMEXS)}] found.\n " \
+    "If installed, please specify the root directory (`matlab_path` and `matlab_version`) of the MATLAB installation.\n " \
+    "If not installed you can download the MCR from: https://uk.mathworks.com/products/compiler/matlab-runtime.html\n"
 VERSION = ''
 INITIALIZED = False
 
@@ -59,7 +63,14 @@ def _initialize_compiled_worker(interface):
             interface.call('subsasgn', pc, access, worker_path)
 
 
+def _checkML(versions):
+    from libpymcr.utils import checkPath
+    return [v for v in versions
+            if checkPath(f'R{v["version"]}', error_if_not_found=False, suppress_output=True) is not None]
+
+
 class Matlab(libpymcr.Matlab):
+
     def __init__(self, matlab_path: Optional[str] = None, matlab_version: Optional[str] = None):
         """
         Create a MATLAB instance with the correct compiled library for the MATLAB version specified.
@@ -71,40 +82,39 @@ class Matlab(libpymcr.Matlab):
         :param matlab_version: Used to specify the version of MATLAB if the matlab_path is given or if
         there is more than 1 MATLAB installation.
         """
-
+        from libpymcr.utils import recombinemex
         global INITIALIZED
         global VERSION
+
         if INITIALIZED:
             super().__init__(VERSION, mlPath=matlab_path)
         elif matlab_version is None:
-            for version in _VERSIONS:
-                if INITIALIZED:
-                    break
-                try:
-                    print(f"Trying MATLAB version: {version['version']} ({version['file']}))")
-                    super().__init__(version['file'], mlPath=matlab_path)
-                    INITIALIZED = True
-                except RuntimeError:
-                    continue
+            avail_ML = _checkML(_VERSIONS)
+            if avail_ML:
+                super().__init__(avail_ML[0]['file'], mlPath=matlab_path)
+            else:
+                avail_ML = _checkML(_NOMEXS)
+                if not avail_ML:
+                    raise RuntimeError(_MATLABNOTFOUND_STR)
+                for ver in avail_ML:
+                    print(f'Please wait... creating pace CTF for Matlab R{ver["version"]}')
+                    recombinemex(f'R{ver["version"]}', _VERSION_DIR)
+                ctffile = _VERSION_DIR / f'pace_{avail_ML[0]["version"]}.ctf'
+                super().__init__(ctffile.resolve(), mlPath=matlab_path)
         else:
-            ctf = [version['file'] for version in _VERSIONS
-                    if version['version'].lower() == matlab_version.lower()]
+            ctf = [v['file'] for v in _VERSIONS if v['version'].lower() == matlab_version.lower()]
+            nmx = [v for v in _NOMEXS if v['version'].lower() == matlab_version.lower()]
+            if not ctf and nmx:
+                recombinemex(f'R{nmx[0]["version"]}', _VERSION_DIR)
+                ctf = [(_VERSION_DIR / f'pace_{nmx[0]["version"]}.ctf').resolve()]
             if len(ctf) == 0:
                 raise RuntimeError(
-                    f"Compiled library for MATLAB version {matlab_version} not found. Please use: [{', '.join([version['version'] for version in _VERSIONS])}]\n ")
+                    f"Compiled library for MATLAB version {matlab_version} not found. "
+                    f"Please use: [{', '.join([version['version'] for version in _NOMEXS])}]\n ")
             else:
                 ctf = ctf[0]
-            try:
-                super().__init__(ctf, mlPath=matlab_path)
-                INITIALIZED = True
-            except RuntimeError:
-                pass
-        if not INITIALIZED:
-            raise RuntimeError(
-                f"No supported MATLAB versions [{', '.join(version['version'] for version in _VERSIONS)}] found.\n "
-                f"If installed, please specify the root directory (`matlab_path` and `matlab_version`) of the MATLAB installation.\n "
-                f"If not installed you can download the MCR from: https://uk.mathworks.com/products/compiler/matlab-runtime.html\n")
-        else:
-            self._interface.call('pyhorace_init', nargout=0)
-            if 'worker' not in sys.argv[0]:
-                _initialize_compiled_worker(self._interface)
+            super().__init__(ctf, mlPath=matlab_path)
+        INITIALIZED = True
+        self._interface.call('pyhorace_init', nargout=0)
+        if 'worker' not in sys.argv[0]:
+            _initialize_compiled_worker(self._interface)

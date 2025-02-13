@@ -78,11 +78,19 @@ if(NOT HORACE_PATH AND WITH_HORACE)
         COMMENT "Patching CTF"
         COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_MODULE_PATH}/patch_horace.py" "${CMAKE_CURRENT_SOURCE_DIR}/diffs" "${CMAKE_BINARY_DIR}/CTF"
     )
+  if(WIN32)
+    add_custom_command(
+        TARGET copy_mex
+        COMMENT "Copying mex to CTF"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/bin/Release/call_python.mexw64" "${CMAKE_BINARY_DIR}/CTF"
+    )
+  else()
     add_custom_command(
         TARGET copy_mex
         COMMENT "Copying mex to CTF"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/bin/call_python.${Matlab_MEX_EXTENSION}" "${CMAKE_BINARY_DIR}/CTF"
     )
+  endif()
 endif()
 add_dependencies(patch_ctf horace)
 add_dependencies(copy_mex call_python)

@@ -75,6 +75,10 @@ else:
 
 if not os.path.isdir(os.path.join(CURRDIR, 'pace_neutrons', 'ctfs')):
     try:
+        import libpymcr
+    except ModuleNotFoundError:
+        pip_out = run([sys.executable, '-m', 'pip', 'install', 'libpymcr>=0.2.0'])
+    try:
         out = check_output([get_cmake(), '--version'])
     except OSError:
         raise RuntimeError("CMake must be installed to build this module")
@@ -159,7 +163,7 @@ KEYWORDARGS = dict(
     packages=['pace_neutrons', 'pace_neutrons_cli', 'euphonic_sqw_models'],
     package_data={'pace_neutrons': ['ctfs/*ctf', 'ctfs/*xz', 'MCR_license.txt']},
     install_requires = ['six>=1.12.0', 'numpy>=1.7.1', 'appdirs>=1.4.4', 'ipython>=3.2.1', 'requests', 'psutil>=0.6.0',
-                        'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=1.3.1', 'brille>=0.5.4', 'libpymcr>=0.1.7'],
+                        'matplotlib>=2.0.0', 'euphonic[phonopy_reader]>=1.3.1', 'brille>=0.5.4', 'libpymcr>=0.2.0'],
     extras_require = {'interactive':['matplotlib>=2.2.0',],},
     cmdclass=versioneer.get_cmdclass(),
     entry_points={'console_scripts': [
