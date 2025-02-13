@@ -23,7 +23,7 @@
 void *_loadlib(std::string path, const char* libname, std::string mlver="");
 void *_resolve(void* lib, const char* sym);
 std::string _getMLversion(std::string mlroot);
-void _loadlibraries(std::string matlabroot);
+double _loadlibraries(std::string matlabroot);
 
 void* mexGetFunctionImpl();
 void mexDestroyFunctionImpl(void* impl);

@@ -18,14 +18,33 @@ void matlab_wrapper_del(PyObject* pyself) {
 }
 
 // Functions to handle Matlab mxArrays
-struct mxArray_header_2020a* _get_mxArray(Array arr) {
+struct mxArray_header_2020a* _get_mxArray(Array arr, double mlver) {
     matlab::data::impl::ArrayImpl* imp = reinterpret_cast<mArray*>(&arr)->get_ptr();
     struct impl_header_col_major* m0 = reinterpret_cast<struct impl_header_col_major*>(imp);
     struct impl_header_col_major* m1 = reinterpret_cast<struct impl_header_col_major*>(m0->data_ptr);
 #if defined __APPLE__
-    return reinterpret_cast<struct mxArray_header_2020a*>(m1->data_ptr);
+    if (mlver > 10) {  // R2023b or newer
+        return reinterpret_cast<struct mxArray_header_2020a*>(m1->dims);
+    } else {
+        return reinterpret_cast<struct mxArray_header_2020a*>(m1->data_ptr);
+    }
 #else
-    return reinterpret_cast<struct mxArray_header_2020a*>(m1->mxArray);
+    if (mlver > 10) {  // R2023b or newer
+        return reinterpret_cast<struct mxArray_header_2020a*>(m1->mxArray2);
+    } else {
+        return reinterpret_cast<struct mxArray_header_2020a*>(m1->mxArray);
+    }
+#endif
+}
+
+struct mxArray_header_2024b* _get_mxArray24b(Array arr) {
+    matlab::data::impl::ArrayImpl* imp = reinterpret_cast<mArray*>(&arr)->get_ptr();
+    struct impl_header_col_major* m0 = reinterpret_cast<struct impl_header_col_major*>(imp);
+    struct impl_header_col_major* m1 = reinterpret_cast<struct impl_header_col_major*>(m0->data_ptr);
+#if defined __APPLE__
+    return reinterpret_cast<struct mxArray_header_2024b*>(m1->data_ptr);
+#else
+    return reinterpret_cast<struct mxArray_header_2024b*>(m1->mxArray3);
 #endif
 }
 
@@ -43,10 +62,15 @@ PyObject* pymat_converter::is_wrapped_np_data(void *addr) {
     return nullptr;
 }
 
-void* _get_data_pointer(matlab::data::Array arr) {
+void* _get_data_pointer(matlab::data::Array arr, double mlver) {
     if (arr.getMemoryLayout() == matlab::data::MemoryLayout::COLUMN_MAJOR) {
-        struct mxArray_header_2020a* mx = _get_mxArray(arr);
-        return mx->pr;
+        if (mlver > 24.1) {  // R2024b or newer
+            struct mxArray_header_2024b* mx = _get_mxArray24b(arr);
+            return mx->pr;
+        } else {
+            struct mxArray_header_2020a* mx = _get_mxArray(arr, mlver);
+            return mx->pr;
+        }
     } else {
         matlab::data::impl::ArrayImpl* imp = reinterpret_cast<mArray*>(&arr)->get_ptr();
         struct impl_header_row_major* m = static_cast<struct impl_header_row_major*>(static_cast<void*>(imp));
@@ -57,14 +81,16 @@ void* _get_data_pointer(matlab::data::Array arr) {
 // Wraps a Matlab array in a numpy array without copying (should work with all numeric types)
 template <typename T> PyObject* pymat_converter::matlab_to_python_t (matlab::data::Array arr, dt<T>) {
     // First checks if the array is not constructed from numpy data in the first place
-    PyObject* wrapper = is_wrapped_np_data(_get_data_pointer(arr));
-    if (wrapper != nullptr) {
-        // If so, just return the original numpy array, but need to INCREF it as returning new reference
-        if (!m_mex_flag) {
-            // For case where an np array is created in a mex file, its REFCNT was INC in the cache
-            Py_INCREF(wrapper);
+    if (m_numpy_conv_flag == NumpyConversion::WRAP) {
+        PyObject* wrapper = is_wrapped_np_data(_get_data_pointer(arr, m_MLVERSION));
+        if (wrapper != nullptr) {
+            // If so, just return the original numpy array, but need to INCREF it as returning new reference
+            if (!m_mex_flag) {
+                // For case where an np array is created in a mex file, its REFCNT was INC in the cache
+                Py_INCREF(wrapper);
+            }
+            return wrapper;
         }
-        return wrapper;
     }
     std::vector<size_t> strides = {sizeof(T)};
     std::vector<size_t> dims = arr.getDimensions();
@@ -223,10 +249,10 @@ PyObject* pymat_converter::to_python(matlab::data::Array input) {
 
 template <typename T> Array pymat_converter::raw_to_matlab(char *raw, size_t sz, std::vector<size_t> dims,
                                                            ssize_t *strides, int f_or_c_continuous,
-                                                           matlab::data::ArrayFactory &factory, PyObject* obj) {
+                                                           matlab::data::mArrayFactory &factory, PyObject* obj) {
     if (f_or_c_continuous == 0) {
         // Slower copy methods - follow data strides for non-contiguous arrays
-        buffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
+        mbuffer_ptr_t<T> buf = factory.createBuffer<T>(sz);
         T* ptr = buf.get();
         std::vector<size_t> stride;
         std::vector<size_t> k = {dims[0]};
@@ -258,7 +284,7 @@ template <typename T> Array pymat_converter::raw_to_matlab(char *raw, size_t sz,
         // Default to try to wrap existing data without copying. We can do this with createArrayFromBuffer
         // but (see: https://www.mathworks.com/matlabcentral/answers/514456) this causes an issue
         // when Matlab tries to delete the buffer. So we have to use a hack (see release_buffer() below)
-        buffer_ptr_t<T> buf = buffer_ptr_t<T>(begin, [](void* ptr){});
+        mbuffer_ptr_t<T> buf = mbuffer_ptr_t<T>(begin, [](T* ptr){});
         if (m_numpy_conv_flag == NumpyConversion::COPY || sz < 1000) {
             // But if user specify to copy or for small arrays, then use the prescribed API with createBuffer()
             buf = factory.createBuffer<T>(sz);
@@ -285,6 +311,9 @@ template <typename T> Array pymat_converter::raw_to_matlab(char *raw, size_t sz,
 
 bool pymat_converter::release_buffer(matlab::data::Array arr) {
     // Hack to safely release a buffer for a no-copy Matlab array converted from numpy
+    if (m_MLVERSION > 24.1) { // R2024b or newer supports custom deleter so don't need hack
+        return true;
+    }
     if (m_numpy_conv_flag == NumpyConversion::COPY) {
         return true;
     }
@@ -297,11 +326,11 @@ bool pymat_converter::release_buffer(matlab::data::Array arr) {
     // where we create a small buffer using createBuffer() and overwrite the mxArray->pr pointer
     // to point to this instead of the numpy array. Then when this array is deleted Matlab will
     // free the newly created buffer instead of the numpy array which causes a heap memory error
-    matlab::data::ArrayFactory factory;
-    struct mxArray_header_2020a* mx = _get_mxArray(arr);
+    matlab::data::mArrayFactory factory;
+    struct mxArray_header_2020a* mx = _get_mxArray(arr, m_MLVERSION);
     long rc = (mx->refcount == nullptr) ? 1 : *(mx->refcount);
     if (mx->refcount == nullptr || *(mx->refcount) == 1) {
-        buffer_ptr_t<double> buf = factory.createBuffer<double>(1);
+        mbuffer_ptr_t<double> buf = factory.createBuffer<double>(1);
         // Hack - switch the memory for a Matlab created buffer
         mx->pr = reinterpret_cast<void*>(buf.release());
         return true;
@@ -310,20 +339,22 @@ bool pymat_converter::release_buffer(matlab::data::Array arr) {
     }
 }
 
-matlab::data::Array pymat_converter::python_array_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
+matlab::data::Array pymat_converter::python_array_to_matlab(PyObject *result, matlab::data::mArrayFactory &factory) {
     // Cast the result to the PyArray C struct and its corresponding dtype struct
     py::detail::PyArray_Proxy *arr = py::detail::array_proxy(result);
-    py::detail::PyArrayDescr_Proxy *dtype = py::detail::array_descriptor_proxy(arr->descr);
+    py::dtype dtype = py::reinterpret_borrow<py::dtype>(arr->descr);
+    ssize_t elsize = dtype.itemsize();
+    char kind = dtype.kind();
     if (arr->nd == 0) {            // 0-dimensional array - return a scalar
-        if (dtype->kind == 'f') {
-            if (dtype->elsize == sizeof(double)) return factory.createScalar(*((double*)(arr->data)));
-            else if (dtype->elsize == sizeof(float)) return factory.createScalar(*((float*)(arr->data)));
-        } else if (dtype->kind == 'c') {
-            if (dtype->elsize == sizeof(std::complex<double>)) return factory.createScalar(*((std::complex<double>*)(arr->data)));
-            else if (dtype->elsize == sizeof(std::complex<float>)) return factory.createScalar(*((std::complex<float>*)(arr->data)));
+        if (kind == 'f') {
+            if (elsize == sizeof(double)) return factory.createScalar(*((double*)(arr->data)));
+            else if (elsize == sizeof(float)) return factory.createScalar(*((float*)(arr->data)));
+        } else if (kind == 'c') {
+            if (elsize == sizeof(std::complex<double>)) return factory.createScalar(*((std::complex<double>*)(arr->data)));
+            else if (elsize == sizeof(std::complex<float>)) return factory.createScalar(*((std::complex<float>*)(arr->data)));
         }
     }
-    if (dtype->elsize == 0) {
+    if (elsize == 0) {
         throw std::runtime_error("Cannot convert heterogeneous numpy arrays to Matlab");
     }
     std::vector<size_t> dims;
@@ -343,7 +374,7 @@ matlab::data::Array pymat_converter::python_array_to_matlab(PyObject *result, ma
 
     char *d = arr->data;
     ssize_t *strd = arr->strides;
-    switch(dtype->type_num) {
+    switch(dtype.num()) {
         case py::detail::npy_api::NPY_DOUBLE_:    return raw_to_matlab<double>(d, numel, dims, strd, fc_cont, factory, result);
         case py::detail::npy_api::NPY_FLOAT_:     return raw_to_matlab<float>(d, numel, dims, strd, fc_cont, factory, result);
         case py::detail::npy_api::NPY_CDOUBLE_:   return raw_to_matlab<std::complex<double>>(d, numel, dims, strd, fc_cont, factory, result);
@@ -379,14 +410,14 @@ template <> double convert_py_obj (PyObject *obj) {
 template <> std::complex<double> convert_py_obj (PyObject *obj) {
     return std::complex<double>(PyComplex_RealAsDouble(obj), PyComplex_ImagAsDouble(obj)); }
 
-template <typename T> Array pymat_converter::fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::ArrayFactory &factory) {
+template <typename T> Array pymat_converter::fill_vec_from_pyobj(std::vector<PyObject*> &objs, matlab::data::mArrayFactory &factory) {
     std::vector<T> vec;
     vec.resize(objs.size());
     std::transform (objs.begin(), objs.end(), vec.begin(), convert_py_obj<T>);
     return factory.createArray<typename std::vector<T>::iterator, T>({1, vec.size()}, vec.begin(), vec.end());
 }
 
-CharArray pymat_converter::python_string_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
+CharArray pymat_converter::python_string_to_matlab(PyObject *result, matlab::data::mArrayFactory &factory) {
     Py_ssize_t str_sz;
     const char *str = PyUnicode_AsUTF8AndSize(result, &str_sz);
     if (!str) {
@@ -396,7 +427,7 @@ CharArray pymat_converter::python_string_to_matlab(PyObject *result, matlab::dat
     return factory.createCharArray(std::string(str, str_sz));
 }
 
-StructArray pymat_converter::python_dict_to_matlab(PyObject *result, matlab::data::ArrayFactory &factory) {
+StructArray pymat_converter::python_dict_to_matlab(PyObject *result, matlab::data::mArrayFactory &factory) {
     Py_ssize_t pos = 0;
     PyObject *key, *val;
     std::vector<std::string> keys;
@@ -473,7 +504,7 @@ std::vector<double> _to_colmajor(std::vector<double> inp, std::vector<size_t> di
     return out;
 }
 
-Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::ArrayFactory &factory) {
+Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::mArrayFactory &factory) {
     // Try to see if we have a nested list/tuple of numeric types: construct a Matlab N-D array
     std::vector<size_t> arr_dim;
     std::vector<double> arr_data;
@@ -519,7 +550,7 @@ Array pymat_converter::listtuple_to_cell(PyObject *result, matlab::data::ArrayFa
     }
 }
 
-matlab::data::Array pymat_converter::wrap_python_function(PyObject *input, matlab::data::ArrayFactory &factory) {
+matlab::data::Array pymat_converter::wrap_python_function(PyObject *input, matlab::data::mArrayFactory &factory) {
     // Wraps a Python function so it can be called using a mex function
     matlab::data::Array rv;
     std::string addrstr = std::to_string(reinterpret_cast<uintptr_t>(input));
@@ -531,7 +562,7 @@ matlab::data::Array pymat_converter::wrap_python_function(PyObject *input, matla
     return rv;
 }
 
-matlab::data::Array pymat_converter::python_to_matlab_single(PyObject *input, matlab::data::ArrayFactory &factory) {
+matlab::data::Array pymat_converter::python_to_matlab_single(PyObject *input, matlab::data::mArrayFactory &factory) {
     matlab::data::Array output;
     auto npy_api = py::detail::npy_api::get();
     bool is_arr = npy_api.PyArray_Check_(input);
@@ -578,12 +609,13 @@ void pymat_converter::clear_py_cache() {
 }
 
 matlab::data::Array pymat_converter::to_matlab(PyObject *input, bool mex_flag) {
-    matlab::data::ArrayFactory factory;
+    matlab::data::mArrayFactory factory;
     m_mex_flag = mex_flag;
     return python_to_matlab_single(input, factory);
 }
 
-pymat_converter::pymat_converter(NumpyConversion np_behaviour) : m_numpy_conv_flag(np_behaviour) {
+pymat_converter::pymat_converter(NumpyConversion np_behaviour, double matlab_version) 
+    : m_numpy_conv_flag(np_behaviour), m_MLVERSION(matlab_version) {
     m_py_matlab_wrapper_t = (PyTypeObject*) PyType_FromSpec(&spec_matlab_wrapper);
 }
 
