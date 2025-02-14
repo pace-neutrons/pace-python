@@ -354,9 +354,6 @@ matlab::data::Array pymat_converter::python_array_to_matlab(PyObject *result, ma
             else if (elsize == sizeof(std::complex<float>)) return factory.createScalar(*((std::complex<float>*)(arr->data)));
         }
     }
-    if (elsize == 0) {
-        throw std::runtime_error("Cannot convert heterogeneous numpy arrays to Matlab");
-    }
     std::vector<size_t> dims;
     size_t numel = 1;
     for (size_t id = 0; id < arr->nd; id++) {

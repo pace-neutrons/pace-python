@@ -66,10 +66,14 @@ class MexFunction : public matlab::mex::Function {
                 else {
                     try {
                         outputs[0] = _converter->to_matlab(result, Py_REFCNT(result)==1);
-                    } catch (char *e) {
+                    } catch ( const std::exception& e ) {
                         Py_DECREF(result);
                         PyGILState_Release(gstate);
-                        throw std::runtime_error(e);
+                        throw std::runtime_error(e.what());
+                    } catch (...) {
+                        Py_DECREF(result);
+                        PyGILState_Release(gstate);
+                        throw std::runtime_error("Error in converting outputs to Matlab");
                     }
                     Py_DECREF(result);
                 }
