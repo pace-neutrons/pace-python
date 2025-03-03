@@ -11,7 +11,11 @@ void *_loadlib(std::string path, const char* libname, std::string mlver) {
     if (mlver.length() > 0)
         mlver = "." + mlver;
 #if defined __APPLE__
-    void* lib = dlopen((path + "/maci64/" + libname + mlver + ".dylib").c_str(), RTLD_LAZY);
+    std::string arch = "/maci64/";
+#if defined __arm64__
+    arch = "/maca64/";
+#endif
+    void* lib = dlopen((path + arch + libname + mlver + ".dylib").c_str(), RTLD_LAZY);
 #else
     void* lib = dlopen((path + "/glnxa64/" + libname + ".so" + mlver).c_str(), RTLD_LAZY);
 #endif
@@ -43,12 +47,19 @@ std::string _getMLversion(std::string mlroot) {
     }
     return _MLVERSTR;
 }
-void _loadlibraries(std::string matlabroot) {
+double _loadlibraries(std::string matlabroot) {
+    std::string mlver = _getMLversion(matlabroot);
     if (!_LIBCPPSHARED) {
         _LIBDATAARRAY = _loadlib(matlabroot + "/extern/bin/", "libMatlabDataArray");
-        _LIBCPPSHARED = _loadlib(matlabroot + "/runtime/", "libMatlabCppSharedLib", _getMLversion(matlabroot));
+        _LIBCPPSHARED = _loadlib(matlabroot + "/runtime/", "libMatlabCppSharedLib", mlver);
         _LIBMEX = _loadlib(matlabroot + "/bin/", "libmex");
     }
+    char *end;
+#ifdef _WIN32
+    return std::strtod(mlver.replace(mlver.find("_"), 1, ".").c_str(), &end);
+#else
+    return std::strtod(mlver.c_str(), &end);
+#endif
 }
 void _checklibs() {
     if (!_LIBDATAARRAY || !_LIBCPPSHARED || !_LIBMEX) {

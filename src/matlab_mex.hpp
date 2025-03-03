@@ -7,9 +7,9 @@
 //#include "mexAdapter.hpp"
 
 #include "load_matlab.hpp"
+#include "matlab_data_array.hpp"
 #include <cassert>
 #include <cstdlib>
-#include <MatlabDataArray/MDArray.hpp>
 
 #ifndef mex_hpp
 #define mex_hpp

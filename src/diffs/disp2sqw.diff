@@ -1,7 +1,7 @@
 diff --git a/HORACE-build/Horace/disp2sqw_plot.m b/HORACE-build/Horace/disp2sqw_plot.m
 index 43af671..12faa0e 100644
---- a/Horace/disp2sqw_plot.m
-+++ b/Horace/disp2sqw_plot.m
+--- a/Horace/horace_core/disp2sqw_plot.m
++++ b/Horace/horace_core/disp2sqw_plot.m
 @@ -119,6 +119,7 @@ else
  end
  
