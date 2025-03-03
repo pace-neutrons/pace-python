@@ -43,7 +43,7 @@ end
 function out = unwrap(in_obj)
     out = in_obj;
     if isstruct(in_obj) && isfield(in_obj, 'libpymcr_func_ptr')
-        out = @(varargin) call('_call_python', in_obj.libpymcr_func_ptr, varargin{:});
+        out = @(varargin) call('_call_python', in_obj.libpymcr_func_ptr, [in_obj.mex_func_ptr, in_obj.conv_ptr], varargin{:});
     elseif isa(in_obj, 'containers.Map') && in_obj.isKey('wrapped_oldstyle_class')
         out = in_obj('wrapped_oldstyle_class');
     elseif iscell(in_obj)
@@ -127,33 +127,14 @@ function out = call_python_m(varargin)
         end
     end
     fun_name = varargin{1};
-
-    if strncmp(varargin{2}, 'pyobj', 5)
-        [kw_args, remaining_args] = get_kw_args(varargin(3:end));
-        remaining_args = [varargin(2) remaining_args];
-    else
-        [kw_args, remaining_args] = get_kw_args(varargin(2:end));
-    end
-    kw_args = unwrap_pyclass(kw_args);
-    remaining_args = unwrap_pyclass(remaining_args);
+    ptrs = varargin{2};
+    [kw_args, remaining_args] = get_kw_args(varargin(3:end));
     if ~isempty(kw_args)
         remaining_args = [remaining_args {struct('pyHorace_pyKwArgs', 1, kw_args{:})}];
     end
-    out = call_python(fun_name, remaining_args{:});
+    out = call_python(fun_name, ptrs, remaining_args{:});
     if ~iscell(out)
         out = {out};
-    end
-end
-
-function input = unwrap_pyclass(input)
-    if iscell(input)
-        for ii = 1:numel(input)
-            input{ii} = unwrap_pyclass(input{ii});
-        end
-    else
-        if isa(input, 'pyclasswrapper')
-            input = input.pyObjectString;
-        end
     end
 end
 

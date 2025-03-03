@@ -1,3 +1,17 @@
+# [v0.4.0](https://github.com/pace-neutrons/pace-python/compare/v0.3.0a0...v0.4.0)
+
+Updated to Horace 4.0.0
+
+* New features
+  - Updated to use libpymcr [v0.2.1](https://github.com/pace-neutrons/libpymcr/releases/tag/v0.2.1)
+  - Features from that include: specifying function handle using the `@` operator, 
+    use of `Ctrl+C` to interrrupt Matlab execution, better formatting of Matlab output
+
+* Bugfixes
+  - Now have `ctf` for Matlab R2021b to R2024b included in distribution.
+  - Support for Python 3.13 added, support for Python 3.7 dropped.
+
+
 # [v0.3.0a1](https://github.com/pace-neutrons/pace-python/compare/v0.2.0...v0.3.0a0)
 
 * New features

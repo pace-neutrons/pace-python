@@ -17,7 +17,7 @@
 #include <dlfcn.h>
 #endif
 
-#include "type_converter.hpp"
+#include "matlab_data_array.hpp"
 #include <fstream>
 
 void *_loadlib(std::string path, const char* libname, std::string mlver="");

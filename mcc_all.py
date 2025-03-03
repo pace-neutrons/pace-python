@@ -5,7 +5,7 @@ import subprocess
 
 if __name__ == '__main__':
     firstrun = True
-    for v in ['R2021a', 'R2021b', 'R2022a', 'R2022b', 'R2023a', 'R2023b', 'R2024a', 'R2024b']:
+    for v in ['R2021b', 'R2022a', 'R2022b', 'R2023a', 'R2023b', 'R2024a', 'R2024b']:
         print(f'Compiling for {v}')
         mlPath = checkPath(v, error_if_not_found=False, suppress_output=True)
         if mlPath is not None:

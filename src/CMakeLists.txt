@@ -1,13 +1,8 @@
 mcr_add_mex(
     NAME call_python
-    SRC call_python.cpp type_converter.cpp load_matlab.cpp
+    SRC call_python.cpp load_matlab.cpp
 )
-target_include_directories(call_python PUBLIC ${PYTHON_INCLUDE_DIRS})
-target_include_directories(call_python PUBLIC "${pybind11_SOURCE_DIR}/include")
 set_property(TARGET call_python PROPERTY LINK_LIBRARIES "")
-if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    target_link_libraries(call_python ${PYTHON_LIBRARIES})
-endif()
 
 add_custom_target(compile_ctf ALL)
 add_custom_target(patch_ctf ALL)
