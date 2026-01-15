@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath(os.path.join('..','..')))
 # -- Project information -----------------------------------------------------
 
 project = 'PACE'
-copyright = "2021 PACE Authors"
+copyright = "2021-2026 PACE Authors"
 author = ['A. Buts','T.G. Perring','N. Battam','H. Saunders','M.D. Le','C. Marooney','J. Wilkins', 'R.A. Ewings', 'J. van Duijn', 'I. Bustinduy', 'G. Tucker', 'R. Fair','A. Jackson', 'S. Ward', 'S. Toth']
 author = ', '.join(sorted(author, key = lambda x: x.split()[-1])) # Authors by surname
 

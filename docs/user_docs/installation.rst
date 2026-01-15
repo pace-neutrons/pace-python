@@ -8,79 +8,45 @@ Installation
 
 ``pace_neutrons`` is available on the Python Package Index `(PyPI) <https://pypi.org/project/pace-neutrons>`__,
 and can in principle be installed with any (CPython) distributions.
-However, due to :ref:`restrictions <installation:Restrictions>` detailed below we recommend that you use the
-`conda <https://docs.conda.io>`__ system.
-You can install a minimal conda system using `miniconda <https://docs.conda.io/en/latest/miniconda.html>`__.
-Once you have installed ``conda``, run it and type:
+We highly recommend to use an isolated Python virtual environment rather than to install ``pace_neutrons``
+into a common Python environment with your other software - in particular, ``pace_neutrons`` is currently
+not compatible with Mantid due to clashing library dependencies.
+
+If you use the conda/mamba system, one way to install is:
 
 .. code-block:: sh
 
-   conda create -n pace python=3.7
+   conda create -n pace python=3.11
    conda activate pace
-   pip install pace_neutrons spyder jupyter
+   python -m pip install pace_neutrons jupyter
 
-Alternatively, you can download and run one of the installers from the
-`github page <https://github.com/pace-neutrons/pace-python/releases/tag/v0.1.4>`__
-(either for `Windows <https://github.com/pace-neutrons/pace-python/releases/download/v0.1.4/pace_neutrons_installer_win32.exe>`__
-or `Linux <https://github.com/pace-neutrons/pace-python/releases/download/v0.1.4/pace_neutrons_installer_linux.install>`__).
+Where you can replace ``conda`` with ``mamba`` if you use the later.
+Alternatively, you can use the ``venv`` package:
 
-The installer will first install the Matlab Compiler Runtime (MCR) needed by ``pace_neutrons``,
-and install a small GUI application called ``Pace Neutrons Installer``,
-which you should then run to install a conda environment and the ``pace_neutrons`` package.
+.. code-block:: sh
+
+    python -m venv /path/to/where/you/want/pace
+    /path/to/where/you/want/pace/env/Scripts/activate
+    python -m pip install pace_neutrons jupyter
+
+We currently support Python 3.8 to 3.13.
 
 
 Matlab Compiler Runtime
 -----------------------
 
-``pace_neutrons`` relies on the Matlab Compiler Runtime (MCR).
-If you did not use the installer, then the MCR also needs to be installed.
-When you first run ``pace_neutrons`` after installing it using ``pip``,
-and the program detects that the MCR has not been installed,
-it will prompt you to ask if you want to install it (and to accept the MCR license).
-Note that you do not need a full Matlab license to install the MCR or to run ``pace_neutrons``.
+``pace_neutrons`` relies on the Matlab Compiler Runtime (MCR), which needs to be installed separately.
+You can find versions at `the Mathworks page <https://www.mathworks.com/products/compiler/matlab-runtime.html>`__.
+We currently support Matlab versions from R2021b to R2024b (R2025a and R2025b are currently not supported).
 
-Alternatively, if you have the MCR or a full version of Matlab with the Compiler SDK toolbox
-(but note that ``pace_neutrons`` specifically needs R2020a on Linux and R2020b on Windows)
-installed but in a non-standard location, you can tell ``pace_neutrons`` this using:
+Alternatively you can download an older installer for `Linux <https://github.com/pace-neutrons/pace-python/releases/download/v0.3.0a1/pace_neutrons_installer_linux.install>`__ or `Windows <https://github.com/pace-neutrons/pace-python/releases/download/v0.3.0a1/pace_neutrons_installer_win32.exe>`__
+which will install a stripped down version of the R2021b MCR and a small GUI application to create
+a conda environment and install ``pace_neutrons``.
+This approach is no longer supported, but the MCR installed by the installer will still work and require
+a smaller download than the full MCR from the `official Mathworks webpage <https://www.mathworks.com/products/compiler/matlab-runtime.html>`__.
 
-.. code-block:: sh
-
-   pace_neutrons -d <path/to/MCR>
-
-
-This location will be cached for future use, so you do not need to specify it again.
-
-You can also tell the program to install the MCR manually using:
-
-.. code-block:: sh
-
-   pace_neutrons --install-mcr
-
-
-In this case it will assume that you consent to the MCR license and will not prompt.
-
-
-Restrictions
-------------
-
-Because of the dependence on the MCR, which bundles its own version of many common libraries,
-``pace_neutrons`` has a number of restrictions:
-
-* On Linux, only Python 3.6 and 3.7 are supported, requiring Matlab 2020a.
-  This is to be compatible with the IDAaaS system.
-* On Windows, only Python 3.7 and 3.8 are supported, requiring Matlab 2020b.
-  This is to support the most common versions of Python in the Windows app store.
-* At present, Mac OS is not supported.
-* ``pace_neutrons`` is not compatible with Mantid Workbench.
-  This is because of incompatibilities between the versions of the Qt and HDF5 libraries
-  bundled by the MCR and those which Mantid is compiled with.
-
-We are working to remove some of these restrictions.
-
-In addition, to avoid incompatiblities with system libraries or those of other Python modules,
-we recommend that you install ``pace_neutrons`` in a Python virtual environment such as
-`venv <https://docs.python.org/3/library/venv.html>`__/`virtualenv <https://virtualenv.pypa.io/>`__
-or `conda <https://docs.conda.io>`__.
+Finally, ``pace_neutrons`` will also work if you have a full (licensed) version of Matlab, as long as
+the Compiler SDK toolbox is installed.
 
 
 Parallization
@@ -114,13 +80,13 @@ on certain versions of the IDAaaS system.)
 IDAaaS Installation
 -------------------
 
-An installation of ``pace_neutrons`` is available on the `IDAaaS <https://isis.analysis.stfc.ac.uk>`__ system.
+An installation of ``pace_neutrons`` is available on the `Ada <https://ada.stfc.ac.uk>`__ system.
 To run it, open a terminal and type:
 
 .. code-block:: sh
 
-   /mnt/nomachine/isis_direct_soft/pace_neutrons --spyder
+   /mnt/ceph/auxiliary/excitations/pace_neutrons
 
 Note that because the distribution is stored on a CEPH shared network drive,
-there may be a delay of ~15-30s the first time it is run whilst the data is retrieved and cached.
+there may be a delay of ~10s the first time it is run whilst the data is retrieved and cached.
 Subsequent start-up time should be faster.

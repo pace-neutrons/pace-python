@@ -19,33 +19,31 @@ You can obtain a zip of this repository
 
 The follow examples will use the data contained in this repository.
 
-
-Starting ``pace_neutrons``
---------------------------
-
-There are three options to start ``pace_neutrons``:
-
-* ``pace_neutrons`` - starts with an IPython console
-
-* ``pace_neutrons -s`` or ``pace_neutrons --spyder`` - starts with the `Spyder IDE <https://www.spyder-ide.org/>`__
-
-* ``pace_neutrons -j`` or ``pace_neutrons --jupyter`` - starts a Jupyter Notebook server.
-
-(The option to start with ``spyder`` or ``jupyter`` only work if you have already installed Spyder or Jupyter).
-
-The following examples will work with all modes.
-
-Note that for the Jupyter notebooks, by default figures are rendered in the notebook as images (``inline`` mode).
-If you are running the Jupyter server on a local machine, and want to have the actual plot windows,
-please run the following in a Notebook cell before making any plots:
-
-.. code-block:: python
-
-   %pace windowed
+More examples can be found in the course materials for a `recent training course <https://github.com/mducle/edatw24>`__ 
+particularly the IPython notebooks in the ``solutions`` folder.
 
 
 Initialisation
 --------------
+
+``pace_neutrons`` is compatible with both jupyter notebooks and the Spyder IDE.
+If you prefer to use either of you can start these as usual,
+or just start python normally to use the standard Python console.
+We recommend to use jupyter notebooks.
+
+.. code-block:: sh
+
+    jupyter notebook
+
+
+Note that for Jupyter notebooks, by default figures are rendered in the notebook as images (``inline`` mode).
+If you are running the Jupyter server on a local machine, and want to have the interactive plot windows,
+please run the following in a Notebook cell before making any plots:
+
+.. code-block:: python
+
+   %matlab_plot_mode windowed
+
 
 After starting ``pace_neutrons`` but defore running any of the Matlab derived programs (``horace`` and ``spinw``),
 we must initialise the Matlab interpreter using:
@@ -66,14 +64,33 @@ but there are a few differences you should bear in mind:
 * Matlab functions like ``diag`` must be preceded by ``m.`` and array elements needs ``,`` comma separators.
 * Array indexing uses square brackets ``[]`` instead of round brackets ``()`` and are indexed from zero.
 * ``.T`` is used for transposed in ``numpy`` instead of the ``'`` operator.
-* Keyword arguments for *Matlab functions* must be speficied as pairs ``'arg_name', arg_val``
-  in the old-style Matlab fashion rather than in Python style ``arg_name=arg_val``.
 
 For vectors and arrays, ``pace_neutrons`` will try to convert
 lists of numeric values into Matlab arrays automatically.
 It will convert non-numeric or mixed lists into Matlab cell arrays,
 so you should not use the braces ``{}`` constructor for this
 (this is used for a Python dictionary which is converted to a Matlab structure).
+Multi-dimensional arrays are constructed as nested list in the Python manner, e.g.
+
+.. code-block:: python
+
+    m.sum([[8, 1, 6], [3, 5, 7], [4, 9, 2]])
+
+
+Will yield ``15 15 15`` summing over the columns of the :math:`3 \times 3` magic square.
+
+If you need to specify a Matlab cell arrays of numeric values, arrays or vectors,
+(such as required by the ``multifit`` class in Horace in order to pass extra parameters to a model function)
+you should use a Python tuple, e.g.
+
+.. code-block:: python
+
+    mf.set_fun(my_function, ([fitpar1, fitpar2], [nonfitpar1, nonfitpar2]))
+
+where the argument is equivalent to the Matlab syntax: ``{[fitpar1 fitpar2] [nonfitpar1 nonfitpar2]}``.
+If you used ``[[fitpar1, fitpar2], [nonfitpar1, nonfitpar2]]`` in Python, ``pace_neutrons``
+will convert this into :math:`2 \times 2` array, but the rounded brackets (a tuple constructor operator)
+tells it to treat the variable as a Matlab cell array.
 
 
 Using Horace to look at INS data
@@ -158,9 +175,9 @@ We can now plot a dispersion and INS spectrum along high symmetry directions:
 
 .. code-block::
 
-   Qlist = [[3/4, 1/4, 1], [1/2, 1/2, 1], [1/2, 0, 1], [3/4, 1/4, 1], \
-            [1, 0, 1], [1/2, 0, 1], 100]
-   Qlab  = ['P', 'M', 'X', 'P', '\Gamma', 'X'];
+   Qlist = ([3/4, 1/4, 1], [1/2, 1/2, 1], [1/2, 0, 1], [3/4, 1/4, 1], \
+            [1, 0, 1], [1/2, 0, 1], 100)
+   Qlab  = ('P', 'M', 'X', 'P', '\Gamma', 'X')
 
    feSpec = fe.spinwave(Qlist,'hermit',False)
    feSpec = m.sw_egrid(m.sw_neutron(feSpec), 'component', 'Sperp');
@@ -369,13 +386,13 @@ so can be used directly.
 
    # Constant parameters for SpinW model
    # Note that we use the damped harmonic oscillator resolution model ('sho')
-   cpars = ['mat', ['J1', 'D(3,3)'], 'hermit', False, 'optmem', 1,
-            'useFast', True, 'resfun', 'sho', 'formfact', True];
+   cpars = ('mat', ['J1', 'D(3,3)'], 'hermit', False, 'optmem', 1,
+            'useFast', True, 'resfun', 'sho', 'formfact', True);
 
    kk = m.multifit_sqw(w_fe)
    # The spinw object "fe" is previous defined above
    # We need to pass the "horace_sqw" method of the "fe" object:
-   kk = kk.set_fun (fe.horace_sqw, [[J, D, gam, temp, amp]]+cpars)
+   kk = kk.set_fun (fe.horace_sqw, ([J, D, gam, temp, amp], *cpars))
    kk = kk.set_free ([1, 0, 1, 0, 1]);
    kk = kk.set_bfun (linear_bg, [0.1,0]);
    kk = kk.set_bfree ([1,0]);
