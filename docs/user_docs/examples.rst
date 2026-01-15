@@ -182,7 +182,7 @@ We can now plot a dispersion and INS spectrum along high symmetry directions:
    feSpec = fe.spinwave(Qlist,'hermit',False)
    feSpec = m.sw_egrid(m.sw_neutron(feSpec), 'component', 'Sperp');
    m.figure()
-   m.sw_plotspec(feSpec, 'dE', 30, 'qlabel', Qlab)
+   m.sw_plotspec(feSpec, 'dE', 0.3, 'qlabel', Qlab)
    m.legend('off')
 
 .. image:: images/example_spinw_fe_disp.png
@@ -350,26 +350,36 @@ defining the instrument and experimental parameters on the workspace and then re
 
 .. code-block:: python
 
-   # Set up instrument and experiment parameters
-   xgeom = [0,0,1]; ygeom = [0,1,0]; shape = 'cuboid'; shape_pars = [0.01,0.05,0.01];
-   w_fe = m.set_sample(w_fe, m.IX_sample(xgeom, ygeom, shape, shape_pars));
-   ei = 70; freq = 250; chopper = 's';
-   w_fe = m.set_instrument(w_fe, m.maps_instrument(ei, freq, chopper));
+   # Define sample parameters
+   xgeom = [0,0,1]
+   ygeom = [0,1,0]
+   shape = 'cuboid'
+   shape_pars = [0.01,0.05,0.01]
+   
+   # Define instrument parameters
+   ei = 400    # Incident energy in meV
+   freq = 600  # Chopper frequency in Hz
+   chop = 's'  # Chopper rotor identifier (ask instrument scientist)
+   
+   # Sets the sample and instrument on the workspace
+   w_fe = w_fe.set_sample(m.IX_sample(xgeom, ygeom, shape, shape_pars))
+   w_fe = w_fe.set_instrument(m.maps_instrument(ei, freq, chop))
+   
+   tbfobj = m.tobyfit(w_fe)
+   tbfobj = tbfobj.set_fun(py_fe_sqw, [J, D, gam, temp, amp])
+   tbfobj = tbfobj.set_bfun(linear_bg, [0.3, 0])
+   w_tbf = tbfobj.simulate()
+   
+   m.acolor('black')
+   m.plot(my_cuts[0])
+   m.acolor('red')
+   m.pl(w_tbf)
+   m.acolor('blue')
+   m.pl(w_cal)
 
-   # Set up resolution convolution model
-   gam = 0.1 # set intrinsic width to minimum
-   kk = m.multifit_sqw(w_fe)
-   kk = kk.set_fun (py_fe_sqw, [J, D, gam, temp, amp])
-   kk = kk.set_free ([1, 0, 1, 0, 1])
-   kk = kk.set_bfun (linear_bg, [0.3,0])
-   kk = kk.set_bfree ([1,0])
 
-   # Calculate the model spectrum
-   w_res = kk.simulate()
-
-   # Plots the data and model together
-   m.plot(w_fe)
-   m.pl(w_res)
+.. image:: images/example_tobyfit.png
+   :width: 500px
 
 
 Modelling Horace data with SpinW or Euphonic
@@ -409,6 +419,10 @@ so can be used directly.
    m.pl(wsim['fore'])
 
 
+.. image:: images/example_horace_spinw.png
+   :width: 500px
+
+
 For Euphonic, the gateway function is ``horace_disp`` and returns two cell arrays
 :math:`E_n(\mathbf{Q}), S_n(\mathbf{Q})`, so must be wrapped in another function ``disp2sqw`` first.
 In addition, ``horace_disp`` is a method of a helper class ``CoherentCrystal``
@@ -437,5 +451,9 @@ from the ``euphonic_sqw_models`` module which should be constructed from the ``F
    wsim = kk.simulate()
 
    hf = m.plot(wsc); m.pl(wsim)
+
+
+.. image:: images/example_horace_euphonic.png
+   :width: 500px
 
 
