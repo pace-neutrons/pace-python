@@ -1,20 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; PACE 0.1.4+2.ga007a48 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Examples &mdash; PACE 0.4.0+2.g79d7c86.dirty documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=3a39a572"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -26,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> PACE
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PACE
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -41,7 +47,6 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#demonstration-repository">Demonstration repository</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#starting-pace-neutrons">Starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#initialisation">Initialisation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-horace-to-look-at-ins-data">Using Horace to look at INS data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-spinw-to-model-spin-waves">Using SpinW to model spin waves</a></li>
@@ -66,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Examples</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Examples</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -77,24 +82,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline"></a></h1>
-<div class="contents local topic" id="contents">
-<p class="topic-title first">Contents</p>
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#demonstration-repository" id="id1">Demonstration repository</a></p></li>
-<li><p><a class="reference internal" href="#starting-pace-neutrons" id="id2">Starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code></a></p></li>
-<li><p><a class="reference internal" href="#initialisation" id="id3">Initialisation</a></p></li>
-<li><p><a class="reference internal" href="#using-horace-to-look-at-ins-data" id="id4">Using Horace to look at INS data</a></p></li>
-<li><p><a class="reference internal" href="#using-spinw-to-model-spin-waves" id="id5">Using SpinW to model spin waves</a></p></li>
-<li><p><a class="reference internal" href="#using-euphonic-to-model-lattice-vibrations" id="id6">Using Euphonic to model lattice vibrations</a></p></li>
-<li><p><a class="reference internal" href="#defining-a-python-model-function-for-horace" id="id7">Defining a Python model function for Horace</a></p></li>
-<li><p><a class="reference internal" href="#modelling-ins-data-with-instrument-resolution-convolution" id="id8">Modelling INS data with instrument resolution convolution</a></p></li>
-<li><p><a class="reference internal" href="#modelling-horace-data-with-spinw-or-euphonic" id="id9">Modelling Horace data with SpinW or Euphonic</a></p></li>
+<li><p><a class="reference internal" href="#initialisation" id="id2">Initialisation</a></p></li>
+<li><p><a class="reference internal" href="#using-horace-to-look-at-ins-data" id="id3">Using Horace to look at INS data</a></p></li>
+<li><p><a class="reference internal" href="#using-spinw-to-model-spin-waves" id="id4">Using SpinW to model spin waves</a></p></li>
+<li><p><a class="reference internal" href="#using-euphonic-to-model-lattice-vibrations" id="id5">Using Euphonic to model lattice vibrations</a></p></li>
+<li><p><a class="reference internal" href="#defining-a-python-model-function-for-horace" id="id6">Defining a Python model function for Horace</a></p></li>
+<li><p><a class="reference internal" href="#modelling-ins-data-with-instrument-resolution-convolution" id="id7">Modelling INS data with instrument resolution convolution</a></p></li>
+<li><p><a class="reference internal" href="#modelling-horace-data-with-spinw-or-euphonic" id="id8">Modelling Horace data with SpinW or Euphonic</a></p></li>
 </ul>
-</div>
-<div class="section" id="demonstration-repository">
-<h2><a class="toc-backref" href="#id1">Demonstration repository</a><a class="headerlink" href="#demonstration-repository" title="Permalink to this headline"></a></h2>
+</nav>
+<section id="demonstration-repository">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Demonstration repository</a><a class="headerlink" href="#demonstration-repository" title="Link to this heading"></a></h2>
 <p>There is a <a class="reference external" href="https://github.com/pace-neutrons/pace-python-demo">demonstration repository</a>
 which contains a <a class="reference external" href="https://github.com/pace-neutrons/pace-python-demo/blob/main/demo.ipynb">Jupyter notebook</a>,
 a <a class="reference external" href="https://github.com/pace-neutrons/pace-python-demo/blob/main/demo.py">plain .py script</a>
@@ -102,29 +106,27 @@ and the required datafiles to run the demonstration.</p>
 <p>You can obtain a zip of this repository
 <a class="reference external" href="https://github.com/pace-neutrons/pace-python-demo/archive/refs/heads/main.zip">here</a>.</p>
 <p>The follow examples will use the data contained in this repository.</p>
-</div>
-<div class="section" id="starting-pace-neutrons">
-<h2><a class="toc-backref" href="#id2">Starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code></a><a class="headerlink" href="#starting-pace-neutrons" title="Permalink to this headline"></a></h2>
-<p>There are three options to start <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> - starts with an IPython console</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span> <span class="pre">-s</span></code> or <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span> <span class="pre">--spyder</span></code> - starts with the <a class="reference external" href="https://www.spyder-ide.org/">Spyder IDE</a></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span> <span class="pre">-j</span></code> or <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span> <span class="pre">--jupyter</span></code> - starts a Jupyter Notebook server.</p></li>
-</ul>
-<p>(The option to start with <code class="docutils literal notranslate"><span class="pre">spyder</span></code> or <code class="docutils literal notranslate"><span class="pre">jupyter</span></code> only work if you have already installed Spyder or Jupyter).</p>
-<p>The following examples will work with all modes.</p>
-<p>Note that for the Jupyter notebooks, by default figures are rendered in the notebook as images (<code class="docutils literal notranslate"><span class="pre">inline</span></code> mode).
-If you are running the Jupyter server on a local machine, and want to have the actual plot windows,
-please run the following in a Notebook cell before making any plots:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">pace</span> <span class="n">windowed</span>
+<p>More examples can be found in the course materials for a <a class="reference external" href="https://github.com/mducle/edatw24">recent training course</a>
+particularly the IPython notebooks in the <code class="docutils literal notranslate"><span class="pre">solutions</span></code> folder.</p>
+</section>
+<section id="initialisation">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Initialisation</a><a class="headerlink" href="#initialisation" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is compatible with both jupyter notebooks and the Spyder IDE.
+If you prefer to use either of you can start these as usual,
+or just start python normally to use the standard Python console.
+We recommend to use jupyter notebooks.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>jupyter<span class="w"> </span>notebook
 </pre></div>
 </div>
+<p>Note that for Jupyter notebooks, by default figures are rendered in the notebook as images (<code class="docutils literal notranslate"><span class="pre">inline</span></code> mode).
+If you are running the Jupyter server on a local machine, and want to have the interactive plot windows,
+please run the following in a Notebook cell before making any plots:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matlab_plot_mode</span> <span class="n">windowed</span>
+</pre></div>
 </div>
-<div class="section" id="initialisation">
-<h2><a class="toc-backref" href="#id3">Initialisation</a><a class="headerlink" href="#initialisation" title="Permalink to this headline"></a></h2>
 <p>After starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> but defore running any of the Matlab derived programs (<code class="docutils literal notranslate"><span class="pre">horace</span></code> and <code class="docutils literal notranslate"><span class="pre">spinw</span></code>),
 we must initialise the Matlab interpreter using:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pace_neutrons</span> <span class="kn">import</span> <span class="n">Matlab</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pace_neutrons</span><span class="w"> </span><span class="kn">import</span> <span class="n">Matlab</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">Matlab</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -137,17 +139,30 @@ but there are a few differences you should bear in mind:</p>
 <li><p>Matlab functions like <code class="docutils literal notranslate"><span class="pre">diag</span></code> must be preceded by <code class="docutils literal notranslate"><span class="pre">m.</span></code> and array elements needs <code class="docutils literal notranslate"><span class="pre">,</span></code> comma separators.</p></li>
 <li><p>Array indexing uses square brackets <code class="docutils literal notranslate"><span class="pre">[]</span></code> instead of round brackets <code class="docutils literal notranslate"><span class="pre">()</span></code> and are indexed from zero.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.T</span></code> is used for transposed in <code class="docutils literal notranslate"><span class="pre">numpy</span></code> instead of the <code class="docutils literal notranslate"><span class="pre">'</span></code> operator.</p></li>
-<li><p>Keyword arguments for <em>Matlab functions</em> must be speficied as pairs <code class="docutils literal notranslate"><span class="pre">'arg_name',</span> <span class="pre">arg_val</span></code>
-in the old-style Matlab fashion rather than in Python style <code class="docutils literal notranslate"><span class="pre">arg_name=arg_val</span></code>.</p></li>
 </ul>
 <p>For vectors and arrays, <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> will try to convert
 lists of numeric values into Matlab arrays automatically.
 It will convert non-numeric or mixed lists into Matlab cell arrays,
 so you should not use the braces <code class="docutils literal notranslate"><span class="pre">{}</span></code> constructor for this
-(this is used for a Python dictionary which is converted to a Matlab structure).</p>
+(this is used for a Python dictionary which is converted to a Matlab structure).
+Multi-dimensional arrays are constructed as nested list in the Python manner, e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">sum</span><span class="p">([[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+</pre></div>
 </div>
-<div class="section" id="using-horace-to-look-at-ins-data">
-<h2><a class="toc-backref" href="#id4">Using Horace to look at INS data</a><a class="headerlink" href="#using-horace-to-look-at-ins-data" title="Permalink to this headline"></a></h2>
+<p>Will yield <code class="docutils literal notranslate"><span class="pre">15</span> <span class="pre">15</span> <span class="pre">15</span></code> summing over the columns of the <span class="math notranslate nohighlight">\(3 \times 3\)</span> magic square.</p>
+<p>If you need to specify a Matlab cell arrays of numeric values, arrays or vectors,
+(such as required by the <code class="docutils literal notranslate"><span class="pre">multifit</span></code> class in Horace in order to pass extra parameters to a model function)
+you should use a Python tuple, e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">set_fun</span><span class="p">(</span><span class="n">my_function</span><span class="p">,</span> <span class="p">([</span><span class="n">fitpar1</span><span class="p">,</span> <span class="n">fitpar2</span><span class="p">],</span> <span class="p">[</span><span class="n">nonfitpar1</span><span class="p">,</span> <span class="n">nonfitpar2</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>where the argument is equivalent to the Matlab syntax: <code class="docutils literal notranslate"><span class="pre">{[fitpar1</span> <span class="pre">fitpar2]</span> <span class="pre">[nonfitpar1</span> <span class="pre">nonfitpar2]}</span></code>.
+If you used <code class="docutils literal notranslate"><span class="pre">[[fitpar1,</span> <span class="pre">fitpar2],</span> <span class="pre">[nonfitpar1,</span> <span class="pre">nonfitpar2]]</span></code> in Python, <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>
+will convert this into <span class="math notranslate nohighlight">\(2 \times 2\)</span> array, but the rounded brackets (a tuple constructor operator)
+tells it to treat the variable as a Matlab cell array.</p>
+</section>
+<section id="using-horace-to-look-at-ins-data">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Using Horace to look at INS data</a><a class="headerlink" href="#using-horace-to-look-at-ins-data" title="Link to this heading"></a></h2>
 <p>In the first example, we will look at a 2D slice of an inelastic neutron scattering single crystal measurement
 on the compound <span class="math notranslate nohighlight">\(\mathrm{Pr(Ca,Sr)_2Mn_2O_7}\)</span>.
 The original experiment is described in <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.109.237202">this work</a>
@@ -160,7 +175,8 @@ and the datafile is available
 <span class="n">m</span><span class="o">.</span><span class="n">lz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/example_pcsmo1.png"><img alt="_images/example_pcsmo1.png" src="_images/example_pcsmo1.png" style="width: 500px;" /></a>
+<a class="reference internal image-reference" href="_images/example_pcsmo1.png"><img alt="_images/example_pcsmo1.png" src="_images/example_pcsmo1.png" style="width: 500px;" />
+</a>
 <p>Ensure that you are in the same folder as the data file <code class="docutils literal notranslate"><span class="pre">pcsmo_cut1.sqw</span></code>
 or give the full or relative path to that file in the argument of <code class="docutils literal notranslate"><span class="pre">m.cut_sqw</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">cut_sqw</span></code> function rebins (histograms) the data and is described in the Horace documentation
@@ -176,52 +192,54 @@ is discarded in the returned object, producing a <code class="docutils literal n
 or other complex modelling.
 The two types are described in more details in the
 <a class="reference external" href="https://pace-neutrons.github.io/Horace/3.6.0/FAQ.html#the-difference-between-sqw-and-dnd-objects">Horace documentation</a>.</p>
-</div>
-<div class="section" id="using-spinw-to-model-spin-waves">
-<h2><a class="toc-backref" href="#id5">Using SpinW to model spin waves</a><a class="headerlink" href="#using-spinw-to-model-spin-waves" title="Permalink to this headline"></a></h2>
+</section>
+<section id="using-spinw-to-model-spin-waves">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Using SpinW to model spin waves</a><a class="headerlink" href="#using-spinw-to-model-spin-waves" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://spinw.org/">SpinW</a> is a program for calculating magnetic inelastic neutron spectra using linear spin wave theory.</p>
 <p>In this example we will model the spin waves in bcc-Iron.
 First we define a <code class="docutils literal notranslate"><span class="pre">spinw</span></code> object and use its methods to define the crystal lattice, atomic basis,
 and spin Hamiltonian parameters (the exchange interactions and single-ion anisotropy).
 These parameters are in principle tensor quantities, and are defined in SpinW as <span class="math notranslate nohighlight">\(3 \times 3\)</span> named matrices.
 Finally we define the ferromagnetic structure and plot it.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">2.87</span><span class="p">;</span><span class="w">  </span>#<span class="w"> </span><span class="n">Angstrom</span><span class="p">,</span><span class="w"> </span><span class="n">lattice</span><span class="w"> </span><span class="n">parameter</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">bcc</span><span class="o">-</span><span class="n">Iron</span><span class="w"></span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">2.87</span><span class="p">;</span><span class="w">  </span>#<span class="w"> </span><span class="n">Angstrom</span><span class="p">,</span><span class="w"> </span><span class="n">lattice</span><span class="w"> </span><span class="n">parameter</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">bcc</span><span class="o">-</span><span class="n">Iron</span>
 
-#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">SpinW</span><span class="w"> </span><span class="n">object</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">lattice</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">bcc</span><span class="o">-</span><span class="n">Iron</span><span class="w"></span>
-<span class="n">fe</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">spinw</span><span class="p">();</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">genlattice</span><span class="p">(</span><span class="s">&#39;lat_const&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;angled&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;spgr&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;I m -3 m&#39;</span><span class="p">)</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">addatom</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;MFe3&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;r&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;S&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;gold&#39;</span><span class="p">)</span><span class="w"></span>
-#<span class="w"> </span><span class="n">Generates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">near</span><span class="o">-</span><span class="n">neighbour</span><span class="w"> </span><span class="n">bonds</span><span class="w"> </span><span class="p">(</span><span class="n">up</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="n">Angstrom</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">default</span><span class="p">)</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">gencoupling</span><span class="p">()</span><span class="w"></span>
-#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="n">neighbour</span><span class="w"> </span><span class="n">interaction</span><span class="w"> </span><span class="n">J1</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="nb">single</span><span class="o">-</span><span class="n">ion</span><span class="w"> </span><span class="n">anisotropy</span><span class="w"> </span><span class="n">D</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">addmatrix</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;J1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;gray&#39;</span><span class="p">)</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">addmatrix</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;D&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;green&#39;</span><span class="p">)</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">addcoupling</span><span class="p">(</span><span class="s">&#39;mat&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;J1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;bond&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">addaniso</span><span class="p">(</span><span class="s">&#39;D&#39;</span><span class="p">)</span><span class="w"></span>
-#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">ferromagnetic</span><span class="w"> </span><span class="n">structure</span><span class="w"></span>
-<span class="n">fe</span><span class="p">.</span><span class="n">genmagstr</span><span class="p">(</span><span class="s">&#39;mode&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;direct&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;S&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">]]).</span><span class="n">T</span><span class="p">);</span><span class="w"></span>
+#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">SpinW</span><span class="w"> </span><span class="n">object</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">lattice</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">bcc</span><span class="o">-</span><span class="n">Iron</span>
+<span class="n">fe</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">spinw</span><span class="p">();</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">genlattice</span><span class="p">(</span><span class="s">&#39;lat_const&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;angled&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">90</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;spgr&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;I m -3 m&#39;</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">addatom</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;MFe3&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;r&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="s">&#39;S&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;gold&#39;</span><span class="p">)</span>
+#<span class="w"> </span><span class="n">Generates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">near</span><span class="o">-</span><span class="n">neighbour</span><span class="w"> </span><span class="n">bonds</span><span class="w"> </span><span class="p">(</span><span class="n">up</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="n">Angstrom</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">default</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">gencoupling</span><span class="p">()</span>
+#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="n">neighbour</span><span class="w"> </span><span class="n">interaction</span><span class="w"> </span><span class="n">J1</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="nb">single</span><span class="o">-</span><span class="n">ion</span><span class="w"> </span><span class="n">anisotropy</span><span class="w"> </span><span class="n">D</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">addmatrix</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;J1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;gray&#39;</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">addmatrix</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;D&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span><span class="w"> </span><span class="s">&#39;color&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;green&#39;</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">addcoupling</span><span class="p">(</span><span class="s">&#39;mat&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;J1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;bond&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">addaniso</span><span class="p">(</span><span class="s">&#39;D&#39;</span><span class="p">)</span>
+#<span class="w"> </span><span class="n">Define</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">ferromagnetic</span><span class="w"> </span><span class="n">structure</span>
+<span class="n">fe</span><span class="p">.</span><span class="n">genmagstr</span><span class="p">(</span><span class="s">&#39;mode&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;direct&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;S&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">]]).</span><span class="n">T</span><span class="p">);</span>
 
-#<span class="w"> </span><span class="n">Plots</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">structure</span><span class="w"></span>
-<span class="n">m</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fe</span><span class="p">)</span><span class="w"></span>
+#<span class="w"> </span><span class="n">Plots</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">structure</span>
+<span class="n">m</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fe</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/example_spinw_fe_struct.png"><img alt="_images/example_spinw_fe_struct.png" src="_images/example_spinw_fe_struct.png" style="width: 500px;" /></a>
+<a class="reference internal image-reference" href="_images/example_spinw_fe_struct.png"><img alt="_images/example_spinw_fe_struct.png" src="_images/example_spinw_fe_struct.png" style="width: 500px;" />
+</a>
 <p>We can now plot a dispersion and INS spectrum along high symmetry directions:</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">Qlist</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[[</span><span class="mi">3</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="o">\</span><span class="w"></span>
-<span class="w">         </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">100</span><span class="p">]</span><span class="w"></span>
-<span class="n">Qlab</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;X&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;\Gamma&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;X&#39;</span><span class="p">];</span><span class="w"></span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">Qlist</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">([</span><span class="mi">3</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="o">\</span>
+<span class="w">         </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="n">Qlab</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;M&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;X&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;\Gamma&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;X&#39;</span><span class="p">)</span>
 
-<span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">fe</span><span class="p">.</span><span class="n">spinwave</span><span class="p">(</span><span class="n">Qlist</span><span class="p">,</span><span class="s">&#39;hermit&#39;</span><span class="p">,</span><span class="n">False</span><span class="p">)</span><span class="w"></span>
-<span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">sw_egrid</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">sw_neutron</span><span class="p">(</span><span class="n">feSpec</span><span class="p">),</span><span class="w"> </span><span class="s">&#39;component&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Sperp&#39;</span><span class="p">);</span><span class="w"></span>
-<span class="n">m</span><span class="p">.</span><span class="n">figure</span><span class="p">()</span><span class="w"></span>
-<span class="n">m</span><span class="p">.</span><span class="n">sw_plotspec</span><span class="p">(</span><span class="n">feSpec</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;dE&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;qlabel&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Qlab</span><span class="p">)</span><span class="w"></span>
-<span class="n">m</span><span class="p">.</span><span class="n">legend</span><span class="p">(</span><span class="s">&#39;off&#39;</span><span class="p">)</span><span class="w"></span>
+<span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">fe</span><span class="p">.</span><span class="n">spinwave</span><span class="p">(</span><span class="n">Qlist</span><span class="p">,</span><span class="s">&#39;hermit&#39;</span><span class="p">,</span><span class="n">False</span><span class="p">)</span>
+<span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">sw_egrid</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">sw_neutron</span><span class="p">(</span><span class="n">feSpec</span><span class="p">),</span><span class="w"> </span><span class="s">&#39;component&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Sperp&#39;</span><span class="p">);</span>
+<span class="n">m</span><span class="p">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">m</span><span class="p">.</span><span class="n">sw_plotspec</span><span class="p">(</span><span class="n">feSpec</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;dE&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;qlabel&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Qlab</span><span class="p">)</span>
+<span class="n">m</span><span class="p">.</span><span class="n">legend</span><span class="p">(</span><span class="s">&#39;off&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/example_spinw_fe_disp.png"><img alt="_images/example_spinw_fe_disp.png" src="_images/example_spinw_fe_disp.png" style="width: 500px;" /></a>
-</div>
-<div class="section" id="using-euphonic-to-model-lattice-vibrations">
-<h2><a class="toc-backref" href="#id6">Using Euphonic to model lattice vibrations</a><a class="headerlink" href="#using-euphonic-to-model-lattice-vibrations" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/example_spinw_fe_disp.png"><img alt="_images/example_spinw_fe_disp.png" src="_images/example_spinw_fe_disp.png" style="width: 500px;" />
+</a>
+</section>
+<section id="using-euphonic-to-model-lattice-vibrations">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Using Euphonic to model lattice vibrations</a><a class="headerlink" href="#using-euphonic-to-model-lattice-vibrations" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://euphonic.readthedocs.io">Euphonic</a> is a program to calculate phonon bandstructures
 and INS intensities from force constants data.
 Euphonic is a Python program and is included automatically in <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>
@@ -229,10 +247,10 @@ so you can simply <code class="docutils literal notranslate"><span class="pre">i
 <a class="reference external" href="https://euphonic.readthedocs.io/en/stable/qpoint-phonon-modes.html#example">documentation</a>.
 The input file may be found
 <a class="reference external" href="https://github.com/pace-neutrons/pace-python-demo/blob/main/datafiles/quartz.castep_bin">here</a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">seekpath</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">euphonic</span> <span class="kn">import</span> <span class="n">ureg</span><span class="p">,</span> <span class="n">QpointPhononModes</span><span class="p">,</span> <span class="n">ForceConstants</span>
-<span class="kn">from</span> <span class="nn">euphonic.util</span> <span class="kn">import</span> <span class="n">mp_grid</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">seekpath</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">euphonic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ureg</span><span class="p">,</span> <span class="n">QpointPhononModes</span><span class="p">,</span> <span class="n">ForceConstants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">euphonic.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">mp_grid</span>
 
 <span class="c1"># Read the force constants</span>
 <span class="n">fc</span> <span class="o">=</span> <span class="n">ForceConstants</span><span class="o">.</span><span class="n">from_castep</span><span class="p">(</span><span class="s1">&#39;datafiles/quartz.castep_bin&#39;</span><span class="p">)</span>
@@ -260,16 +278,17 @@ The input file may be found
 <span class="n">sf</span> <span class="o">=</span> <span class="n">phonons</span><span class="o">.</span><span class="n">calculate_structure_factor</span><span class="p">(</span><span class="n">scattering_lengths</span><span class="p">,</span> <span class="n">dw</span><span class="o">=</span><span class="n">dw</span><span class="p">)</span>
 
 <span class="c1"># Plots the spectrum as a colormesh</span>
-<span class="kn">from</span> <span class="nn">euphonic</span> <span class="kn">import</span> <span class="n">ureg</span>
-<span class="kn">from</span> <span class="nn">euphonic.plot</span> <span class="kn">import</span> <span class="n">plot_2d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">euphonic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ureg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">euphonic.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_2d</span>
 <span class="n">energy_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ureg</span><span class="p">(</span><span class="s1">&#39;meV&#39;</span><span class="p">)</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_2d</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">calculate_sqw_map</span><span class="p">(</span><span class="n">energy_bins</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/example_quartz_disp.png"><img alt="_images/example_quartz_disp.png" src="_images/example_quartz_disp.png" style="width: 500px;" /></a>
-</div>
-<div class="section" id="defining-a-python-model-function-for-horace">
-<h2><a class="toc-backref" href="#id7">Defining a Python model function for Horace</a><a class="headerlink" href="#defining-a-python-model-function-for-horace" title="Permalink to this headline"></a></h2>
+<a class="reference internal image-reference" href="_images/example_quartz_disp.png"><img alt="_images/example_quartz_disp.png" src="_images/example_quartz_disp.png" style="width: 500px;" />
+</a>
+</section>
+<section id="defining-a-python-model-function-for-horace">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Defining a Python model function for Horace</a><a class="headerlink" href="#defining-a-python-model-function-for-horace" title="Link to this heading"></a></h2>
 <p>In order to use Horace to model or fit an inelastic neutron spectrum,
 we have to pass it a model function.
 This function should either:</p>
@@ -296,8 +315,8 @@ The calculated spectrum is this simulated and plot over the data.</p>
 <span class="n">A</span><span class="o">=</span><span class="mf">0.0706</span><span class="p">;</span> <span class="n">a</span><span class="o">=</span><span class="mf">35.008</span><span class="p">;</span>  <span class="n">B</span><span class="o">=</span><span class="mf">0.3589</span><span class="p">;</span> <span class="n">b</span><span class="o">=</span><span class="mf">15.358</span><span class="p">;</span>  <span class="n">C</span><span class="o">=</span><span class="mf">0.5819</span><span class="p">;</span> <span class="n">c</span><span class="o">=</span><span class="mf">5.561</span><span class="p">;</span>  <span class="n">D</span><span class="o">=-</span><span class="mf">0.0114</span><span class="p">;</span>
 
 <span class="c1"># Define the Python function</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="k">def</span> <span class="nf">py_fe_sqw</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">py_fe_sqw</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
     <span class="n">js</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">om</span> <span class="o">=</span> <span class="n">d</span> <span class="o">+</span> <span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">js</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">l</span><span class="p">))</span>
@@ -331,11 +350,12 @@ The calculated spectrum is this simulated and plot over the data.</p>
 <span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">w_cal</span><span class="p">)</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/example_pyfun_spectrum.png"><img alt="_images/example_pyfun_spectrum.png" src="_images/example_pyfun_spectrum.png" style="width: 500px;" /></a>
+<a class="reference internal image-reference" href="_images/example_pyfun_spectrum.png"><img alt="_images/example_pyfun_spectrum.png" src="_images/example_pyfun_spectrum.png" style="width: 500px;" />
+</a>
 <p>A fit can be run be replacing <code class="docutils literal notranslate"><span class="pre">w_cal</span> <span class="pre">=</span> <span class="pre">kk.simulate()</span></code> with <code class="docutils literal notranslate"><span class="pre">w_fit,</span> <span class="pre">fitpars</span> <span class="pre">=</span> <span class="pre">kk.fit()</span></code>.</p>
-</div>
-<div class="section" id="modelling-ins-data-with-instrument-resolution-convolution">
-<h2><a class="toc-backref" href="#id8">Modelling INS data with instrument resolution convolution</a><a class="headerlink" href="#modelling-ins-data-with-instrument-resolution-convolution" title="Permalink to this headline"></a></h2>
+</section>
+<section id="modelling-ins-data-with-instrument-resolution-convolution">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Modelling INS data with instrument resolution convolution</a><a class="headerlink" href="#modelling-ins-data-with-instrument-resolution-convolution" title="Link to this heading"></a></h2>
 <p>Including instrument resolution convolution to the calculation is simply a matter of
 defining the instrument and experimental parameters on the workspace and then replacing
 <code class="docutils literal notranslate"><span class="pre">kk</span> <span class="pre">=</span> <span class="pre">m.multifit_sqw(w_fe)</span></code> with <code class="docutils literal notranslate"><span class="pre">kk</span> <span class="pre">=</span> <span class="pre">m.tobyfit(w_fe)</span></code>, e.g.</p>
@@ -361,9 +381,9 @@ defining the instrument and experimental parameters on the workspace and then re
 <span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">w_res</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="modelling-horace-data-with-spinw-or-euphonic">
-<h2><a class="toc-backref" href="#id9">Modelling Horace data with SpinW or Euphonic</a><a class="headerlink" href="#modelling-horace-data-with-spinw-or-euphonic" title="Permalink to this headline"></a></h2>
+</section>
+<section id="modelling-horace-data-with-spinw-or-euphonic">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Modelling Horace data with SpinW or Euphonic</a><a class="headerlink" href="#modelling-horace-data-with-spinw-or-euphonic" title="Link to this heading"></a></h2>
 <p>Finally, to use SpinW or Euphonic with Horace, we pass a “gateway” function
 defined by those programs to <code class="docutils literal notranslate"><span class="pre">multifit_sqw</span></code> or <code class="docutils literal notranslate"><span class="pre">tobyfit</span></code> instead of the Python function
 we defined in the previous section.</p>
@@ -371,13 +391,13 @@ we defined in the previous section.</p>
 so can be used directly.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Constant parameters for SpinW model</span>
 <span class="c1"># Note that we use the damped harmonic oscillator resolution model (&#39;sho&#39;)</span>
-<span class="n">cpars</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mat&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;J1&#39;</span><span class="p">,</span> <span class="s1">&#39;D(3,3)&#39;</span><span class="p">],</span> <span class="s1">&#39;hermit&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;optmem&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
-         <span class="s1">&#39;useFast&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;resfun&#39;</span><span class="p">,</span> <span class="s1">&#39;sho&#39;</span><span class="p">,</span> <span class="s1">&#39;formfact&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">];</span>
+<span class="n">cpars</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mat&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;J1&#39;</span><span class="p">,</span> <span class="s1">&#39;D(3,3)&#39;</span><span class="p">],</span> <span class="s1">&#39;hermit&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;optmem&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+         <span class="s1">&#39;useFast&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;resfun&#39;</span><span class="p">,</span> <span class="s1">&#39;sho&#39;</span><span class="p">,</span> <span class="s1">&#39;formfact&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
 
 <span class="n">kk</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">multifit_sqw</span><span class="p">(</span><span class="n">w_fe</span><span class="p">)</span>
 <span class="c1"># The spinw object &quot;fe&quot; is previous defined above</span>
 <span class="c1"># We need to pass the &quot;horace_sqw&quot; method of the &quot;fe&quot; object:</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_fun</span> <span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">horace_sqw</span><span class="p">,</span> <span class="p">[[</span><span class="n">J</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">gam</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">amp</span><span class="p">]]</span><span class="o">+</span><span class="n">cpars</span><span class="p">)</span>
+<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_fun</span> <span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">horace_sqw</span><span class="p">,</span> <span class="p">([</span><span class="n">J</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">gam</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">amp</span><span class="p">],</span> <span class="o">*</span><span class="n">cpars</span><span class="p">))</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_free</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]);</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_bfun</span> <span class="p">(</span><span class="n">linear_bg</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">0</span><span class="p">]);</span>
 <span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_bfree</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]);</span>
@@ -398,8 +418,8 @@ so can be used directly.</p>
 <span class="math notranslate nohighlight">\(E_n(\mathbf{Q}), S_n(\mathbf{Q})\)</span>, so must be wrapped in another function <code class="docutils literal notranslate"><span class="pre">disp2sqw</span></code> first.
 In addition, <code class="docutils literal notranslate"><span class="pre">horace_disp</span></code> is a method of a helper class <code class="docutils literal notranslate"><span class="pre">CoherentCrystal</span></code>
 from the <code class="docutils literal notranslate"><span class="pre">euphonic_sqw_models</span></code> module which should be constructed from the <code class="docutils literal notranslate"><span class="pre">ForceConstants</span></code> as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">euphonic</span> <span class="kn">import</span> <span class="n">ForceConstants</span>
-<span class="kn">from</span> <span class="nn">euphonic_sqw_models</span> <span class="kn">import</span> <span class="n">CoherentCrystal</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">euphonic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForceConstants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">euphonic_sqw_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoherentCrystal</span>
 
 <span class="n">fc</span> <span class="o">=</span> <span class="n">ForceConstants</span><span class="o">.</span><span class="n">from_castep</span><span class="p">(</span><span class="s1">&#39;datafiles/quartz.castep_bin&#39;</span><span class="p">)</span>
 <span class="n">euobj</span> <span class="o">=</span> <span class="n">CoherentCrystal</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">debye_waller_grid</span><span class="o">=</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -421,8 +441,8 @@ from the <code class="docutils literal notranslate"><span class="pre">euphonic_s
 <span class="n">hf</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wsc</span><span class="p">);</span> <span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">wsim</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -434,8 +454,8 @@ from the <code class="docutils literal notranslate"><span class="pre">euphonic_s
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021 PACE Authors.
-      <span class="lastupdated">Last updated on Nov 21, 2021, 6:11:50 PM.
+    <p>&#169; Copyright 2021-2026 PACE Authors.
+      <span class="lastupdated">Last updated on Jan 15, 2026, 5:46:47 PM.
       </span></p>
   </div>
 

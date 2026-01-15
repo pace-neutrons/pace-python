@@ -1,19 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; PACE 0.1.4+2.ga007a48 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Installation &mdash; PACE 0.4.0+1.g967d036.dirty documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a1e00c55"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -26,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> PACE
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PACE
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -40,7 +46,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#matlab-compiler-runtime">Matlab Compiler Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#restrictions">Restrictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parallization">Parallization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#idaaas-installation">IDAaaS Installation</a></li>
 </ul>
 </li>
@@ -60,8 +66,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Installation</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -71,87 +77,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
-<div class="contents local topic" id="contents">
-<p class="topic-title first">Contents</p>
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#matlab-compiler-runtime" id="id1">Matlab Compiler Runtime</a></p></li>
-<li><p><a class="reference internal" href="#restrictions" id="id2">Restrictions</a></p></li>
+<li><p><a class="reference internal" href="#parallization" id="id2">Parallization</a></p></li>
 <li><p><a class="reference internal" href="#idaaas-installation" id="id3">IDAaaS Installation</a></p></li>
 </ul>
-</div>
+</nav>
 <p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is available on the Python Package Index <a class="reference external" href="https://pypi.org/project/pace-neutrons">(PyPI)</a>,
 and can in principle be installed with any (CPython) distributions.
-However, due to <a class="reference internal" href="#restrictions"><span class="std std-ref">restrictions</span></a> detailed below we recommend that you use the
-<a class="reference external" href="https://docs.conda.io">conda</a> system.
-You can install a minimal conda system using <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.
-Once you have installed <code class="docutils literal notranslate"><span class="pre">conda</span></code>, run it and type:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda create -n pace <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
-conda activate pace
-pip install pace_neutrons spyder jupyter
+We highly recommend to use an isolated Python virtual environment rather than to install <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>
+into a common Python environment with your other software - in particular, <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is currently
+not compatible with Mantid due to clashing library dependencies.</p>
+<p>If you use the conda/mamba system, one way to install is:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>pace<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+conda<span class="w"> </span>activate<span class="w"> </span>pace
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pace_neutrons<span class="w"> </span>jupyter
 </pre></div>
 </div>
-<p>Alternatively, you can download and run one of the installers from the
-<a class="reference external" href="https://github.com/pace-neutrons/pace-python/releases/tag/v0.1.4">github page</a>
-(either for <a class="reference external" href="https://github.com/pace-neutrons/pace-python/releases/download/v0.1.4/pace_neutrons_installer_win32.exe">Windows</a>
-or <a class="reference external" href="https://github.com/pace-neutrons/pace-python/releases/download/v0.1.4/pace_neutrons_installer_linux.install">Linux</a>).</p>
-<p>The installer will first install the Matlab Compiler Runtime (MCR) needed by <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>,
-and install a small GUI application called <code class="docutils literal notranslate"><span class="pre">Pace</span> <span class="pre">Neutrons</span> <span class="pre">Installer</span></code>,
-which you should then run to install a conda environment and the <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> package.</p>
-<div class="section" id="matlab-compiler-runtime">
-<h2><a class="toc-backref" href="#id1">Matlab Compiler Runtime</a><a class="headerlink" href="#matlab-compiler-runtime" title="Permalink to this headline"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> relies on the Matlab Compiler Runtime (MCR).
-If you did not use the installer, then the MCR also needs to be installed.
-When you first run <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> after installing it using <code class="docutils literal notranslate"><span class="pre">pip</span></code>,
-and the program detects that the MCR has not been installed,
-it will prompt you to ask if you want to install it (and to accept the MCR license).
-Note that you do not need a full Matlab license to install the MCR or to run <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>.</p>
-<p>Alternatively, if you have the MCR or a full version of Matlab with the Compiler SDK toolbox
-(but note that <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> specifically needs R2020a on Linux and R2020b on Windows)
-installed but in a non-standard location, you can tell <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> this using:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pace_neutrons -d &lt;path/to/MCR&gt;
+<p>Where you can replace <code class="docutils literal notranslate"><span class="pre">conda</span></code> with <code class="docutils literal notranslate"><span class="pre">mamba</span></code> if you use the later.
+Alternatively, you can use the <code class="docutils literal notranslate"><span class="pre">venv</span></code> package:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>/path/to/where/you/want/pace
+/path/to/where/you/want/pace/env/Scripts/activate
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pace_neutrons<span class="w"> </span>jupyter
 </pre></div>
 </div>
-<p>This location will be cached for future use, so you do not need to specify it again.</p>
-<p>You can also tell the program to install the MCR manually using:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pace_neutrons --install-mcr
+<p>We currently support Python 3.8 to 3.13.</p>
+<section id="matlab-compiler-runtime">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Matlab Compiler Runtime</a><a class="headerlink" href="#matlab-compiler-runtime" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> relies on the Matlab Compiler Runtime (MCR), which needs to be installed separately.
+You can find versions at <a class="reference external" href="https://www.mathworks.com/products/compiler/matlab-runtime.html">the Mathworks page</a>.
+We currently support Matlab versions from R2021b to R2024b (R2025a and R2025b are currently not supported).</p>
+<p>Alternatively you can download an older installer for <a class="reference external" href="https://github.com/pace-neutrons/pace-python/releases/download/v0.3.0a1/pace_neutrons_installer_linux.install">Linux</a> or <a class="reference external" href="https://github.com/pace-neutrons/pace-python/releases/download/v0.3.0a1/pace_neutrons_installer_win32.exe">Windows</a>
+which will install a stripped down version of the R2021b MCR and a small GUI application to create
+a conda environment and install <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code>.
+This approach is no longer supported, but the MCR installed by the installer will still work and require
+a smaller download than the full MCR from the <a class="reference external" href="https://www.mathworks.com/products/compiler/matlab-runtime.html">official Mathworks webpage</a>.</p>
+<p>Finally, <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> will also work if you have a full (licensed) version of Matlab, as long as
+the Compiler SDK toolbox is installed.</p>
+</section>
+<section id="parallization">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Parallization</a><a class="headerlink" href="#parallization" title="Link to this heading"></a></h2>
+<p>You can activate the parallization framework using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pace_neutrons</span><span class="w"> </span><span class="kn">import</span> <span class="n">Matlab</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">Matlab</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">hpc</span><span class="p">(</span><span class="s1">&#39;on&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In this case it will assume that you consent to the MCR license and will not prompt.</p>
+<p>or deactivate it with <code class="code docutils literal notranslate"><span class="pre">m.hpc('off')</span></code>. You can select different types of parallelisation using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">hpc_config</span><span class="p">()</span><span class="o">.</span><span class="n">parallel_cluster</span> <span class="o">=</span> <span class="s1">&#39;parpool&#39;</span>
+</pre></div>
 </div>
-<div class="section" id="restrictions">
-<h2><a class="toc-backref" href="#id2">Restrictions</a><a class="headerlink" href="#restrictions" title="Permalink to this headline"></a></h2>
-<p>Because of the dependence on the MCR, which bundles its own version of many common libraries,
-<code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> has a number of restrictions:</p>
-<ul class="simple">
-<li><p>On Linux, only Python 3.6 and 3.7 are supported, requiring Matlab 2020a.
-This is to be compatible with the IDAaaS system.</p></li>
-<li><p>On Windows, only Python 3.7 and 3.8 are supported, requiring Matlab 2020b.
-This is to support the most common versions of Python in the Windows app store.</p></li>
-<li><p>At present, Mac OS is not supported.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is not compatible with Mantid Workbench.
-This is because of incompatibilities between the versions of the Qt and HDF5 libraries
-bundled by the MCR and those which Mantid is compiled with.</p></li>
-</ul>
-<p>We are working to remove some of these restrictions.</p>
-<p>In addition, to avoid incompatiblities with system libraries or those of other Python modules,
-we recommend that you install <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> in a Python virtual environment such as
-<a class="reference external" href="https://docs.python.org/3/library/venv.html">venv</a>/<a class="reference external" href="https://virtualenv.pypa.io/">virtualenv</a>
-or <a class="reference external" href="https://docs.conda.io">conda</a>.</p>
-</div>
-<div class="section" id="idaaas-installation">
-<h2><a class="toc-backref" href="#id3">IDAaaS Installation</a><a class="headerlink" href="#idaaas-installation" title="Permalink to this headline"></a></h2>
-<p>An installation of <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is available on the <a class="reference external" href="https://isis.analysis.stfc.ac.uk">IDAaaS</a> system.
+<p>(The compiled matlab code includes the parallelisation toolbox so <code class="code docutils literal notranslate"><span class="pre">parpool</span></code> will work.)</p>
+<p>Other options are <code class="code docutils literal notranslate"><span class="pre">'herbert'</span></code> (file-based communications) or <code class="code docutils literal notranslate"><span class="pre">'mpiexec_mpi'</span></code>.
+The last options needs an MPI installation, and a properly configured firewall.
+On Windows you can use <a class="reference external" href="https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi">MSMPI</a>.
+Horace does bundle a version of <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code> for Windows but it may be blocked by the firewall in some
+cases where the official Microsoft version is not blocked.
+(The Matlab version of Horace also has an addition option <code class="code docutils literal notranslate"><span class="pre">'slurm_mpi'</span></code> but this only works
+on certain versions of the IDAaaS system.)</p>
+</section>
+<section id="idaaas-installation">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">IDAaaS Installation</a><a class="headerlink" href="#idaaas-installation" title="Link to this heading"></a></h2>
+<p>An installation of <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code> is available on the <a class="reference external" href="https://ada.stfc.ac.uk">Ada</a> system.
 To run it, open a terminal and type:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>/mnt/nomachine/isis_direct_soft/pace_neutrons --spyder
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>/mnt/ceph/auxiliary/excitations/pace_neutrons
 </pre></div>
 </div>
 <p>Note that because the distribution is stored on a CEPH shared network drive,
-there may be a delay of ~15-30s the first time it is run whilst the data is retrieved and cached.
+there may be a delay of ~10s the first time it is run whilst the data is retrieved and cached.
 Subsequent start-up time should be faster.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -164,8 +164,8 @@ Subsequent start-up time should be faster.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021 PACE Authors.
-      <span class="lastupdated">Last updated on Nov 21, 2021, 6:11:50 PM.
+    <p>&#169; Copyright 2021-2026 PACE Authors.
+      <span class="lastupdated">Last updated on Jan 15, 2026, 5:38:45 PM.
       </span></p>
   </div>
 

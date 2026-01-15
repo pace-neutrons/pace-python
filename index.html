@@ -1,19 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PACE: Proper Analysis of Coherent Excitations in Python &mdash; PACE 0.1.4+2.ga007a48 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>PACE: Proper Analysis of Coherent Excitations in Python &mdash; PACE 0.4.0+1.g967d036.dirty documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a1e00c55"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -25,11 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> PACE
+
+          
+          
+          <a href="#" class="icon icon-home">
+            PACE
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -54,8 +60,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>PACE: Proper Analysis of Coherent Excitations in Python</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PACE: Proper Analysis of Coherent Excitations in Python</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -65,8 +71,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="pace-proper-analysis-of-coherent-excitations-in-python">
-<h1>PACE: Proper Analysis of Coherent Excitations in Python<a class="headerlink" href="#pace-proper-analysis-of-coherent-excitations-in-python" title="Permalink to this headline"></a></h1>
+  <section id="pace-proper-analysis-of-coherent-excitations-in-python">
+<h1>PACE: Proper Analysis of Coherent Excitations in Python<a class="headerlink" href="#pace-proper-analysis-of-coherent-excitations-in-python" title="Link to this heading"></a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">PACE</span></code> is a suite of programs for data analysis of inelastic neutron scattering spectra,
 written in both Python and Matlab.</p>
 <p>The packages included in PACE are:</p>
@@ -90,13 +96,12 @@ which does not require a Matlab license.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#matlab-compiler-runtime">Matlab Compiler Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#restrictions">Restrictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#parallization">Parallization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#idaaas-installation">IDAaaS Installation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#demonstration-repository">Demonstration repository</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#starting-pace-neutrons">Starting <code class="docutils literal notranslate"><span class="pre">pace_neutrons</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#initialisation">Initialisation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#using-horace-to-look-at-ins-data">Using Horace to look at INS data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#using-spinw-to-model-spin-waves">Using SpinW to model spin waves</a></li>
@@ -108,7 +113,7 @@ which does not require a Matlab license.</p>
 </li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -120,8 +125,8 @@ which does not require a Matlab license.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021 PACE Authors.
-      <span class="lastupdated">Last updated on Nov 21, 2021, 6:11:50 PM.
+    <p>&#169; Copyright 2021-2026 PACE Authors.
+      <span class="lastupdated">Last updated on Jan 15, 2026, 5:38:45 PM.
       </span></p>
   </div>
 
