@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; PACE 0.4.0+2.g79d7c86.dirty documentation</title>
+  <title>Examples &mdash; PACE 0.4.0+2.gc73cefe.dirty documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=3a39a572"></script>
+      <script src="_static/documentation_options.js?v=56d26f14"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -231,7 +231,7 @@ Finally we define the ferromagnetic structure and plot it.</p>
 <span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">fe</span><span class="p">.</span><span class="n">spinwave</span><span class="p">(</span><span class="n">Qlist</span><span class="p">,</span><span class="s">&#39;hermit&#39;</span><span class="p">,</span><span class="n">False</span><span class="p">)</span>
 <span class="n">feSpec</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">sw_egrid</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">sw_neutron</span><span class="p">(</span><span class="n">feSpec</span><span class="p">),</span><span class="w"> </span><span class="s">&#39;component&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;Sperp&#39;</span><span class="p">);</span>
 <span class="n">m</span><span class="p">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">m</span><span class="p">.</span><span class="n">sw_plotspec</span><span class="p">(</span><span class="n">feSpec</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;dE&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;qlabel&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Qlab</span><span class="p">)</span>
+<span class="n">m</span><span class="p">.</span><span class="n">sw_plotspec</span><span class="p">(</span><span class="n">feSpec</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;dE&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;qlabel&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">Qlab</span><span class="p">)</span>
 <span class="n">m</span><span class="p">.</span><span class="n">legend</span><span class="p">(</span><span class="s">&#39;off&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -359,28 +359,36 @@ The calculated spectrum is this simulated and plot over the data.</p>
 <p>Including instrument resolution convolution to the calculation is simply a matter of
 defining the instrument and experimental parameters on the workspace and then replacing
 <code class="docutils literal notranslate"><span class="pre">kk</span> <span class="pre">=</span> <span class="pre">m.multifit_sqw(w_fe)</span></code> with <code class="docutils literal notranslate"><span class="pre">kk</span> <span class="pre">=</span> <span class="pre">m.tobyfit(w_fe)</span></code>, e.g.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up instrument and experiment parameters</span>
-<span class="n">xgeom</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">];</span> <span class="n">ygeom</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">];</span> <span class="n">shape</span> <span class="o">=</span> <span class="s1">&#39;cuboid&#39;</span><span class="p">;</span> <span class="n">shape_pars</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.01</span><span class="p">];</span>
-<span class="n">w_fe</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">set_sample</span><span class="p">(</span><span class="n">w_fe</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">IX_sample</span><span class="p">(</span><span class="n">xgeom</span><span class="p">,</span> <span class="n">ygeom</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">shape_pars</span><span class="p">));</span>
-<span class="n">ei</span> <span class="o">=</span> <span class="mi">70</span><span class="p">;</span> <span class="n">freq</span> <span class="o">=</span> <span class="mi">250</span><span class="p">;</span> <span class="n">chopper</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span><span class="p">;</span>
-<span class="n">w_fe</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">set_instrument</span><span class="p">(</span><span class="n">w_fe</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">maps_instrument</span><span class="p">(</span><span class="n">ei</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">chopper</span><span class="p">));</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define sample parameters</span>
+<span class="n">xgeom</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">ygeom</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="s1">&#39;cuboid&#39;</span>
+<span class="n">shape_pars</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.01</span><span class="p">]</span>
 
-<span class="c1"># Set up resolution convolution model</span>
-<span class="n">gam</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># set intrinsic width to minimum</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">multifit_sqw</span><span class="p">(</span><span class="n">w_fe</span><span class="p">)</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_fun</span> <span class="p">(</span><span class="n">py_fe_sqw</span><span class="p">,</span> <span class="p">[</span><span class="n">J</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">gam</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">amp</span><span class="p">])</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_free</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_bfun</span> <span class="p">(</span><span class="n">linear_bg</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-<span class="n">kk</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">set_bfree</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="c1"># Define instrument parameters</span>
+<span class="n">ei</span> <span class="o">=</span> <span class="mi">400</span>    <span class="c1"># Incident energy in meV</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="mi">600</span>  <span class="c1"># Chopper frequency in Hz</span>
+<span class="n">chop</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>  <span class="c1"># Chopper rotor identifier (ask instrument scientist)</span>
 
-<span class="c1"># Calculate the model spectrum</span>
-<span class="n">w_res</span> <span class="o">=</span> <span class="n">kk</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+<span class="c1"># Sets the sample and instrument on the workspace</span>
+<span class="n">w_fe</span> <span class="o">=</span> <span class="n">w_fe</span><span class="o">.</span><span class="n">set_sample</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">IX_sample</span><span class="p">(</span><span class="n">xgeom</span><span class="p">,</span> <span class="n">ygeom</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">shape_pars</span><span class="p">))</span>
+<span class="n">w_fe</span> <span class="o">=</span> <span class="n">w_fe</span><span class="o">.</span><span class="n">set_instrument</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">maps_instrument</span><span class="p">(</span><span class="n">ei</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">chop</span><span class="p">))</span>
 
-<span class="c1"># Plots the data and model together</span>
-<span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_fe</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">w_res</span><span class="p">)</span>
+<span class="n">tbfobj</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">tobyfit</span><span class="p">(</span><span class="n">w_fe</span><span class="p">)</span>
+<span class="n">tbfobj</span> <span class="o">=</span> <span class="n">tbfobj</span><span class="o">.</span><span class="n">set_fun</span><span class="p">(</span><span class="n">py_fe_sqw</span><span class="p">,</span> <span class="p">[</span><span class="n">J</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">gam</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">amp</span><span class="p">])</span>
+<span class="n">tbfobj</span> <span class="o">=</span> <span class="n">tbfobj</span><span class="o">.</span><span class="n">set_bfun</span><span class="p">(</span><span class="n">linear_bg</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">w_tbf</span> <span class="o">=</span> <span class="n">tbfobj</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+
+<span class="n">m</span><span class="o">.</span><span class="n">acolor</span><span class="p">(</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">my_cuts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">m</span><span class="o">.</span><span class="n">acolor</span><span class="p">(</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">w_tbf</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">acolor</span><span class="p">(</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">w_cal</span><span class="p">)</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/example_tobyfit.png"><img alt="_images/example_tobyfit.png" src="_images/example_tobyfit.png" style="width: 500px;" />
+</a>
 </section>
 <section id="modelling-horace-data-with-spinw-or-euphonic">
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">Modelling Horace data with SpinW or Euphonic</a><a class="headerlink" href="#modelling-horace-data-with-spinw-or-euphonic" title="Link to this heading"></a></h2>
@@ -414,6 +422,8 @@ so can be used directly.</p>
 <span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">wsim</span><span class="p">[</span><span class="s1">&#39;fore&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/example_horace_spinw.png"><img alt="_images/example_horace_spinw.png" src="_images/example_horace_spinw.png" style="width: 500px;" />
+</a>
 <p>For Euphonic, the gateway function is <code class="docutils literal notranslate"><span class="pre">horace_disp</span></code> and returns two cell arrays
 <span class="math notranslate nohighlight">\(E_n(\mathbf{Q}), S_n(\mathbf{Q})\)</span>, so must be wrapped in another function <code class="docutils literal notranslate"><span class="pre">disp2sqw</span></code> first.
 In addition, <code class="docutils literal notranslate"><span class="pre">horace_disp</span></code> is a method of a helper class <code class="docutils literal notranslate"><span class="pre">CoherentCrystal</span></code>
@@ -441,6 +451,8 @@ from the <code class="docutils literal notranslate"><span class="pre">euphonic_s
 <span class="n">hf</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wsc</span><span class="p">);</span> <span class="n">m</span><span class="o">.</span><span class="n">pl</span><span class="p">(</span><span class="n">wsim</span><span class="p">)</span>
 </pre></div>
 </div>
+<a class="reference internal image-reference" href="_images/example_horace_euphonic.png"><img alt="_images/example_horace_euphonic.png" src="_images/example_horace_euphonic.png" style="width: 500px;" />
+</a>
 </section>
 </section>
 
@@ -455,7 +467,7 @@ from the <code class="docutils literal notranslate"><span class="pre">euphonic_s
 
   <div role="contentinfo">
     <p>&#169; Copyright 2021-2026 PACE Authors.
-      <span class="lastupdated">Last updated on Jan 15, 2026, 5:46:47 PM.
+      <span class="lastupdated">Last updated on Jan 15, 2026, 6:43:11 PM.
       </span></p>
   </div>
 
