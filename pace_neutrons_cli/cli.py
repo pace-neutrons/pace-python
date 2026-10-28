@@ -43,6 +43,8 @@ def main(args=None):
     args = _get_args().parse_args(args if args else sys.argv[1:])
     if sum([args.spyder, args.jupyter, args.mantid]) > 1:
         raise RuntimeError('You can only specify one of --spyder, --jupyter or --mantid')
+    if args.matlab_dir:
+        os.environ['PACE_MCR_DIR'] = args.matlab_dir
     if args.install_mcr:
         from .utils import install_MCR
         install_MCR(interactive=False)

@@ -48,7 +48,16 @@ installed but in a non-standard location, you can tell ``pace_neutrons`` this us
    pace_neutrons -d <path/to/MCR>
 
 
-This location will be cached for future use, so you do not need to specify it again.
+This location is not remembered between runs. To avoid passing it every time, or when
+using ``pace_neutrons.Matlab`` directly from Python, set environment variables instead:
+
+.. code-block:: sh
+
+   export PACE_MCR_DIR=<path/to/MCR>
+   export PACE_MCR_VERSION=R2024a
+
+``PACE_MCR_VERSION`` is optional when only one MATLAB version is installed.
+Arguments passed to ``Matlab(matlab_path=..., matlab_version=...)`` take precedence.
 
 You can also tell the program to install the MCR manually using:
 

@@ -43,9 +43,6 @@ def main(args=None):
         # So if we're not logging, then just redirect to /dev/null
         logs = pace_neutrons._DummyFile()
     sys.stdout = logs
-    if 'PACE_MCR_VERSION' in os.environ:
-        m = pace_neutrons.Matlab(matlab_version=os.environ['PACE_MCR_VERSION'])
-    else:
-        m = pace_neutrons.Matlab()
+    m = pace_neutrons.Matlab()
     m.worker_v4(cs)
     logs.close()

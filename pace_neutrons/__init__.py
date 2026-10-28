@@ -63,8 +63,11 @@ def _initialize_compiled_worker(interface):
             interface.call('subsasgn', pc, access, worker_path)
 
 
-def _checkML(versions):
-    from libpymcr.utils import checkPath
+def _checkML(versions, matlab_path=None):
+    from libpymcr.utils import checkPath, DetectMatlab
+    if matlab_path:
+        return [v for v in versions
+                if DetectMatlab(f'R{v["version"]}').find_version(matlab_path, suppress_output=True) is not None]
     return [v for v in versions
             if checkPath(f'R{v["version"]}', error_if_not_found=False, suppress_output=True) is not None]
 
@@ -79,21 +82,26 @@ class Matlab(libpymcr.Matlab):
         will be raised.
 
         :param matlab_path: Path to the root directory of the MATLAB installation or MCR installation.
+        Defaults to the PACE_MCR_DIR environment variable, if set.
         :param matlab_version: Used to specify the version of MATLAB if the matlab_path is given or if
-        there is more than 1 MATLAB installation.
+        there is more than 1 MATLAB installation, e.g. '2024a' or 'R2024a'.
+        Defaults to the PACE_MCR_VERSION environment variable, if set.
         """
         from libpymcr.utils import recombinemex
         global INITIALIZED
         global VERSION
 
+        matlab_path = matlab_path or os.environ.get('PACE_MCR_DIR')
+        matlab_version = matlab_version or os.environ.get('PACE_MCR_VERSION')
+
         if INITIALIZED:
             super().__init__(VERSION, mlPath=matlab_path)
         elif matlab_version is None:
-            avail_ML = _checkML(_VERSIONS)
+            avail_ML = _checkML(_VERSIONS, matlab_path)
             if avail_ML:
                 super().__init__(avail_ML[0]['file'], mlPath=matlab_path)
             else:
-                avail_ML = _checkML(_NOMEXS)
+                avail_ML = _checkML(_NOMEXS, matlab_path)
                 if not avail_ML:
                     raise RuntimeError(_MATLABNOTFOUND_STR)
                 for ver in avail_ML:
@@ -102,8 +110,10 @@ class Matlab(libpymcr.Matlab):
                 ctffile = _VERSION_DIR / f'pace_{avail_ML[0]["version"]}.ctf'
                 super().__init__(ctffile.resolve(), mlPath=matlab_path)
         else:
-            ctf = [v['file'] for v in _VERSIONS if v['version'].lower() == matlab_version.lower()]
-            nmx = [v for v in _NOMEXS if v['version'].lower() == matlab_version.lower()]
+            # Accept both 'R2024a' (as set in PACE_MCR_VERSION by the CLI) and '2024a'
+            matlab_version = matlab_version.lower().lstrip('r')
+            ctf = [v['file'] for v in _VERSIONS if v['version'].lower() == matlab_version]
+            nmx = [v for v in _NOMEXS if v['version'].lower() == matlab_version]
             if not ctf and nmx:
                 recombinemex(f'R{nmx[0]["version"]}', _VERSION_DIR)
                 ctf = [(_VERSION_DIR / f'pace_{nmx[0]["version"]}.ctf').resolve()]
